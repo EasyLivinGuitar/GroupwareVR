@@ -1,0 +1,8 @@
+
+=================
+Start PS-Tracking
+=================
+
+- $> sudo /opt/local/bin/pstrack2configure eth0
+- $> /opt/local/bin/pstrack2start
+- in tab "interface", group "dtrack": check enable, set "Client1 address" adress to "127.0.0.1" and port to "5020"
