@@ -69,7 +69,7 @@ def start ():
 
 	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 
-	#tracked_object.Transform.value=avango.gua.make_trans_mat(0,0, -5)
+	tracked_object.Transform.value=avango.gua.make_scale_mat(0.1)
 
 	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object])
 
