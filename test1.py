@@ -67,6 +67,14 @@ def start ():
 
 	cylinder_transform=avango.gua.nodes.TransformNode(Children=[cylinder])
 
+	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+
+	#tracked_object.Transform.value=avango.gua.make_trans_mat(0,0, -5)
+
+	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object])
+
+
+
 	#Material 
 	cube.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.8, 0.136, 0.8))
 	cube.Material.value.set_uniform("Roughness", 0.4)
@@ -137,7 +145,7 @@ def start ():
 
 	cam.PipelineDescription.value = pipeline_description
 
-	graph.Root.value.Children.value=[light, cube_transform, cylinder_transform, screen, cam]
+	graph.Root.value.Children.value=[light, object_transform, screen, cam]
 
 	#setup viewer
 	viewer = avango.gua.nodes.Viewer()
@@ -157,7 +165,7 @@ def start ():
 	pointertracking.TransmitterOffset.value = offset_tracking
 	pointertracking.Station.value = "pointer"
 
-	cylinder_transform.Transform.connect_from(pointertracking.Matrix)
+	object_transform.Transform.connect_from(pointertracking.Matrix)
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
 		DeviceService = avango.daemon.DeviceService()
@@ -168,7 +176,7 @@ def start ():
 	pointerstuff.TopButton.connect_from(pointer_device_sensor.Button0)
 	pointerstuff.CenterButton.connect_from(pointer_device_sensor.Button1)
 	pointerstuff.BottomButton.connect_from(pointer_device_sensor.Button2)
-	pointerstuff.cylinderRef = cylinder
+	pointerstuff.cylinderRef = tracked_object
 
 	#light.Color.connect_from(pointerstuff.OutColor)
 
