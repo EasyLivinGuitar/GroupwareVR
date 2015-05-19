@@ -54,12 +54,12 @@ def start ():
 
 	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object], Transform=avango.gua.make_scale_mat(0.01))
 
-	#home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	#home.Transform.value = avango.gua.make_scale_mat(0.01)
+	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	home.Transform.value = avango.gua.make_scale_mat(0.2)
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 	tracking = setupEnvironment.setup(graph)
 
-	#graph.Root.value.Children.value.extend([object_transform, home])
-	graph.Root.value.Children.value.append(object_transform)
+	graph.Root.value.Children.value.extend([object_transform, home])
 
 	tracked_object.Transform.connect_from(tracking.Matrix)
 

@@ -31,14 +31,14 @@ def setup(graph):
 
 	window = avango.gua.nodes.GlfwWindow(
 		Size=resolution,
-		LeftResolution=resolution,
-		RightResolution=resolution,
-		StereoMode=avango.gua.StereoMode.CHECKERBOARD
+		LeftResolution=resolution
+		#RightResolution=resolution,
+		#StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
 
 	avango.gua.register_window("window", window)
 
-	cam = avango.gua.nodes.CameraNode(
+	'''cam = avango.gua.nodes.CameraNode(
 		LeftScreenPath="/screen",
 		RightScreenPath="/screen",
 		SceneGraph="scenegraph",
@@ -47,7 +47,15 @@ def setup(graph):
 		EnableStereo = True,
 		OutputWindowName="window",
 		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-		)
+		)'''
+	cam = avango.gua.nodes.CameraNode(
+		Name = "cam",
+		LeftScreenPath = "/screen",
+		SceneGraph = "scenegraph",
+		Resolution = resolution,
+		OutputWindowName="window",
+		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+	)
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
@@ -68,7 +76,7 @@ def setup(graph):
 	res_pass.EnvironmentLightingColor.value = avango.gua.Color(0.1, 0.1, 0.1)
 	res_pass.ToneMappingMode.value = avango.gua.ToneMappingMode.UNCHARTED
 	res_pass.Exposure.value = 1.0
-	res_pass.BackgroundColor.value = avango.gua.Color(0.45, 0.5, 0.6)
+	res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
 
 	anti_aliasing = avango.gua.nodes.SSAAPassDescription()
 
