@@ -97,9 +97,9 @@ def start ():
 	#Meshes
 	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 
-	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object], Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
+	object_transform=avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
 
-	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	home=loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.2)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 	tracking = setupEnvironment.setup(graph)
