@@ -5,13 +5,17 @@ import sys
 # functions
 def init_pst_tracking():
 	# create instance of DTrack
+	'''
 	pst = avango.daemon.DTrack()
 	pst.port = "5020" # PST port
 
 	pst.stations[1] = avango.daemon.Station('head')
 	pst.stations[2] = avango.daemon.Station('pointer')
+	pst.stations[2] = avango.daemon.Station('keyboard')
+	
 
 	device_list.append(pst)
+	'''
 	print("PST Tracking started!")
 
 
