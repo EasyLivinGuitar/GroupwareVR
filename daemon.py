@@ -5,7 +5,7 @@ import sys
 # functions
 def init_pst_tracking():
 	# create instance of DTrack
-	'''
+	
 	pst = avango.daemon.DTrack()
 	pst.port = "5020" # PST port
 
@@ -15,8 +15,9 @@ def init_pst_tracking():
 	
 
 	device_list.append(pst)
-	'''
+
 	print("PST Tracking started!")
+	
 
 
 def init_pointer():
@@ -239,11 +240,11 @@ def init_xbox_controllers():
 
 device_list = []
 
-init_pst_tracking()
-init_pointer()
+#init_pst_tracking()
+#init_pointer()
 #init_tuio_input()
 #init_mouse()
-#init_keyboard()
+init_keyboard()
 #init_spheron()
 #init_xbox_controllers()
 

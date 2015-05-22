@@ -46,6 +46,22 @@ class PointerStuff(avango.script.Script):
 		if self.BottomButton.value:
 			print("BottomButton down")
 
+def handle_key(key, scancode, action, mods):
+	if action == 0:
+		print(key)
+		#32 is space 335 is num_enter
+		if key is 49: # key 1
+			print("pRESSED 1")
+		elif key is 50: # key 2
+			print("2")
+		elif key is 51: # key 3
+			print("3")
+		elif key is 52: # key 4
+			print("4")
+		elif key is 53: # key 5
+			print("5")
+
+
 def start ():
 	graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -98,6 +114,7 @@ def start ():
 		RightResolution=resolution,
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
+	window.on_key_press(handle_key)
 
 	avango.gua.register_window("window", window)
 

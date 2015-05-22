@@ -52,25 +52,11 @@ class PointerStuff(avango.script.Script):
 			self.outRange()
 		#print(distance)
 
-	'''def evaluate(self):
-		if self.TopButton.value:
-			print("TopButton down")
-			#self.cylinderRef.Material.value.set_uniform("Color", avango.gua.Vec4(random.random(), random.random(), random.random(), 1.0))
-		if self.CenterButton.value:
-			print("CenterButton down")
-			#self.cylinderRef.Transform.value = avango.gua.make_trans_mat(0, 0, -0.1)*self.cylinderRef.Transform.value
-			#self.cylinderRef.Transform.value = avango.gua.make_trans_mat(0, 0, -1)*avango.gua.make_scale_mat(0.01, 0.01, 10.0)
-		if self.CenterButton.value==False:
-			print("CenterButton up")
-			#self.cylinderRef.Transform.value = avango.gua.make_trans_mat(0, 0, 0.1)*self.cylinderRef.Transform.value
-			#self.cylinderRef.Transform.value = avango.gua.make_trans_mat(0, 0, -1)*avango.gua.make_scale_mat(0.01, 0.01, 10.0)
-		if self.BottomButton.value:
-			print("BottomButton down")'''
-
 	@field_has_changed(timer)
 	def updateTimer(self):
 		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 			self.isInside = False
+			
 			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
@@ -87,7 +73,12 @@ class PointerStuff(avango.script.Script):
 		self.isInside = False
 		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 
-	
+def handle_key(key, scancode, action, mods):
+	if action == 0:
+		print(key)
+		#32 is space 335 is num_enter
+		if key is 335:
+			print("check if achieved the goal")
 
 
 def start ():
@@ -102,6 +93,8 @@ def start ():
 	home=loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.2)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
+
+	setupEnvironment.getWindow().on_key_press(handle_key)
 	tracking = setupEnvironment.setup(graph)
 
 	graph.Root.value.Children.value.extend([object_transform,home])
@@ -125,8 +118,6 @@ def start ():
 	pointerstuff.timer.connect_from(timer.Time)
 	#pointerstuff.HomeRef=home
 
-
-	#light.Color.connect_from(pointerstuff.OutColor)
 	setupEnvironment.launch()
 
 if __name__ == '__main__':

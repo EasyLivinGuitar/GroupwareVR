@@ -5,6 +5,20 @@ import avango.script
 
 from examples_common.GuaVE import GuaVE
 
+'''
+Written by Benedikt Vogler and Marcel Gohsen
+
+How to setup a new test case:
+
+1. use getWindow() to setup the key events
+2. call setup()
+3. call launch()
+
+Then start the scene with the according start.sh
+'''
+
+
+
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
 	while stack:
@@ -15,8 +29,16 @@ def print_graph(root_node):
 
 viewer = avango.gua.nodes.Viewer()
 
-def setup(graph):
+resolution = avango.gua.Vec2ui(1920, 1080)
+screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+window = avango.gua.nodes.GlfwWindow(
+		Size=resolution,
+		LeftResolution=resolution,
+		RightResolution=resolution,
+		StereoMode=avango.gua.StereoMode.CHECKERBOARD
+		)
 
+def setup(graph):
 	light = avango.gua.nodes.LightNode(
 		Type=avango.gua.LightType.POINT,
 		Name="light",
@@ -24,16 +46,6 @@ def setup(graph):
 		Brightness=100.0,
 		Transform=(avango.gua.make_trans_mat(1, 1, 5) *
 				   avango.gua.make_scale_mat(30, 30, 30))
-		)
-
-	resolution = avango.gua.Vec2ui(1920, 1080)
-	screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
-
-	window = avango.gua.nodes.GlfwWindow(
-		Size=resolution,
-		LeftResolution=resolution,
-		RightResolution=resolution,
-		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
 
 	avango.gua.register_window("window", window)
@@ -111,6 +123,9 @@ def setup(graph):
 	pointertracking.Station.value = "pointer"
 
 	return pointertracking
+
+def getWindow():
+	return window
 
 def launch():
 	guaVE = GuaVE()
