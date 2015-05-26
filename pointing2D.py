@@ -5,34 +5,35 @@ import avango.script
 import random
 import setupEnvironment
 import math
+import os.path
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
+
 class PointerStuff(avango.script.Script):
-	TopButton = avango.SFBool()
-	CenterButton = avango.SFBool()
-	BottomButton = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
-	isInside = False;
+	isInside = False
 	timer = avango.SFFloat()
 	startTime = 0
 	endTime = 0
+	result_file= None
+	created_file=False
+	num_files=0
 
 
 	def __init__(self):
 		self.super(PointerStuff).__init__()
-		self.top_button_last_time = False
-		#self.HomeRef=None
 
-
-	@field_has_changed(TopButton)
-	def top_button_has_changed(self):
-		pass
+	def __del__(self):
+		self.result_file.close()
+		
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
+		self.logdata()
+
 		trans_x=self.TransMat.value.get_translate()[0]
 		trans_y=self.TransMat.value.get_translate()[1]
 		trans_z=self.TransMat.value.get_translate()[2]
@@ -50,10 +51,23 @@ class PointerStuff(avango.script.Script):
 			self.inRange()
 		else: 
 			self.outRange()
-		#print(distance)
+		
+		#self.result_file.write(str(distance))
+
+	def logdata(self):
+		path="results/results_pointing_2D/"
+		if self.created_file==False:
+			self.num_files=len([f for f in os.listdir(path)
+				if os.path.isfile(os.path.join(path, f))])
+			self.created_file=True
+		else:
+			self.result_file=open(path+"pointing2D_trail"+str(self.num_files)+".txt", "a+")
+			self.result_file.write("Time-Stamp:  "+str(self.timer.value)+"\n"+str(self.TransMat.value)+"\n\n")
+			self.result_file.close()
 
 	@field_has_changed(timer)
 	def updateTimer(self):
+		self.TransMat.value=avango.gua.make_trans_mat(12*self.timer.value, 0.0, 0.0)
 		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 			self.isInside = False
 			
@@ -88,9 +102,9 @@ def start ():
 	#Meshes
 	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 
-	object_transform=avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
+	object_transform=avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -5.0))
 
-	home=loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.2)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 
@@ -108,9 +122,6 @@ def start ():
 
 	pointerstuff = PointerStuff()
 	setattr(pointerstuff, "HomeRef", home)
-	pointerstuff.TopButton.connect_from(pointer_device_sensor.Button0)
-	pointerstuff.CenterButton.connect_from(pointer_device_sensor.Button1)
-	pointerstuff.BottomButton.connect_from(pointer_device_sensor.Button2)
 	pointerstuff.TransMat.connect_from(tracking.Matrix)
 	pointerstuff.HomeMat.connect_from(home.Transform)
 
