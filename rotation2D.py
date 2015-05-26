@@ -9,12 +9,9 @@ import math
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-class PointerStuff(avango.script.Script):
-	TopButton = avango.SFBool()
-	CenterButton = avango.SFBool()
-	BottomButton = avango.SFBool()
+class trackingManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
-	HomeMat = avango.gua.SFMatrix4()
+	aimMat = avango.gua.SFMatrix4()
 	isInside = False;
 	timer = avango.SFFloat()
 	startTime = 0
@@ -22,14 +19,8 @@ class PointerStuff(avango.script.Script):
 
 
 	def __init__(self):
-		self.super(PointerStuff).__init__()
-		self.top_button_last_time = False
-		#self.HomeRef=None
-
-
-	@field_has_changed(TopButton)
-	def top_button_has_changed(self):
-		pass
+		self.super(trackingManager).__init__()
+		#self.aimRef=None
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
@@ -37,15 +28,15 @@ class PointerStuff(avango.script.Script):
 		trans_y=self.TransMat.value.get_translate()[1]
 		trans_z=self.TransMat.value.get_translate()[2]
 
-		home_x=self.HomeMat.value.get_translate()[0]
-		home_y=self.HomeMat.value.get_translate()[1]
-		home_z=self.HomeMat.value.get_translate()[2]
+		aim_x=self.aimMat.value.get_translate()[0]
+		aim_y=self.aimMat.value.get_translate()[1]
+		aim_z=self.aimMat.value.get_translate()[2]
 
-		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
-		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
-		trans_home_z_square=(trans_z - home_z)*(trans_z - home_z)
+		trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
+		trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
+		trans_aim_z_square=(trans_z - aim_z)*(trans_z - aim_z)
 		
-		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
+		distance=math.sqrt(trans_aim_x_square+trans_aim_y_square+trans_aim_z_square)
 		if distance < 0.5:
 			self.inRange()
 		else: 
@@ -57,21 +48,21 @@ class PointerStuff(avango.script.Script):
 		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 			self.isInside = False
 			
-			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
-			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
-			#bewege home an neue Stelle
+			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
+			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
+			#bewege aim an neue Stelle
 
 	def inRange(self):
 		if self.isInside==False:
 		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 0.5)) #Transparenz funktioniert nicht
+		#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 0.5)) #Transparenz funktioniert nicht
 
 	def outRange(self):
 		if self.isInside==True:
 		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
+		#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 
 def handle_key(key, scancode, action, mods):
 	if action == 0:
@@ -86,18 +77,18 @@ def start ():
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 	#Meshes
-	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	tracked_object = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 
-	object_transform=avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
+	object_transform = avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
 
-	home=loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.2)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
+	aim = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aim.Transform.value = avango.gua.make_scale_mat(0.2)
+	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.3, 0.3, 0.5)) #Transparenz funktioniert nicht
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	tracking = setupEnvironment.setup(graph)
 
-	graph.Root.value.Children.value.extend([object_transform,home])
+	graph.Root.value.Children.value.extend([object_transform,aim])
 
 	tracked_object.Transform.connect_from(tracking.Matrix)
 
@@ -106,17 +97,14 @@ def start ():
 		)
 	pointer_device_sensor.Station.value = "device-pointer"
 
-	pointerstuff = PointerStuff()
-	setattr(pointerstuff, "HomeRef", home)
-	pointerstuff.TopButton.connect_from(pointer_device_sensor.Button0)
-	pointerstuff.CenterButton.connect_from(pointer_device_sensor.Button1)
-	pointerstuff.BottomButton.connect_from(pointer_device_sensor.Button2)
-	pointerstuff.TransMat.connect_from(tracking.Matrix)
-	pointerstuff.HomeMat.connect_from(home.Transform)
+	trackManager = trackingManager()
+	setattr(trackManager, "aimRef", aim)
+	trackManager.TransMat.connect_from(tracking.Matrix)
+	trackManager.aimMat.connect_from(aim.Transform)
 
 	timer = avango.nodes.TimeSensor()
-	pointerstuff.timer.connect_from(timer.Time)
-	#pointerstuff.HomeRef=home
+	trackManager.timer.connect_from(timer.Time)
+	trackingManager.aimRef=aim
 
 	setupEnvironment.launch()
 
