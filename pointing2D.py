@@ -61,7 +61,7 @@ class PointerStuff(avango.script.Script):
 				if os.path.isfile(os.path.join(path, f))])
 			self.created_file=True
 		else:
-			self.result_file=open(path+"pointing2D_trail"+str(self.num_files)+".txt", "a+")
+			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
 			self.result_file.write(str(self.timer.value)+"\n"+str(self.TransMat.value)+"\n\n")
 			self.result_file.close()
 
