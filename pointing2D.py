@@ -67,8 +67,6 @@ class PointerStuff(avango.script.Script):
 
 	@field_has_changed(timer)
 	def updateTimer(self):
-		self.TransMat.value=avango.gua.make_rot_mat(self.timer.value*10, 0.0, 0.0, 1.0)*avango.gua.make_trans_mat(0.5, 0.0, 0.0)
-		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 			self.isInside = False
 			
 			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
@@ -87,13 +85,21 @@ class PointerStuff(avango.script.Script):
 		self.isInside = False
 		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.1)) #Transparenz funktioniert nicht
 
-def handle_key(key, scancode, action, mods):
-	if action == 0:
-		print(key)
-		#32 is space 335 is num_enter
-		if key is 335:
-			print("check if achieved the goal")
+	def getRandomTranslation(self):
+		rand_index_1=random.randint(0, 10)
+		rand_div_1=5#random.randint(1, 5)
 
+		rand_index_2=random.randint(0, 10)
+		rand_div_2=5#random.randint(1, 5)
+
+		return avango.gua.make_trans_mat(rand_index_1/rand_div_1, 0, rand_index_2/rand_div_2)
+
+	def handle_key(self, key, scancode, action, mods):
+		if action == 0:
+			#32 is space 335 is num_enter
+			if key==335:
+				self.HomeMat.value=self.getRandomTranslation()
+			
 
 def start ():
 	graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
@@ -102,15 +108,14 @@ def start ():
 	#Meshes
 	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 
-	#tracked_object.Transform=avango.gua.make_scale_mat(0.01)
-
 	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.2)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 0.1)) #Transparenz funktioniert nicht
 
-	setupEnvironment.getWindow().on_key_press(handle_key)
+	pointerstuff = PointerStuff()
+	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
 	tracking = setupEnvironment.setup(graph)
 
 	graph.Root.value.Children.value.extend([object_transform,home])
@@ -122,11 +127,11 @@ def start ():
 		)
 	pointer_device_sensor.Station.value = "device-pointer"
 
-	pointerstuff = PointerStuff()
 	setattr(pointerstuff, "HomeRef", home)
 	#pointerstuff.TransMat.connect_from(tracking.Matrix)
 	object_transform.Transform.connect_from(pointerstuff.TransMat)
 	pointerstuff.HomeMat.connect_from(home.Transform)
+	home.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
