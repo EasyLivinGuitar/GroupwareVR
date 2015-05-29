@@ -101,6 +101,7 @@ def setup(graph):
 			])
 
 	cam.PipelineDescription.value = pipeline_description
+	cam.PipelineDescription.value.EnableABuffer.value=True
 
 
 	graph.Root.value.Children.value=[light, screen, cam]
