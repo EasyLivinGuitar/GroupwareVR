@@ -106,19 +106,21 @@ def start ():
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 	#Meshes
-	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
+	#tracked_object.Transform=avango.gua.make_scale_mat(0.01)
 
-	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object])
+	object_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.2)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 0.1)) #Transparenz funktioniert nicht
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 0.1))
 
 	pointerstuff = PointerStuff()
 	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
 	tracking = setupEnvironment.setup(graph)
 
-	graph.Root.value.Children.value.extend([object_transform,home])
+	graph.Root.value.Children.value.extend([home])
 
 	#tracked_object.Transform.connect_from(tracking.Matrix)
 

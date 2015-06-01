@@ -10,33 +10,32 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 class trackingManager(avango.script.Script):
-	TransMat = avango.gua.SFMatrix4()
+	pencilTransMat = avango.gua.SFMatrix4()
 	aimMat = avango.gua.SFMatrix4()
-	isInside = False;
 	timer = avango.SFFloat()
-	startTime = 0
-	endTime = 0
 
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
+		self.isInside = False;
+		self.startTime = 0
+		self.endTime = 0
+		self.aimRef = None
 		#self.aimRef=None
 
-	@field_has_changed(TransMat)
-	def transMatHasChanged(self):
-		trans_x=self.TransMat.value.get_translate()[0]
-		trans_y=self.TransMat.value.get_translate()[1]
-		trans_z=self.TransMat.value.get_translate()[2]
+	@field_has_changed(pencilTransMat)
+	def pencilTransMatHasChanged(self):
+		#calculate error
+		currentRot = self.pencilTransMat.value.get_rotate().get_axis()*self.pencilTransMat.value.get_rotate().get_angle()
 
-		aim_x=self.aimMat.value.get_translate()[0]
-		aim_y=self.aimMat.value.get_translate()[1]
-		aim_z=self.aimMat.value.get_translate()[2]
+		aimRot = self.aimMat.value.get_rotate().get_axis()*self.pencilTransMat.value.get_rotate().get_angle()
 
-		trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-		trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-		trans_aim_z_square=(trans_z - aim_z)*(trans_z - aim_z)
+		error = currentRot - aimRot
+		error_x_square = (currentRot[0] - aimRot[0])*(currentRot[0] - aimRot[0])
+		error_y_square = (currentRot[1] - aimRot[1])*(currentRot[1] - aimRot[1])
+		error_z_square = (currentRot[2] - aimRot[2])*(currentRot[2] - aimRot[2])
 		
-		distance=math.sqrt(trans_aim_x_square+trans_aim_y_square+trans_aim_z_square)
+		distance=math.sqrt(error_x_square+error_y_square+error_z_square)
 		if distance < 0.5:
 			self.inRange()
 		else: 
@@ -45,6 +44,11 @@ class trackingManager(avango.script.Script):
 
 	@field_has_changed(timer)
 	def updateTimer(self):
+		#erase translation in the matrix and keep rotation
+		rotation = self.pencilTransMat.value.get_rotate()
+		self.pencilTransMat.value = avango.gua.Mat4()
+		self.pencilTransMat.value = avango.gua.make_rot_mat(rotation)
+
 		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 			self.isInside = False
 			
@@ -56,19 +60,19 @@ class trackingManager(avango.script.Script):
 		if self.isInside==False:
 		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 0.5)) #Transparenz funktioniert nicht
+		self.aimRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 0.5)) #Transparenz funktioniert nicht
 
 	def outRange(self):
 		if self.isInside==True:
 		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
+		self.aimRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.5)) #Transparenz funktioniert nicht
 
 def handle_key(key, scancode, action, mods):
 	if action == 0:
 		print(key)
 		#32 is space 335 is num_enter
-		if key is 335:
+		if key == 335:
 			print("check if achieved the goal")
 
 
@@ -77,20 +81,21 @@ def start ():
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 	#Meshes
-	tracked_object = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-
-	object_transform = avango.gua.nodes.TransformNode(Transform=avango.gua.make_trans_mat(0.0, 0.0, -10.0))
+	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.3, 0.3, 0.5))
+	object_transform = avango.gua.nodes.TransformNode(Children=[pencil], Transform=avango.gua.make_trans_mat(0.0, 0.0, -15.0))
 
 	aim = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_scale_mat(0.2)
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.3, 0.3, 0.5)) #Transparenz funktioniert nicht
+	aim.Transform.value = avango.gua.make_trans_mat(0,0,-10)*avango.gua.make_scale_mat(0.2)
+	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.3, 0.3, 0.5))
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	tracking = setupEnvironment.setup(graph)
 
-	graph.Root.value.Children.value.extend([object_transform,aim])
+	#add nodes to root
+	graph.Root.value.Children.value.extend([object_transform, aim])
 
-	tracked_object.Transform.connect_from(tracking.Matrix)
+	pencil.Transform.connect_from(tracking.Matrix)
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
 		DeviceService = avango.daemon.DeviceService()
@@ -98,8 +103,8 @@ def start ():
 	pointer_device_sensor.Station.value = "device-pointer"
 
 	trackManager = trackingManager()
-	setattr(trackManager, "aimRef", aim)
-	trackManager.TransMat.connect_from(tracking.Matrix)
+	trackManager.aimRef = aim
+	trackManager.pencilTransMat.connect_from(tracking.Matrix)
 	trackManager.aimMat.connect_from(aim.Transform)
 
 	timer = avango.nodes.TimeSensor()
