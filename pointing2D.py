@@ -21,6 +21,7 @@ class PointerStuff(avango.script.Script):
 	result_file= None
 	created_file=False
 	num_files=0
+	index = 0
 
 
 	def __init__(self):
@@ -70,29 +71,48 @@ class PointerStuff(avango.script.Script):
 			self.isInside = False
 			
 			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
-			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.1)) #Transparenz funktioniert nicht
+			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
 
 	def inRange(self):
 		if self.isInside==False:
 		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 0.1)) #Transparenz funktioniert nicht
+		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
 
 	def outRange(self):
 		if self.isInside==True:
 		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0.1)) #Transparenz funktioniert nicht
+		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def getRandomTranslation(self):
-		rand_index_1=random.randint(0, 10)
+		'''rand_index_1=random.randint(0, 10)
 		rand_div_1=5#random.randint(1, 5)
 
 		rand_index_2=random.randint(0, 10)
 		rand_div_2=5#random.randint(1, 5)
 
-		return avango.gua.make_trans_mat(rand_index_1/rand_div_1, 0, rand_index_2/rand_div_2)
+		return avango.gua.make_trans_mat(rand_index_1/rand_div_1, 0, rand_index_2/rand_div_2)'''
+
+		'''settings=[avango.gua.make_trans_mat(-3, 0, -3),
+			avango.gua.make_trans_mat(-2, 0, -2),
+			avango.gua.make_trans_mat(-1, 0, -1),
+			avango.gua.make_trans_mat(0, 0, 0),
+			avango.gua.make_trans_mat(1, 0, 1),
+			avango.gua.make_trans_mat(2, 0, 2),
+			avango.gua.make_trans_mat(3, 0, 3)]'''
+
+		settings=[avango.gua.make_trans_mat(0, 0, -8),
+			avango.gua.make_trans_mat(0, 0, -6),
+			avango.gua.make_trans_mat(0, 0, -4),
+			avango.gua.make_trans_mat(0, 0, -2),
+			avango.gua.make_trans_mat(0, 0, -1),
+			avango.gua.make_trans_mat(0, 0, -0.5)]
+
+		##index=random.randint(0, 2)
+		self.index=(self.index+1) % len(settings)
+		return settings[self.index]
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 0:
@@ -113,14 +133,16 @@ def start ():
 	object_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.2)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 0.1))
+	home.Transform.value = avango.gua.make_scale_mat(0.5)
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
+
+	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
 	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
 	tracking = setupEnvironment.setup(graph)
 
-	graph.Root.value.Children.value.extend([home])
+	graph.Root.value.Children.value.extend([home_transform])
 
 	#tracked_object.Transform.connect_from(tracking.Matrix)
 
@@ -133,7 +155,7 @@ def start ():
 	#pointerstuff.TransMat.connect_from(tracking.Matrix)
 	object_transform.Transform.connect_from(pointerstuff.TransMat)
 	pointerstuff.HomeMat.connect_from(home.Transform)
-	home.Transform.connect_from(pointerstuff.HomeMat)
+	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
