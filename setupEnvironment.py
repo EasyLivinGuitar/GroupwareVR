@@ -30,7 +30,8 @@ def print_graph(root_node):
 viewer = avango.gua.nodes.Viewer()
 
 resolution = avango.gua.Vec2ui(1920, 1080)
-screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+#screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+screenSize = avango.gua.Vec2(1., 0.495) # in meters
 window = avango.gua.nodes.GlfwWindow(
 		Size=resolution,
 		LeftResolution=resolution,
@@ -57,8 +58,8 @@ def setup(graph):
 		Resolution=resolution,
 		EyeDistance = 0.064,
 		EnableStereo = True,
-		OutputWindowName="window",
-		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+		OutputWindowName="window"#,
+		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
 		)
 	'''cam = avango.gua.nodes.CameraNode(
 		Name = "cam",
@@ -71,8 +72,8 @@ def setup(graph):
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
-		Height=screenSize.y,
-		Transform=avango.gua.make_rot_mat(0 , 0.0, 0.0, 1.0),
+		Height=screenSize.y#,
+		#Transform=avango.gua.make_rot_mat(180 , 1.0, 0.0, 0.0),
 		#Children=[cam]
 		)
 
