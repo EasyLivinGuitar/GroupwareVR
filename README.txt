@@ -10,8 +10,7 @@ Start PS-Tracking
 =================
 # Start Daemon for Polhemus Latus
 =================
-- cd /opt/avango/new_renderer/examples/polhemus
-- sudo /opt/avango/new_renderer/examples/polhemus/start.sh
+- cd /opt/avango/new_renderer/examples/polhemus; sudo /opt/avango/new_renderer/examples/polhemus/start.sh
 
 im start skript sollte kein weiterer demon sein
 - start skript ausführen

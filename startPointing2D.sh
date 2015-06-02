@@ -36,4 +36,4 @@ cd "$DIR" && python3.4 ./pointing2D.py
 fi
 
 # kill daemon
-kill %1
+#kill %1

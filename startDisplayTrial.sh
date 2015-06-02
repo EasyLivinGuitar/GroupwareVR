@@ -25,7 +25,7 @@ export PYTHONPATH="$LOCAL_AVANGO/lib/python3.4":"$LOCAL_AVANGO/examples":$AVANGO
 export LD_LIBRARY_PATH="$LOCAL_GUACAMOLE/lib":$GUACAMOLE/lib:$LD_LIBRARY_PATH
 
 # run daemon
-python3.4 ./daemon.py > /dev/null &
+#python3.4 ./daemon.py > /dev/null &
 
 # run program
 if [[ $* == *-d* ]]
