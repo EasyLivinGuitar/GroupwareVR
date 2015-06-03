@@ -1,4 +1,3 @@
-
 #ifndef _LIBERTY_H
 #define _LIBERTY_H
 
@@ -19,8 +18,7 @@ struct pose_t {
 // --------------------------------------------------------------------------
 // Liberty class (quick&dirty-hack to enscapulate connection dependend data)
 
-class Liberty
-{
+class Liberty {
   public:
 
 	Liberty();
@@ -42,14 +40,15 @@ class Liberty
 
 	static void* ReadTrackerThread( void* pParam );
     int receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker);
+    bool sendCommand(std::string cmd);
+    std::string readString();
 	
   protected:
 
   private:
- 	void connect(LPCNX_STRUCT pcs);
+ 	void connect();
 	int split_lines(char* str, unsigned long len, char** strarr, int maxlines);
-	void disconnect(LPCNX_STRUCT pcs);
-	bool sendCommand(std::string cmd, LPCNX_STRUCT pcs );
+	void disconnect();
 	int sendInitialCommands();
 
   private:

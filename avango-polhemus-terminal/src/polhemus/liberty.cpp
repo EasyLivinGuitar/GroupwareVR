@@ -1,6 +1,6 @@
 #include "liberty.h"
-#include <stdio.h>
-#include <unistd.h>
+//#include <stdio.h>
+//#include <unistd.h>
 #include <pthread.h>
 #include "PiTracker.h"
 #include "PingPong.h"
@@ -14,36 +14,17 @@
 
 #define BUFFER_SIZE     1000
 
-namespace {
-
-// usb vid/pids for Polehemus trackers
-USB_PARAMS usbTrkParams[NUM_SUPP_TRKS]={
-  {0x0f44,0xff20,0x04,0x88},  // Lib HS
-  {0x0f44,0xff21,0x02,0x82},   // Lib
-  {0x0f44,0xef12,0x02,0x82},  // Patriot
-  {0x0f44,0x0002,0x02,0x82}};  // Fastrak
-
-// polhemus tracker names
-const char* trackerNames[NUM_SUPP_TRKS]={
-  "High Speed Liberty","Liberty","Patriot","Fastrak"};
-
-
-}
-
-
-
 // --------------------------------------------------------------------------
 // Constructor & Destructor
 
 Liberty::Liberty()
 : mReadStruct_(), mWriteStruct_(), mPong_(), mcnxStruct_(), mcp_(), mthread_id_()
 {
+
 }
 
-Liberty::~Liberty()
-{
-	if(mcnxStruct_.pTrak)
-	{
+Liberty::~Liberty() {
+	if(mcnxStruct_.pTrak) {
 		delete mcnxStruct_.pTrak;
 	}
 }
@@ -54,12 +35,9 @@ Liberty::~Liberty()
 // ini (i): parameters
 // return value (o): error code
 
-int Liberty::init()
-{	
-	if(mPong_.InitPingPong(BUFFER_SIZE) < 0)
-	{
+int Liberty::init() {	
+	if(mPong_.InitPingPong(BUFFER_SIZE) < 0) {
 		// throw error that memalloc failed
-		// fprintf(stderr, "Memory Allocation Error setting up buffers!\n");
 		std::cerr << "Memory Allocation Error setting up buffers!" << std::endl;
 		return( -1 );
 	}
@@ -70,15 +48,13 @@ int Liberty::init()
 
 	// set up USB connection
 	mcnxStruct_.cnxType = USB_CNX;
-	mcnxStruct_.trackerType = TRKR_LIB_HS;
+	mcnxStruct_.trackerType = TRKR_LIB_HS;//connect with high speed libertiy latus
 	//std::strncpy(mcp_.port, "/dev/ttyS0", 50);
 
 	mcnxStruct_.pTrak = new PiTracker;
 
-	if( !mcnxStruct_.pTrak )
-	{
+	if( !mcnxStruct_.pTrak ) {
 		// throw error 
-		// fprintf(stderr, "Memory Allocation Error creating tracker communication module!\n");
 		std::cerr << "Memory Allocation Error creating tracker communication module!" << std::endl;
 		return( -3 );
 	}
@@ -99,7 +75,7 @@ int Liberty::init()
 	mWriteStruct_->pthread = &mthread_id_;
 	mWriteStruct_->pParam = NULL;
 
-	connect(&mcnxStruct_);
+	connect();
 
 	
 /*
@@ -111,10 +87,8 @@ int Liberty::init()
 
 */
 	
-	
 
-	if( sendInitialCommands() < 0 )
-	{
+	if( sendInitialCommands() < 0 )	{
 		std::cout << "FATAL ERROR: sending initial commands to tracker" << std::endl;
 		return -1;
 	}
@@ -127,31 +101,26 @@ int Liberty::init()
 	return 0;
 }
 
-int
-Liberty::sendInitialCommands()
-{
+int Liberty::sendInitialCommands() {
 	std::cout << "Please wait..." << std::endl;
 
 	usleep(1000000); // 3s
 	std::cout << "Calibrating for first receiver" << std::endl;
 
-	if(!sendCommand("a1\r", &mcnxStruct_))
-	{
+	if(!sendCommand("a1\r")) {
 		return -1;		
 	}
 
 	std::cout << "Switch: autodetect markers" << std::endl;
 	usleep(1000000);
-	if(!sendCommand("@A1\r", &mcnxStruct_))
-	{
+	if(!sendCommand("@A1\r"))	{
 		return -2;
 	}
 
 
 	std::cout << "Switch: metric units" << std::endl;
 	usleep(1000000);
-	if(!sendCommand("U1\r", &mcnxStruct_))
-	{
+	if(!sendCommand("U1\r"))	{
 		return -3;
 	}
 	
@@ -159,37 +128,44 @@ Liberty::sendInitialCommands()
 	// wait a second ;)
 	// good ole machine needs time 
 	usleep(1000000);
-	if(!sendCommand("c\r", &mcnxStruct_))
-	{
+	if(!sendCommand("c\r"))	{
 		return -4;
 	}
 
 	return 0;
 }
 
-void
-Liberty::connect(LPCNX_STRUCT pcs)
-{
+void Liberty::connect() {
 	int cnxSuccess;
 	//char* str;
 	//char* port;
 
-	if(pcs->cnxType == USB_CNX)
-	{
+	if(mcnxStruct_.cnxType == USB_CNX)	{
 		do {
-			std::cout << "attempting UsbConnect()..." << std::endl;
-			cnxSuccess=pcs->pTrak->UsbConnect(usbTrkParams[pcs->trackerType].vid, usbTrkParams[pcs->trackerType].pid, usbTrkParams[pcs->trackerType].writeEp, usbTrkParams[pcs->trackerType].readEp );
-//			cnxSuccess=pcs->pTrak->UsbConnect(3908, 65312, 4, 136); // magic values for debugging purpose
 
-			if( cnxSuccess != 0 )
-			{		
+			std::cout << "attempting UsbConnect("
+				<< usbTrkParams[mcnxStruct_.trackerType].vid
+				<< "," << usbTrkParams[mcnxStruct_.trackerType].pid
+				<< "," << usbTrkParams[mcnxStruct_.trackerType].writeEp
+				<< "," << usbTrkParams[mcnxStruct_.trackerType].readEp
+				<<")..." << std::endl;
+
+			cnxSuccess = mcnxStruct_.pTrak->UsbConnect(
+				usbTrkParams[mcnxStruct_.trackerType].vid,
+				usbTrkParams[mcnxStruct_.trackerType].pid,
+				usbTrkParams[mcnxStruct_.trackerType].writeEp,
+				usbTrkParams[mcnxStruct_.trackerType].readEp
+			);
+//			cnxSuccess=pcs->pTrak->UsbConnect(3908, 65312, 4, 136); // magic values for debugging purpose, magic numbers are LL HS id's as dec 
+
+			if( cnxSuccess != 0 ) {		
 				// throw failure message
 				std::cerr << "UsbConnect() failed..." << std::endl;
 			}
 		} while( cnxSuccess != 0 );
 	}
 
-	std::cout << "Connected to " << trackerNames[pcs->trackerType] << " over USB" << std::endl;
+	std::cout << "Connected to " << trackerNames[mcnxStruct_.trackerType] << " over USB" << std::endl;
 	
 	/*
 	// start read thread
@@ -202,19 +178,15 @@ Liberty::connect(LPCNX_STRUCT pcs)
 }
 
 
-void
-Liberty::disconnect(LPCNX_STRUCT pcs)
-{
+void Liberty::disconnect() {
 	LPREAD_WRITE_STRUCT prs = mReadStruct_;
 	prs->keepLooping = 0;
 	pthread_join( *prs->pthread, NULL); // wait for read thread
-	pcs->pTrak->CloseTrk(); // close tracker connection
+	mcnxStruct_.pTrak->CloseTrk(); // close tracker connection
 }
 
 
-/* static */ void*
-Liberty::ReadTrackerThread( void* pParam )
-{
+/* static */ void* Liberty::ReadTrackerThread( void* pParam ) {
 	BYTE buf[BUFFER_SIZE];
 	LPREAD_WRITE_STRUCT prs = (LPREAD_WRITE_STRUCT)pParam;
 	PiTracker* pTrak = (PiTracker*)prs->pParam;
@@ -246,29 +218,24 @@ Liberty::ReadTrackerThread( void* pParam )
 	return NULL;
 }
 
-bool
-Liberty::sendCommand(std::string cmd, LPCNX_STRUCT pcs)
-{
-	if( pcs->pTrak->GetCnxType() == NO_CNX )
-	{
+bool Liberty::sendCommand(std::string cmd) {
+	if( mcnxStruct_.pTrak->GetCnxType() == NO_CNX )	{
 		std::cout << "FATAL ERROR! Connection to tracker lost!" << std::endl;
 		return( false );
 	}
 	
-	pcs->pTrak->WriteTrkData( const_cast<char*>( cmd.c_str() ), cmd.length() );
+	mcnxStruct_.pTrak->WriteTrkData( const_cast<char*>( cmd.c_str() ), cmd.length() );
 
 	return( true );
 }
 
 
-int
-Liberty::receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker)
-{
+int Liberty::receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker) {
 	// Defaults:
 	*nmarker = 0;
 	
 	// send command to receive snapshot
-	//sendCommand("p", &mcnxStruct_);
+	//sendCommand("p");
 	//usleep(2000);
 
 	LPREAD_WRITE_STRUCT lws = mWriteStruct_;
@@ -277,8 +244,7 @@ Liberty::receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker)
 
 	int len = lws->pPong->ReadPP(buf);
 
-	while(len) 
-	{
+	while(len) 	{
 		using namespace boost;
 
 		buf[len] = 0; // never forget null termination DOH
@@ -294,37 +260,29 @@ Liberty::receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker)
 		unsigned int c(0);
 		unsigned int id(0);
 
-		for(tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++c)
-		{
+		for(tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++c) {
 			// marker data is always 7 valus 
-			if(c % 7 == 0) // guess it's an Id value
-			{
-				try
-				{
+			if(c % 7 == 0) {// guess it's an Id value
+				try	{
 					id = lexical_cast<unsigned short>(*tok_iter);
-					if(id > 0 && id <= max_nmarker)
-					{
+					if(id > 0 && id <= max_nmarker)	{
 						pose[id - 1].id = id;
 						// std::cout << "Catched ID: " << id << std::endl;
 						*nmarker = std::max(*nmarker, id);
 						//std::cout << "setting nmarker to " << *nmarker << std::endl;
 					}
 				}
-				catch(bad_lexical_cast &)
-				{
+				catch(bad_lexical_cast &)	{
 					id = 0;
 				}
 			}
-			else if( id > 0 && id <= max_nmarker)
-			{
-				try
-				{
+			else if( id > 0 && id <= max_nmarker){
+				try	{
 					float val = lexical_cast<float>(*tok_iter);
 					pose[id - 1].pose[ c % 7 - 1 ] = val;
 					//std::cout << "Catched Value: " << val << std::endl;
 				}
-				catch(bad_lexical_cast &)
-				{
+				catch(bad_lexical_cast &) {
 
 				}
 			}
@@ -336,17 +294,31 @@ Liberty::receiveData(unsigned int* nmarker, pose_t* pose, int max_nmarker)
 	return len;
 }
 
+std::string Liberty::readString() {
 
-int Liberty::split_lines(char* str, unsigned long len, char** strarr, int maxlines)
-{
+	BYTE buf[BUFFER_SIZE];
+	std::string s;
+
+	int len = mWriteStruct_->pPong->ReadPP(buf);
+	while(len) 	{
+		buf[len] = 0; // never forget null termination DOH
+		std::string s;
+		s.assign((char*)buf);
+		len = mWriteStruct_->pPong->ReadPP(buf);
+	}
+	return s;
+}
+
+
+int Liberty::split_lines(char* str, unsigned long len, char** strarr, int maxlines) {
 	unsigned long i = 0;
 	int index = 0;
 	char* s = str;
 
 	while(*str && (i<len)){
-		if(*str == '\r'){         // substitute cr
+		if(*str == '\r') {         // substitute cr
 			*str = '\0';
-		}else if(*str == '\n'){   // lf: end of line found
+		} else if(*str == '\n') {   // lf: end of line found
 			*str = '\0';
 			
 			strarr[index++] = s;
@@ -366,9 +338,8 @@ int Liberty::split_lines(char* str, unsigned long len, char** strarr, int maxlin
 // Exit:
 // return value (o): error code
 
-int Liberty::exit(void)
-{
-	disconnect(&mcnxStruct_);
+int Liberty::exit(void) {
+	disconnect();
 	
 	return 0;
 }

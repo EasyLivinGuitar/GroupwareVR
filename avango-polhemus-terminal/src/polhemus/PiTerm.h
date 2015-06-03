@@ -69,19 +69,20 @@ typedef struct _READ_WRITE_STRUCT {
   void* pParam;
 }*LPREAD_WRITE_STRUCT,READ_WRITE_STRUCT;
 
-/*
-// usb vid/pids for Polehemus trackers
-USB_PARAMS usbTrkParams[NUM_SUPP_TRKS]={
-  {0x0f44,0xff20,0x04,0x88},  // Lib HS
-  {0x0f44,0xff12,0x02,0x82},   // Lib
-  {0x0f44,0xef12,0x02,0x82},  // Patriot
-  {0x0f44,0x0002,0x02,0x82}};  // Fastrak
 
-// polhemus tracker names
-const char* trackerNames[NUM_SUPP_TRKS]={
-  "High Speed Liberty","Liberty","Patriot","Fastrak"};
-*/
+namespace {
 
+  // usb vid/pids for Polehemus trackers
+  USB_PARAMS usbTrkParams[NUM_SUPP_TRKS]={
+    {0x0f44,0xff21,0x04,0x88},  // Lib HS
+    {0x0f44,0xff12,0x02,0x82},   // Lib
+    {0x0f44,0xef12,0x02,0x82},  // Patriot
+    {0x0f44,0x0002,0x02,0x82}};  // Fastrak
+
+  // polhemus tracker names
+  const char* trackerNames[NUM_SUPP_TRKS]={
+    "High Speed Liberty","Liberty","Patriot","Fastrak"};
+}
 
 // definitions for the GTK+ callbacks and other worker functions
 

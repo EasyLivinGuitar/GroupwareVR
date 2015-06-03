@@ -12,7 +12,7 @@ bool mKeepRunning =true;
 
 void startDevice() {
   mPolhemus = std::make_shared<Liberty>(Liberty());
-  // TODO
+
   // initialize
   mPolhemus->init();
 
@@ -27,6 +27,14 @@ void readLoop() {
   pose_t* buf = 0;
 
   unsigned int nmarker;
+
+  std::string consoleInput;
+  while (true) {
+    std::cout << "Read from device:" << mPolhemus->readString();
+    std::cin >> consoleInput;
+    std::cout << consoleInput;
+    mPolhemus->sendCommand("test");
+  }
 
  /* while (mKeepRunning) {
 
