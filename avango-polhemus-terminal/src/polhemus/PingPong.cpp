@@ -102,7 +102,7 @@ int PingPong::ReadPP(BYTE* buf){
     return 0;
   }
 
-  memcpy(buf,m_buf[m_readInd],len);
+  memcpy(buf, m_buf[m_readInd], len);
   m_len[m_readInd]=0;
   //   printf("Read %d bytes from buffer %d\n",len,m_readInd);
   IncrInd(m_readInd);

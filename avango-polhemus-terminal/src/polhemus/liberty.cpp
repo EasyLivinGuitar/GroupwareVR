@@ -77,26 +77,19 @@ int Liberty::init() {
 
 	connect();
 
-	
-/*
-
-	usleep(10000);
-	sendCommand("a1\r", &mcnxStruct_); // calibrate for first receiver
-	usleep(10000);
-	sendCommand("@A1\r", &mcnxStruct_); // autodetect markers
-
-*/
-	
 
 	if( sendInitialCommands() < 0 )	{
 		std::cout << "FATAL ERROR: sending initial commands to tracker" << std::endl;
 		return -1;
 	}
 
-	LPREAD_WRITE_STRUCT prs = mReadStruct_;
-	*(prs->keepLooping) = 1;
+	*(mReadStruct_->keepLooping) = 1;
 	
-	pthread_create( prs->pthread, NULL, ReadTrackerThread, prs);
+	pthread_create( mReadStruct_->pthread,
+		NULL,
+		ReadTrackerThread,
+		mReadStruct_
+	);
 	
 	return 0;
 }
@@ -104,18 +97,18 @@ int Liberty::init() {
 int Liberty::sendInitialCommands() {
 	std::cout << "Please wait..." << std::endl;
 
-	usleep(1000000); // 3s
-	std::cout << "Calibrating for first receiver" << std::endl;
+	// usleep(1000000); // 3s
+	// std::cout << "Calibrating for first receiver" << std::endl;
 
-	if(!sendCommand("a1\r")) {
-		return -1;		
-	}
+	// if(!sendCommand("a1\r")) {
+	// 	return -1;		
+	// }
 
-	std::cout << "Switch: autodetect markers" << std::endl;
-	usleep(1000000);
-	if(!sendCommand("@A1\r"))	{
-		return -2;
-	}
+	// std::cout << "Switch: autodetect markers" << std::endl;
+	// usleep(1000000);
+	// if(!sendCommand("@A1\r"))	{
+	// 	return -2;
+	// }
 
 
 	std::cout << "Switch: metric units" << std::endl;
@@ -187,6 +180,7 @@ void Liberty::disconnect() {
 
 
 /* static */ void* Liberty::ReadTrackerThread( void* pParam ) {
+	std::cout << "made new thread"<<std::endl;
 	BYTE buf[BUFFER_SIZE];
 	LPREAD_WRITE_STRUCT prs = (LPREAD_WRITE_STRUCT)pParam;
 	PiTracker* pTrak = (PiTracker*)prs->pParam;
@@ -201,15 +195,26 @@ void Liberty::disconnect() {
 		len = pTrak->ReadTrkData(buf, BUFFER_SIZE); // keep trying till we get a response
 	} while( !len );
 
-	while( prs->keepLooping )
-	{
+	while( prs->keepLooping ) {
+
 		len = pTrak->ReadTrkData( buf, BUFFER_SIZE ); // read tracker data
-		if( len > 0 && len < BUFFER_SIZE )
-		{
+
+		std::string s;
+		s.assign((char*)buf);
+		std::cout << "buffer1:"<< buf << " len:"<<len<<" max:"<<BUFFER_SIZE<<std::endl;
+		if (len >= BUFFER_SIZE)
+			len = BUFFER_SIZE-1;
+		if( len > 0 && len < BUFFER_SIZE ) {
 			buf[len] = 0; // null terminate
 			do {
 				bw = prs->pPong->WritePP( buf, len ); // write to buffer
-				usleep(1000);
+				std::string s;
+				s.assign((char*)buf);
+				std::cout << "buffer2:"<<buf<<std::endl;
+				for (int i=0;i<1000;++i) {
+			std::cout <<"["<< static_cast<int>(buf[i])<<"]";
+		}
+				usleep(100000);
 			} while( !bw );
 			usleep(2000); // rest for 2 ms
 		}

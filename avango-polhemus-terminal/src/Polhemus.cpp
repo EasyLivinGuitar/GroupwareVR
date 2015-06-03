@@ -30,10 +30,9 @@ void readLoop() {
 
   std::string consoleInput;
   while (true) {
-    std::cout << "Read from device:" << mPolhemus->readString();
+    std::cout << "Read from device:" << mPolhemus->readString() << std::endl;
     std::cin >> consoleInput;
-    std::cout << consoleInput;
-    mPolhemus->sendCommand("test");
+    mPolhemus->sendCommand(consoleInput);
   }
 
  /* while (mKeepRunning) {
@@ -124,4 +123,5 @@ void stopDevice()
 
 int main () {
   startDevice();
+  readLoop();
 }
