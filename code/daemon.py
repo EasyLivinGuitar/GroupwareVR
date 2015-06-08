@@ -1,8 +1,4 @@
-import avango
 import avango.daemon
-import avango.daemon.polhemus
-#import polhemus
-
 import os
 import sys
 
@@ -21,7 +17,19 @@ def init_pst_tracking():
 	device_list.append(pst)
 
 	print("PST Tracking started!")
+
+def init_lcd_wall_tracking():
 	
+	_dtrack=avango.daemon.DTrack()
+	_dtrack.port= "5000"
+
+	_dtrack.stations[1] = avango.daemon.Station('glass-1')
+	_dtrack.stations[2]	= avango.daemon.Station('glass-2')
+	_dtrack.stations[3] = avango.daemon.Station('pointer-1')
+
+	device_list.append(_dtrack)
+
+	print("LCD wall tracking has started!")
 
 
 def init_pointer():
@@ -240,31 +248,17 @@ def init_xbox_controllers():
 			print("XBox Controllers NOT found!")
 			return
 
-def init_latus():	
-	# enable logging for detailed information on device setup
-	avango.enable_logging()
 
-	# create a station for each target you want to track
-	s1 = avango.daemon.Station('LATUS-M1')
-	s2 = avango.daemon.Station('LATUS-M2')
-
-	# create instance of Polhemus
-	polhemus = avango.daemon.polhemus.Polhemus()
-
-	# add stations (index should correspond to the number of the Marker)
-	polhemus.stations[1] = s1
-	polhemus.stations[2] = s2
-	device_list.append(polhemus)
 
 device_list = []
+
 #init_pst_tracking()
 #init_pointer()
 #init_tuio_input()
 #init_mouse()
 init_keyboard()
+init_lcd_wall_tracking()
 #init_spheron()
 #init_xbox_controllers()
-init_latus()
 
-# start daemon (will enter the main loop)
 avango.daemon.run(device_list)
