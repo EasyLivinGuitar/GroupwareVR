@@ -25,15 +25,15 @@ export PYTHONPATH="$LOCAL_AVANGO/lib/python3.4":"$LOCAL_AVANGO/examples":$AVANGO
 export LD_LIBRARY_PATH="$LOCAL_GUACAMOLE/lib":$GUACAMOLE/lib:$LD_LIBRARY_PATH
 
 # run daemon
-#python3.4 ./daemon.py > /dev/null &
+#python3.4 ./code/daemon.py > /dev/null &
 
 # run program
 if [[ $* == *-d* ]]
 then
-cd "$DIR" && gdb --args python3.4 ./test1.py
+cd "$DIR" && gdb --args python3.4 ./code/test1.py
 else
-cd "$DIR" && python3.4 ./test1.py
+cd "$DIR" && python3.4 ./code/test1.py
 fi
 
 # kill daemon
-kill %1
+#kill %1
