@@ -29,8 +29,7 @@ def print_graph(root_node):
 
 viewer = avango.gua.nodes.Viewer()
 
-resolution = avango.gua.Vec2ui(1920*2, 1080)
-#screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+resolution = avango.gua.Vec2ui(1920*2, 1200)
 screenSize = avango.gua.Vec2(3., 2.) # in meters
 window = avango.gua.nodes.GlfwWindow(
 		Size=resolution,
@@ -74,9 +73,9 @@ def setup(graph):
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
-		Height=screenSize.y#,
+		Height=screenSize.y,
 		#Transform=avango.gua.make_rot_mat(180 , 1.0, 0.0, 0.0),
-		#Children=[cam]
+		Children=[cam]
 		)
 
 	#Sieht netter aus
@@ -107,7 +106,7 @@ def setup(graph):
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
 
-	graph.Root.value.Children.value=[light, screen, cam]
+	graph.Root.value.Children.value=[light, screen]
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
@@ -117,16 +116,9 @@ def setup(graph):
 
 	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	headtracking.TransmitterOffset.value = offset_tracking
-	headtracking.Station.value = "head"
+	headtracking.Station.value = "glass-1"
 	cam.Transform.connect_from(headtracking.Matrix)
 
-	pointertracking = avango.daemon.nodes.DeviceSensor(
-		DeviceService=avango.daemon.DeviceService()
-		)
-	pointertracking.TransmitterOffset.value = offset_tracking
-	pointertracking.Station.value = "pointer"
-
-	return pointertracking
 
 def getWindow():
 	return window

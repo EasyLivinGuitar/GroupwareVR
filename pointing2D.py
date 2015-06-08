@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironment
+import setupEnvironmentWall
 import math
 import os.path
 
@@ -34,7 +34,6 @@ class PointerStuff(avango.script.Script):
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
-		print("has changed")
 		self.logData()
 
 		trans_x=self.TransMat.value.get_translate()[0]
@@ -72,7 +71,7 @@ class PointerStuff(avango.script.Script):
 	def updateTimer(self):
 			self.isInside = False
 			
-			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
+			#self.HomeMat.value= avango.gua.make_rot_mat(20*self.timer.value, 0, 1, 0) * avango.gua.make_trans_mat(1,0,0)
 			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
 
@@ -122,44 +121,46 @@ def start ():
 
 	#Meshes
 	pencil=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.05)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
-	#tracked_object.Transform=avango.gua.make_scale_mat(0.01)
 
-	object_transform=avango.gua.nodes.TransformNode(Children=[pencil])
+	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.1)
+	home.Transform.value = avango.gua.make_scale_mat(0.5)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
-	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
-	tracking = setupEnvironment.setup(graph)
+	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
+	setupEnvironmentWall.setup(graph)
 
-	graph.Root.value.Children.value.extend([home_transform])
-
-	#tracked_object.Transform.connect_from(tracking.Matrix)
+	graph.Root.value.Children.value.extend([home_transform, pencil_transform])
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
 		DeviceService = avango.daemon.DeviceService()
 		)
-	pointer_device_sensor.Station.value = "LATUS-M1"
+	pointer_device_sensor.TransmitterOffset.value = avango.gua.make_trans_mat(0, -1, 0)
+	pointer_device_sensor.Station.value = "pointer-1"
 
 	pointerstuff.homeRef = home
+	
 	#connect transmat with matrix from deamon
 	pointerstuff.TransMat.connect_from(pointer_device_sensor.Matrix)
+	
 	#connect object at the place of transmat
-	object_transform.Transform.connect_from(pointerstuff.TransMat)
+	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
+	
 	#connect home with home
-	pointerstuff.HomeMat.connect_from(home.Transform)
-	home_transform.Transform.connect_from(pointerstuff.HomeMat)
+	pointerstuff.HomeMat.connect_from(home_transform.Transform)
+	#home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
 	#pointerstuff.HomeRef=home
 
-	setupEnvironment.launch()
+	setupEnvironmentWall.launch()
 
 if __name__ == '__main__':
   start()

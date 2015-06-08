@@ -17,7 +17,19 @@ def init_pst_tracking():
 	device_list.append(pst)
 
 	print("PST Tracking started!")
+
+def init_lcd_wall_tracking():
 	
+	_dtrack=avango.daemon.DTrack()
+	_dtrack.port= "5000"
+
+	_dtrack.stations[1] = avango.daemon.Station('glass-1')
+	_dtrack.stations[2]	= avango.daemon.Station('glass-2')
+	_dtrack.stations[3] = avango.daemon.Station('pointer-1')
+
+	device_list.append(_dtrack)
+
+	print("LCD wall tracking has started!")
 
 
 def init_pointer():
@@ -245,6 +257,7 @@ device_list = []
 #init_tuio_input()
 #init_mouse()
 init_keyboard()
+init_lcd_wall_tracking()
 #init_spheron()
 #init_xbox_controllers()
 
