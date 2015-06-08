@@ -116,7 +116,6 @@ void av::daemon::polhemus::Polhemus::readLoop()
                          ::gua::math::vec3f(0.0f, 1.0f, 0.0f),
                          roll_a,
                          ::gua::math::vec3f(0.0f, 0.0f, 1.0f));
-
 #endif
           ::gua::math::mat4 rot = ::scm::math::make_rotation(yaw_a, pitch_a, roll_a, 0.0);
           ::gua::math::mat4 trans = ::scm::math::make_translation(::gua::math::vec3(
