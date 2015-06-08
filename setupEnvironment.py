@@ -30,14 +30,15 @@ def print_graph(root_node):
 viewer = avango.gua.nodes.Viewer()
 
 resolution = avango.gua.Vec2ui(1920, 1080)
-#screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
-screenSize = avango.gua.Vec2(1., 0.495) # in meters
+screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+#screenSize = avango.gua.Vec2(1., 0.495) # in meters
 window = avango.gua.nodes.GlfwWindow(
 		Size=resolution,
 		LeftResolution=resolution,
 		RightResolution=resolution,
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
+
 
 def setup(graph):
 	light = avango.gua.nodes.LightNode(
@@ -58,8 +59,8 @@ def setup(graph):
 		Resolution=resolution,
 		EyeDistance = 0.064,
 		EnableStereo = True,
-		OutputWindowName="window"#,
-		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+		OutputWindowName="window",
+		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
 		)
 	'''cam = avango.gua.nodes.CameraNode(
 		Name = "cam",
@@ -72,9 +73,9 @@ def setup(graph):
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
-		Height=screenSize.y#,
-		#Transform=avango.gua.make_rot_mat(180 , 1.0, 0.0, 0.0),
-		#Children=[cam]
+		Height=screenSize.y,
+		Transform=avango.gua.make_rot_mat(180 , 0.0, 0.0, 0.0),
+		Children=[cam]
 		)
 
 	#Sieht netter aus
@@ -105,7 +106,7 @@ def setup(graph):
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
 
-	graph.Root.value.Children.value=[light, screen, cam]
+	graph.Root.value.Children.value=[light, screen]
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
@@ -113,10 +114,10 @@ def setup(graph):
 
 	offset_tracking=avango.gua.make_trans_mat(-0.05, 0.05, 0.825)
 
-	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+	'''headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	headtracking.TransmitterOffset.value = offset_tracking
-	headtracking.Station.value = "head"
-	cam.Transform.connect_from(headtracking.Matrix)
+	headtracking.Station.value = "head"'''
+	###cam.Transform.connect_from(avango.gua.make_trans_mat(0, 0, 0).matrix)
 
 	pointertracking = avango.daemon.nodes.DeviceSensor(
 		DeviceService=avango.daemon.DeviceService()

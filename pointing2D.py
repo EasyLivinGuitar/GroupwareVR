@@ -87,13 +87,6 @@ class PointerStuff(avango.script.Script):
 		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def getRandomTranslation(self):
-		'''rand_index_1=random.randint(0, 10)
-		rand_div_1=5#random.randint(1, 5)
-
-		rand_index_2=random.randint(0, 10)
-		rand_div_2=5#random.randint(1, 5)
-
-		return avango.gua.make_trans_mat(rand_index_1/rand_div_1, 0, rand_index_2/rand_div_2)'''
 
 		'''settings=[avango.gua.make_trans_mat(-3, 0, -3),
 			avango.gua.make_trans_mat(-2, 0, -2),
@@ -133,7 +126,7 @@ def start ():
 	object_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.5)
+	home.Transform.value = avango.gua.make_scale_mat(0.1)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
