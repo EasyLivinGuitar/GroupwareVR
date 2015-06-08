@@ -145,10 +145,10 @@ void Liberty::connect() {
 
 			//try to connect
 			cnxSuccess = mcnxStruct_.pTrak->UsbConnect(
-				0x0f44,
-				0xff20,
-				0x04,
-				0x88
+				usbTrkParams[mcnxStruct_.trackerType].vid,
+				usbTrkParams[mcnxStruct_.trackerType].pid,
+				usbTrkParams[mcnxStruct_.trackerType].writeEp,
+				usbTrkParams[mcnxStruct_.trackerType].readEp
 			);
 
 			if( cnxSuccess != 0 ) {		
@@ -159,14 +159,14 @@ void Liberty::connect() {
 
 	std::cout << "Connected to " << trackerNames[mcnxStruct_.trackerType] << " over USB" << std::endl;
 	
-	/*
+	
 	// start read thread
 
 	LPREAD_WRITE_STRUCT prs = mReadStruct_;
 	*(prs->keepLooping) = 1;
 	
 	pthread_create( prs->pthread, NULL, ReadTrackerThread, prs);
-	*/
+	
 }
 
 
@@ -179,7 +179,6 @@ void Liberty::disconnect() {
 
 
 /* static */ void* Liberty::ReadTrackerThread( void* pParam ) {
-	std::cout << "made new thread"<<std::endl;
 	BYTE buf[BUFFER_SIZE];
 	LPREAD_WRITE_STRUCT prs = (LPREAD_WRITE_STRUCT)pParam;
 	PiTracker* pTrak = (PiTracker*)prs->pParam;
@@ -194,26 +193,15 @@ void Liberty::disconnect() {
 		len = pTrak->ReadTrkData(buf, BUFFER_SIZE); // keep trying till we get a response
 	} while( !len );
 
-	while( prs->keepLooping ) {
-
+	while( prs->keepLooping )
+	{
 		len = pTrak->ReadTrkData( buf, BUFFER_SIZE ); // read tracker data
-
-		std::string s;
-		s.assign((char*)buf);
-		std::cout << "buffer1:"<< buf << " len:"<<len<<" max:"<<BUFFER_SIZE<<std::endl;
-		if (len >= BUFFER_SIZE)
-			len = BUFFER_SIZE-1;
-		if( len > 0 && len < BUFFER_SIZE ) {
+		if( len > 0 && len < BUFFER_SIZE )
+		{
 			buf[len] = 0; // null terminate
 			do {
 				bw = prs->pPong->WritePP( buf, len ); // write to buffer
-				std::string s;
-				s.assign((char*)buf);
-				std::cout << "buffer2:"<<buf<<std::endl;
-				for (int i=0;i<1000;++i) {
-			std::cout <<"["<< static_cast<int>(buf[i])<<"]";
-		}
-				usleep(100000);
+				usleep(1000);
 			} while( !bw );
 			usleep(2000); // rest for 2 ms
 		}
