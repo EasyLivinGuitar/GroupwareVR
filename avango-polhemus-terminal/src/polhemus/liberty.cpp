@@ -143,19 +143,18 @@ void Liberty::connect() {
 				<< "," << usbTrkParams[mcnxStruct_.trackerType].readEp
 				<<")..." << std::endl;
 
+			//try to connect
 			cnxSuccess = mcnxStruct_.pTrak->UsbConnect(
-				usbTrkParams[mcnxStruct_.trackerType].vid,
-				usbTrkParams[mcnxStruct_.trackerType].pid,
-				usbTrkParams[mcnxStruct_.trackerType].writeEp,
-				usbTrkParams[mcnxStruct_.trackerType].readEp
+				0x0f44,
+				0xff20,
+				0x04,
+				0x88
 			);
-//			cnxSuccess=pcs->pTrak->UsbConnect(3908, 65312, 4, 136); // magic values for debugging purpose, magic numbers are LL HS id's as dec 
 
 			if( cnxSuccess != 0 ) {		
-				// throw failure message
 				std::cerr << "UsbConnect() failed..." << std::endl;
 			}
-		} while( cnxSuccess != 0 );
+		} while( false);
 	}
 
 	std::cout << "Connected to " << trackerNames[mcnxStruct_.trackerType] << " over USB" << std::endl;

@@ -26,6 +26,7 @@ class PointerStuff(avango.script.Script):
 
 	def __init__(self):
 		self.super(PointerStuff).__init__()
+		self.homeRef = None
 
 	def __del__(self):
 		self.result_file.close()
@@ -72,20 +73,20 @@ class PointerStuff(avango.script.Script):
 			self.isInside = False
 			
 			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
-			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
+			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
 
 	def inRange(self):
 		if self.isInside==False:
 		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
+		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
 
 	def outRange(self):
 		if self.isInside==True:
 		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
+		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def getRandomTranslation(self):
 		'''rand_index_1=random.randint(0, 10)
@@ -152,9 +153,12 @@ def start ():
 		)
 	pointer_device_sensor.Station.value = "LATUS-M1"
 
-	setattr(pointerstuff, "HomeRef", home)
-	#pointerstuff.TransMat.connect_from(tracking.Matrix)
+	pointerstuff.homeRef = home
+	#connect transmat with matrix from deamon
+	pointerstuff.TransMat.connect_from(pointer_device_sensor.Matrix)
+	#connect object at the place of transmat
 	object_transform.Transform.connect_from(pointerstuff.TransMat)
+	#connect home with home
 	pointerstuff.HomeMat.connect_from(home.Transform)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
