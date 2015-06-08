@@ -128,3 +128,6 @@ def launch():
 	guaVE.start(locals(), globals())
 
 	viewer.run()
+
+def ignoreZ():
+	return True

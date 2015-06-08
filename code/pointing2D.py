@@ -71,6 +71,10 @@ class PointerStuff(avango.script.Script):
 	def updateTimer(self):
 			self.isInside = False
 			
+			if setupEnvironmentWall.ignoreZ():
+				translation = self.TransMat.value.get_translate()
+				translation.z = 0
+				self.TransMat.value = avango.gua.make_trans_mat(translation)
 			#self.HomeMat.value= avango.gua.make_rot_mat(20*self.timer.value, 0, 1, 0) * avango.gua.make_trans_mat(1,0,0)
 			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
