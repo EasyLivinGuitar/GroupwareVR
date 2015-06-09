@@ -12,6 +12,7 @@ from avango.script import field_has_changed
 
 
 class PointerStuff(avango.script.Script):
+	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
 	isInside = False
@@ -21,7 +22,9 @@ class PointerStuff(avango.script.Script):
 	result_file= None
 	created_file=False
 	num_files=0
-	index = 0
+
+	inHome=True
+
 
 
 	def __init__(self):
@@ -30,6 +33,16 @@ class PointerStuff(avango.script.Script):
 
 	def __del__(self):
 		self.result_file.close()
+
+	@field_has_changed(Button)
+	def button_pressed(self):
+		if self.Button.value:
+			if(self.inHome):
+				self.HomeMat.value=self.getRandomTranslation()
+				self.inHome=False
+			else:
+				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 0)
+				self.inHome=True
 		
 
 	@field_has_changed(TransMat)
@@ -54,7 +67,6 @@ class PointerStuff(avango.script.Script):
 		else: 
 			self.outRange()
 		
-		#self.result_file.write(str(distance))
 
 	def logData(self):
 		path="results/results_pointing_2D/"
@@ -93,25 +105,16 @@ class PointerStuff(avango.script.Script):
 		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def getRandomTranslation(self):
+		settings=[avango.gua.make_trans_mat(-0.8, -0.8, 0),
+			avango.gua.make_trans_mat(-0.4, 0.4, 0),
+			avango.gua.make_trans_mat(0.2, -0.2, 0),
+			avango.gua.make_trans_mat(0.2, 0.2, 0),
+			avango.gua.make_trans_mat(0.4, -0.4, 0),
+			avango.gua.make_trans_mat(0.8, 0.8, 0)]
 
-		'''settings=[avango.gua.make_trans_mat(-3, 0, -3),
-			avango.gua.make_trans_mat(-2, 0, -2),
-			avango.gua.make_trans_mat(-1, 0, -1),
-			avango.gua.make_trans_mat(0, 0, 0),
-			avango.gua.make_trans_mat(1, 0, 1),
-			avango.gua.make_trans_mat(2, 0, 2),
-			avango.gua.make_trans_mat(3, 0, 3)]'''
-
-		settings=[avango.gua.make_trans_mat(0, 0, -8),
-			avango.gua.make_trans_mat(0, 0, -6),
-			avango.gua.make_trans_mat(0, 0, -4),
-			avango.gua.make_trans_mat(0, 0, -2),
-			avango.gua.make_trans_mat(0, 0, -1),
-			avango.gua.make_trans_mat(0, 0, -0.5)]
-
-		##index=random.randint(0, 2)
-		self.index=(self.index+1) % len(settings)
-		return settings[self.index]
+		index=random.randint(0, len(settings)-1)
+		
+		return settings[index]
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 0:
@@ -148,6 +151,15 @@ def start ():
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironmentWall.getOffsetTracking()
 	pointer_device_sensor.Station.value = "pointer-1"
+
+	button_sensor=avango.daemon.nodes.DeviceSensor(
+		DeviceService=avango.daemon.DeviceService()
+		)
+	button_sensor.Station.value="device-pointer"
+
+	pointerstuff.homeRef = home
+
+	pointerstuff.Button.connect_from(button_sensor.Button0)
 	
 	#connect transmat with matrix from deamon
 	pointerstuff.TransMat.connect_from(pointer_device_sensor.Matrix)
@@ -157,7 +169,7 @@ def start ():
 	
 	#connect home with home
 	pointerstuff.HomeMat.connect_from(home_transform.Transform)
-	#home_transform.Transform.connect_from(pointerstuff.HomeMat)
+	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)

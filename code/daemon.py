@@ -253,7 +253,7 @@ def init_xbox_controllers():
 device_list = []
 
 #init_pst_tracking()
-#init_pointer()
+init_pointer()
 #init_tuio_input()
 #init_mouse()
 init_keyboard()
