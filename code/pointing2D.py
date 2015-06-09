@@ -12,6 +12,7 @@ from avango.script import field_has_changed
 
 
 class PointerStuff(avango.script.Script):
+	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
 	isInside = False
@@ -22,6 +23,7 @@ class PointerStuff(avango.script.Script):
 	created_file=False
 	num_files=0
 	index = 0
+	
 
 
 	def __init__(self):
@@ -30,6 +32,11 @@ class PointerStuff(avango.script.Script):
 
 	def __del__(self):
 		self.result_file.close()
+
+	@field_has_changed(Button)
+	def button_pressed(self):
+		if self.Button.value:
+			Home
 		
 
 	@field_has_changed(TransMat)
@@ -148,7 +155,14 @@ def start ():
 	pointer_device_sensor.TransmitterOffset.value = avango.gua.make_trans_mat(0, -1, 0)
 	pointer_device_sensor.Station.value = "pointer-1"
 
+	button_sensor=avango.daemon.nodes.DeviceSensor(
+		DeviceService=avango.daemon.DeviceService()
+		)
+	button_sensor.Station.value="device-pointer"
+
 	pointerstuff.homeRef = home
+
+	pointerstuff.Button.connect_from(button_sensor.Button0)
 	
 	#connect transmat with matrix from deamon
 	pointerstuff.TransMat.connect_from(pointer_device_sensor.Matrix)
