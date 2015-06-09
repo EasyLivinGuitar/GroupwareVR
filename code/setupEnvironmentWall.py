@@ -17,7 +17,6 @@ How to setup a new test case:
 
 Then start the scene with the according start.sh
 '''
-
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
 	while stack:
@@ -39,6 +38,8 @@ window = avango.gua.nodes.GlfwWindow(
 		StereoMode=avango.gua.StereoMode.SIDE_BY_SIDE
 		)
 
+headtracking = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+
 def setup(graph):
 	light = avango.gua.nodes.LightNode(
 		Type=avango.gua.LightType.POINT,
@@ -58,23 +59,15 @@ def setup(graph):
 		Resolution=resolution,
 		EyeDistance = 0.064,
 		EnableStereo = True,
-		OutputWindowName="window"#,
-		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-		)
-	'''cam = avango.gua.nodes.CameraNode(
-		Name = "cam",
-		LeftScreenPath = "/screen",
-		SceneGraph = "scenegraph",
-		Resolution = resolution,
 		OutputWindowName="window",
-		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-	)'''
+		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.0)
+		)
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
-		Height=screenSize.y#,
+		Height=screenSize.y,
 		#Transform=avango.gua.make_rot_mat(180 , 1.0, 0.0, 0.0),
-		#Children=[cam]
+		Children=[cam]
 		)
 
 	#Sieht netter aus
@@ -99,35 +92,22 @@ def setup(graph):
 			avango.gua.nodes.LightVisibilityPassDescription(),
 			res_pass,
 			anti_aliasing,
-			])
+		]
+	)
 
 	cam.PipelineDescription.value = pipeline_description
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
 
-	graph.Root.value.Children.value=[light, screen, cam]
+	graph.Root.value.Children.value=[light, screen]
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
-
-	fieldmanager = FieldManager()
-	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-	headtracking.TransmitterOffset.value = getOffsetTracking()
-	headtracking.Station.value = "rift"
-	#fieldmanager.TransMat.connect_from(headtracking.Matrix)
-	#cam.Transform.connect_from(FieldManager.TransMat)
-
-class FieldManager(avango.script.Script):
-	TransMat = avango.gua.SFMatrix4()
-
-	def __init__(self):
-		self.super(FieldManager).__init__()
 	
-
-	@field_has_changed(TransMat)
-	def transMatHasChanged(self):
-		print(self.TransMat)
+	headtracking.TransmitterOffset.value = getOffsetTracking()
+	headtracking.Station.value = "glass-1"
+	cam.Transform.connect_from(headtracking.Matrix)
 
 def getWindow():
 	return window
@@ -143,4 +123,4 @@ def ignoreZ():
 	return True
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 
+	return avango.gua.make_trans_mat(0.0, -1.4, 2.6) 

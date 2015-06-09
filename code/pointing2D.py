@@ -25,11 +25,8 @@ class PointerStuff(avango.script.Script):
 
 	inHome=True
 
-
-
 	def __init__(self):
 		self.super(PointerStuff).__init__()
-		self.homeRef = None
 
 	def __del__(self):
 		self.result_file.close()
@@ -41,7 +38,7 @@ class PointerStuff(avango.script.Script):
 				self.HomeMat.value=self.getRandomTranslation()
 				self.inHome=False
 			else:
-				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 0)
+				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 1)
 				self.inHome=True
 		
 
@@ -85,32 +82,34 @@ class PointerStuff(avango.script.Script):
 			
 			if setupEnvironmentWall.ignoreZ():
 				translation = self.TransMat.value.get_translate()
-				translation.z = 0
+				translation.z = 1
 
 				self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 			#self.HomeMat.value= avango.gua.make_rot_mat(20*self.timer.value, 0, 1, 0) * avango.gua.make_trans_mat(1,0,0)
-			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
+			#self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
 
 	def inRange(self):
 		if self.isInside==False:
 		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
+		#self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
 
 	def outRange(self):
 		if self.isInside==True:
 		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
+		#self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def getRandomTranslation(self):
-		settings=[avango.gua.make_trans_mat(-0.8, -0.8, 0),
-			avango.gua.make_trans_mat(-0.4, 0.4, 0),
-			avango.gua.make_trans_mat(0.2, -0.2, 0),
-			avango.gua.make_trans_mat(0.2, 0.2, 0),
-			avango.gua.make_trans_mat(0.4, -0.4, 0),
-			avango.gua.make_trans_mat(0.8, 0.8, 0)]
+		settings=[
+			avango.gua.make_trans_mat(-0.8, -0.8, 1),
+			avango.gua.make_trans_mat(-0.4, 0.4, 1),
+			avango.gua.make_trans_mat(0.2, -0.2, 1),
+			avango.gua.make_trans_mat(0.2, 0.2, 1),
+			avango.gua.make_trans_mat(0.4, -0.4, 1),
+			avango.gua.make_trans_mat(0.8, 0.8, 1)
+		]
 
 		index=random.randint(0, len(settings)-1)
 		
@@ -129,19 +128,18 @@ def start ():
 
 	#Meshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.05)
+	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.5)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
+	home.Transform.value = avango.gua.make_scale_mat(0.15)
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
-	pointerstuff.homeRef = home
 	#setup
 	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
 	setupEnvironmentWall.setup(graph)
@@ -154,10 +152,8 @@ def start ():
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(
 		DeviceService=avango.daemon.DeviceService()
-		)
+	)
 	button_sensor.Station.value="device-pointer"
-
-	pointerstuff.homeRef = home
 
 	pointerstuff.Button.connect_from(button_sensor.Button0)
 	
