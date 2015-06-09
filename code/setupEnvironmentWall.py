@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 
 from examples_common.GuaVE import GuaVE
+from avango.script import field_has_changed
 
 '''
 Written by Benedikt Vogler and Marcel Gohsen
@@ -16,8 +17,6 @@ How to setup a new test case:
 
 Then start the scene with the according start.sh
 '''
-
-
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -73,9 +72,9 @@ def setup(graph):
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
-		Height=screenSize.y,
+		Height=screenSize.y#,
 		#Transform=avango.gua.make_rot_mat(180 , 1.0, 0.0, 0.0),
-		Children=[cam]
+		#Children=[cam]
 		)
 
 	#Sieht netter aus
@@ -106,19 +105,29 @@ def setup(graph):
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
 
-	graph.Root.value.Children.value=[light, screen]
+	graph.Root.value.Children.value=[light, screen, cam]
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
 
-	offset_tracking=avango.gua.make_trans_mat(-0.05, 0.05, 0.825)
-
+	fieldmanager = FieldManager()
 	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-	headtracking.TransmitterOffset.value = offset_tracking
-	headtracking.Station.value = "glass-1"
-	cam.Transform.connect_from(headtracking.Matrix)
+	headtracking.TransmitterOffset.value = getOffsetTracking()
+	headtracking.Station.value = "rift"
+	#fieldmanager.TransMat.connect_from(headtracking.Matrix)
+	#cam.Transform.connect_from(FieldManager.TransMat)
 
+class FieldManager(avango.script.Script):
+	TransMat = avango.gua.SFMatrix4()
+
+	def __init__(self):
+		self.super(FieldManager).__init__()
+	
+
+	@field_has_changed(TransMat)
+	def transMatHasChanged(self):
+		print(self.TransMat)
 
 def getWindow():
 	return window
@@ -129,5 +138,9 @@ def launch():
 
 	viewer.run()
 
+'''if the z value should be locked'''
 def ignoreZ():
 	return True
+
+def getOffsetTracking():
+	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 

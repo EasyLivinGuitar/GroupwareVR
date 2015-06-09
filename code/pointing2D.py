@@ -74,7 +74,8 @@ class PointerStuff(avango.script.Script):
 			if setupEnvironmentWall.ignoreZ():
 				translation = self.TransMat.value.get_translate()
 				translation.z = 0
-				self.TransMat.value = avango.gua.make_trans_mat(translation)
+
+				self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 			#self.HomeMat.value= avango.gua.make_rot_mat(20*self.timer.value, 0, 1, 0) * avango.gua.make_trans_mat(1,0,0)
 			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
 			#bewege home an neue Stelle
@@ -120,35 +121,33 @@ class PointerStuff(avango.script.Script):
 			
 
 def start ():
-	graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
+	graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 	#Meshes
-	pencil=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.05)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
-	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	home = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	home.Transform.value = avango.gua.make_scale_mat(0.5)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
+	pointerstuff.homeRef = home
+	#setup
 	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
 	setupEnvironmentWall.setup(graph)
 
 	graph.Root.value.Children.value.extend([home_transform, pencil_transform])
 
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
-		DeviceService = avango.daemon.DeviceService()
-		)
-	pointer_device_sensor.TransmitterOffset.value = avango.gua.make_trans_mat(0, -1, 0)
+	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironmentWall.getOffsetTracking()
 	pointer_device_sensor.Station.value = "pointer-1"
-
-	pointerstuff.homeRef = home
 	
 	#connect transmat with matrix from deamon
 	pointerstuff.TransMat.connect_from(pointer_device_sensor.Matrix)

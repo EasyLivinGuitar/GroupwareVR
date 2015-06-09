@@ -24,7 +24,7 @@ def init_lcd_wall_tracking():
 	_dtrack.port= "5000"
 
 	_dtrack.stations[5] = avango.daemon.Station('glass-1')
-	_dtrack.stations[4] = avango.daemon.Station('rift')
+	_dtrack.stations[2] = avango.daemon.Station('glass-2')
 	_dtrack.stations[3] = avango.daemon.Station('pointer-1')
 
 	device_list.append(_dtrack)
