@@ -62,19 +62,11 @@ def setup(graph):
 		OutputWindowName="window",
 		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
 		)
-	'''cam = avango.gua.nodes.CameraNode(
-		Name = "cam",
-		LeftScreenPath = "/screen",
-		SceneGraph = "scenegraph",
-		Resolution = resolution,
-		OutputWindowName="window",
-		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-	)'''
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
 		Height=screenSize.y,
-		Transform=avango.gua.make_rot_mat(180 , 0.0, 0.0, 0.0),
+		#Transform=avango.gua.make_rot_mat(180 , 0.0, 0.0, 0.0),
 		Children=[cam]
 		)
 
@@ -100,7 +92,8 @@ def setup(graph):
 			avango.gua.nodes.LightVisibilityPassDescription(),
 			res_pass,
 			anti_aliasing,
-			])
+		]
+	)
 
 	cam.PipelineDescription.value = pipeline_description
 	cam.PipelineDescription.value.EnableABuffer.value=True
@@ -111,21 +104,23 @@ def setup(graph):
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
+	'''
+	fieldmanager = FieldManager()
+	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+	headtracking.TransmitterOffset.value = getOffsetTracking()
+	headtracking.Station.value = "glass-1"
+	fieldmanager.TransMat.connect_from(headtracking.Matrix)
+	cam.Transform.connect_from(fieldmanager.TransMat)
 
-	offset_tracking=avango.gua.make_trans_mat(-0.05, 0.05, 0.825)
+class FieldManager(avango.script.Script):
+	TransMat = avango.gua.SFMatrix4()
 
-	'''headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-	headtracking.TransmitterOffset.value = offset_tracking
-	headtracking.Station.value = "head"'''
-	###cam.Transform.connect_from(avango.gua.make_trans_mat(0, 0, 0).matrix)
-
-	pointertracking = avango.daemon.nodes.DeviceSensor(
-		DeviceService=avango.daemon.DeviceService()
-		)
-	pointertracking.TransmitterOffset.value = offset_tracking
-	pointertracking.Station.value = "pointer"
-
-	return pointertracking
+	def __init__(self):
+		self.super(FieldManager).__init__()
+	
+	@field_has_changed(TransMat)
+	def transMatHasChanged(self):
+		print(self.TransMat.value)'''
 
 def getWindow():
 	return window
@@ -135,3 +130,10 @@ def launch():
 	guaVE.start(locals(), globals())
 
 	viewer.run()
+
+'''if the z value should be locked'''
+def ignoreZ():
+	return True
+
+def getOffsetTracking():
+	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 

@@ -43,7 +43,7 @@ class PointerStuff(avango.script.Script):
 				self.inHome=False
 			else:
 				self.startedTest=False
-				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 0)
+				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 1)
 				self.inHome=True
 
 	@field_has_changed(TransMat)
@@ -76,13 +76,16 @@ class PointerStuff(avango.script.Script):
 				+str(self.HomeMat.value)+"\n\n")
 			self.result_file.close()
 
+
 	def getRandomTranslation(self):
-		settings=[avango.gua.make_trans_mat(-0.8, -0.8, 0),
-			avango.gua.make_trans_mat(-0.4, 0.4, 0),
-			avango.gua.make_trans_mat(0.2, -0.2, 0),
-			avango.gua.make_trans_mat(0.2, 0.2, 0),
-			avango.gua.make_trans_mat(0.4, -0.4, 0),
-			avango.gua.make_trans_mat(0.8, 0.8, 0)]
+		settings=[
+			avango.gua.make_trans_mat(-0.8, -0.8, 1),
+			avango.gua.make_trans_mat(-0.4, 0.4, 1),
+			avango.gua.make_trans_mat(0.2, -0.2, 1),
+			avango.gua.make_trans_mat(0.2, 0.2, 1),
+			avango.gua.make_trans_mat(0.4, -0.4, 1),
+			avango.gua.make_trans_mat(0.8, 0.8, 1)
+		]
 
 		index=random.randint(0, len(settings)-1)
 		
@@ -118,19 +121,18 @@ def start ():
 
 	#Meshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.05)
+	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.5)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0,0, 1))
+	home.Transform.value = avango.gua.make_scale_mat(0.15)
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
-	
 	#setup
 	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
 	setupEnvironmentWall.setup(graph)
@@ -143,6 +145,7 @@ def start ():
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
+
 	pointerstuff.Button.connect_from(button_sensor.Button0)
 	
 	#connect transmat with matrix from deamon
