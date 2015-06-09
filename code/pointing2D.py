@@ -15,21 +15,21 @@ class PointerStuff(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
-	isInside = False
+	
 	timer = avango.SFFloat()
-	startTime = 0
-	endTime = 0
+	
 	result_file= None
 	created_file=False
 	num_files=0
 
+	startedTest=False
 	inHome=True
 
+	error=0
 
 
 	def __init__(self):
 		self.super(PointerStuff).__init__()
-		self.homeRef = None
 
 	def __del__(self):
 		self.result_file.close()
@@ -37,18 +37,58 @@ class PointerStuff(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value:
-			if(self.inHome):
+			if self.inHome:
+				self.startedTest=True
 				self.HomeMat.value=self.getRandomTranslation()
 				self.inHome=False
 			else:
+				self.startedTest=False
 				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 0)
 				self.inHome=True
-		
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
-		self.logData()
+		self.error=self.getDistance()
+		if(self.startedTest==True):
+			self.logData()
 
+		
+	@field_has_changed(timer)
+	def updateTimer(self):
+		if setupEnvironmentWall.ignoreZ():
+			translation = self.TransMat.value.get_translate()
+			translation.z = 0
+
+			self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
+
+	def logData(self):
+		path="results/results_pointing_2D/"
+		if self.created_file==False:
+			self.num_files=len([f for f in os.listdir(path)
+				if os.path.isfile(os.path.join(path, f))])
+			self.created_file=True
+		else:
+			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+			self.result_file.write(
+				str(self.timer.value)+"\n"
+				+str(self.error)+"\n"
+				+str(self.TransMat.value)+"\n"
+				+str(self.HomeMat.value)+"\n\n")
+			self.result_file.close()
+
+	def getRandomTranslation(self):
+		settings=[avango.gua.make_trans_mat(-0.8, -0.8, 0),
+			avango.gua.make_trans_mat(-0.4, 0.4, 0),
+			avango.gua.make_trans_mat(0.2, -0.2, 0),
+			avango.gua.make_trans_mat(0.2, 0.2, 0),
+			avango.gua.make_trans_mat(0.4, -0.4, 0),
+			avango.gua.make_trans_mat(0.8, 0.8, 0)]
+
+		index=random.randint(0, len(settings)-1)
+		
+		return settings[index]
+
+	def getDistance(self):
 		trans_x=self.TransMat.value.get_translate()[0]
 		trans_y=self.TransMat.value.get_translate()[1]
 		trans_z=self.TransMat.value.get_translate()[2]
@@ -62,59 +102,8 @@ class PointerStuff(avango.script.Script):
 		trans_home_z_square=(trans_z - home_z)*(trans_z - home_z)
 		
 		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
-		if distance < 0.5:
-			self.inRange()
-		else: 
-			self.outRange()
-		
+		return distance
 
-	def logData(self):
-		path="results/results_pointing_2D/"
-		if self.created_file==False:
-			self.num_files=len([f for f in os.listdir(path)
-				if os.path.isfile(os.path.join(path, f))])
-			self.created_file=True
-		else:
-			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
-			self.result_file.write(str(self.timer.value)+"\n"+str(self.TransMat.value)+"\n\n")
-			self.result_file.close()
-
-	@field_has_changed(timer)
-	def updateTimer(self):
-			self.isInside = False
-			
-			if setupEnvironmentWall.ignoreZ():
-				translation = self.TransMat.value.get_translate()
-				translation.z = 0
-
-				self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
-			#self.HomeMat.value= avango.gua.make_rot_mat(20*self.timer.value, 0, 1, 0) * avango.gua.make_trans_mat(1,0,0)
-			self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
-			#bewege home an neue Stelle
-
-	def inRange(self):
-		if self.isInside==False:
-		  self.startTime = self.timer.value #startTimer
-		self.isInside = True
-		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
-
-	def outRange(self):
-		if self.isInside==True:
-		   self.endTime = self.timer.value #startTimer#onExit, stop timer
-		self.isInside = False
-		self.homeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
-
-	def getRandomTranslation(self):
-		settings=[avango.gua.make_trans_mat(-0.8, -0.8, 0),
-			avango.gua.make_trans_mat(-0.4, 0.4, 0),
-			avango.gua.make_trans_mat(0.2, -0.2, 0),
-			avango.gua.make_trans_mat(0.2, 0.2, 0),
-			avango.gua.make_trans_mat(0.4, -0.4, 0),
-			avango.gua.make_trans_mat(0.8, 0.8, 0)]
-
-		index=random.randint(0, len(settings)-1)
-		
-		return settings[index]
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 0:
@@ -141,7 +130,7 @@ def start ():
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
 	pointerstuff = PointerStuff()
-	pointerstuff.homeRef = home
+	
 	#setup
 	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
 	setupEnvironmentWall.setup(graph)
@@ -152,13 +141,8 @@ def start ():
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironmentWall.getOffsetTracking()
 	pointer_device_sensor.Station.value = "pointer-1"
 
-	button_sensor=avango.daemon.nodes.DeviceSensor(
-		DeviceService=avango.daemon.DeviceService()
-		)
+	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
-
-	pointerstuff.homeRef = home
-
 	pointerstuff.Button.connect_from(button_sensor.Button0)
 	
 	#connect transmat with matrix from deamon
@@ -173,7 +157,6 @@ def start ():
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
-	#pointerstuff.HomeRef=home
 
 	setupEnvironmentWall.launch()
 

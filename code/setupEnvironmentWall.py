@@ -58,17 +58,9 @@ def setup(graph):
 		Resolution=resolution,
 		EyeDistance = 0.064,
 		EnableStereo = True,
-		OutputWindowName="window"#,
-		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-		)
-	'''cam = avango.gua.nodes.CameraNode(
-		Name = "cam",
-		LeftScreenPath = "/screen",
-		SceneGraph = "scenegraph",
-		Resolution = resolution,
 		OutputWindowName="window",
 		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-	)'''
+		)
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
@@ -104,7 +96,6 @@ def setup(graph):
 	cam.PipelineDescription.value = pipeline_description
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
-
 	graph.Root.value.Children.value=[light, screen, cam]
 
 	#setup viewer
@@ -115,8 +106,8 @@ def setup(graph):
 	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	headtracking.TransmitterOffset.value = getOffsetTracking()
 	headtracking.Station.value = "rift"
-	#fieldmanager.TransMat.connect_from(headtracking.Matrix)
-	#cam.Transform.connect_from(FieldManager.TransMat)
+	fieldmanager.TransMat.connect_from(headtracking.Matrix)
+	#cam.Transform.value=avango.gua.make_trans_mat(0, 0, 0)
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
