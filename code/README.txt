@@ -25,6 +25,6 @@ im start skript sollte kein weiterer demon sein
    Latus Terminal ausführen
 ==================================
 
-$ cp ./LatusTerminal /opt/avang/new_renderer/lib/LatusTerminal
-$ sudo /opt/avang/new_renderer/lib/LatusTerminal
+$ cp ./LatusTerminal /opt/avango/new_renderer/lib/LatusTerminal
+$ sudo /opt/avango/new_renderer/lib/LatusTerminal
 
