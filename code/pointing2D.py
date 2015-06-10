@@ -23,7 +23,7 @@ class PointerStuff(avango.script.Script):
 	num_files=0
 
 	startedTest=False
-	inHome=True
+	flagPrinted=False
 
 	error=0
 
@@ -37,24 +37,24 @@ class PointerStuff(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value:
-			if self.inHome:
+			if self.startedTest==False:
 				self.startedTest=True
 				self.HomeMat.value=self.getRandomTranslation()
-				self.inHome=False
 			else:
 				self.startedTest=False
 				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 1)
-				self.inHome=True
+		else:
+			self.flagPrinted=False
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
 		self.error=self.getDistance()
-		if(self.startedTest==True):
-			self.logData()
 
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
+		self.logData()
+
 		if setupEnvironmentWall.ignoreZ():
 			translation = self.TransMat.value.get_translate()
 			translation.z = 0
@@ -63,18 +63,32 @@ class PointerStuff(avango.script.Script):
 
 	def logData(self):
 		path="results/results_pointing_2D/"
-		if self.created_file==False:
-			self.num_files=len([f for f in os.listdir(path)
-				if os.path.isfile(os.path.join(path, f))])
-			self.created_file=True
+		if(self.startedTest):
+			if self.created_file==False:
+				self.num_files=len([f for f in os.listdir(path)
+					if os.path.isfile(os.path.join(path, f))])
+				self.created_file=True
+			else:
+				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+				
+				if(self.Button.value and self.flagPrinted==False):
+					self.result_file.write("==========\n\n")
+					self.flagPrinted=True
+				
+				self.result_file.write(
+					str(self.timer.value)+"\n"
+					+str(self.error)+"\n"
+					+str(self.TransMat.value)+"\n"
+					+str(self.HomeMat.value)+"\n\n")
+				self.result_file.close()
 		else:
-			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
-			self.result_file.write(
-				str(self.timer.value)+"\n"
-				+str(self.error)+"\n"
-				+str(self.TransMat.value)+"\n"
-				+str(self.HomeMat.value)+"\n\n")
-			self.result_file.close()
+			if self.Button.value:
+				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+				if(self.flagPrinted==False):
+					self.result_file.write("----------\n\n")
+					self.flagPrinted=True
+				self.result_file.close()
+
 
 
 	def getRandomTranslation(self):
