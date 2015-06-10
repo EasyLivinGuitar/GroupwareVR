@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironment
+import setupEnvironmentWall
 import math
 import queue
 import os.path
@@ -16,38 +16,26 @@ class PointerStuff(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
 	isInside = False
+	
 	timer = avango.SFFloat()
-	startTime = 0
-	endTime = 0
-	result_file= None
-	created_file=False
-	num_files=0
-	read=False
-	queue=queue.Queue()
-	step=None
+	
+	result_file = None
+
+	read = False
+	queue = queue.Queue()
+	step = None
 
 
 	def __init__(self):
-		#self.readData()
 		self.super(PointerStuff).__init__()
+		self.HomeRef=None
 		
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
-		trans_x=self.TransMat.value.get_translate()[0]
-		trans_y=self.TransMat.value.get_translate()[1]
-		trans_z=self.TransMat.value.get_translate()[2]
+		distance=self.getDistance()
 
-		home_x=self.HomeMat.value.get_translate()[0]
-		home_y=self.HomeMat.value.get_translate()[1]
-		home_z=self.HomeMat.value.get_translate()[2]
-
-		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
-		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
-		trans_home_z_square=(trans_z - home_z)*(trans_z - home_z)
-		
-		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
-		if distance < 0.5:
+		if distance < 0.1:
 			self.inRange()
 		else: 
 			self.outRange()
@@ -61,91 +49,111 @@ class PointerStuff(avango.script.Script):
 
 		self.play()
 
-		getattr(self, "HomeRef").value=avango.gua.make_trans_mat(self.timer.value, 0.0, 0.0)
-		if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
-			self.isInside = False
-			
-			#self.HomeMat.value *= avango.gua.make_trans_mat(500,0,0) 
-			getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1)) #Transparenz funktioniert nicht
-			#bewege home an neue Stelle
+	def getDistance(self):
+		trans_x=self.TransMat.value.get_translate()[0]
+		trans_y=self.TransMat.value.get_translate()[1]
+		trans_z=self.TransMat.value.get_translate()[2]
+
+		home_x=self.HomeMat.value.get_translate()[0]
+		home_y=self.HomeMat.value.get_translate()[1]
+		home_z=self.HomeMat.value.get_translate()[2]
+
+		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
+		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
+		trans_home_z_square=(trans_z - home_z)*(trans_z - home_z)
+		
+		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
+		return distance
 
 	def inRange(self):
-		if self.isInside==False:
-		  self.startTime = self.timer.value #startTimer
 		self.isInside = True
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
+		self.HomeRef.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1,0, 1)) #Transparenz funktioniert nicht
 
 	def outRange(self):
-		if self.isInside==True:
-		   self.endTime = self.timer.value #startTimer#onExit, stop timer
 		self.isInside = False
-		getattr(self, "HomeRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
+		self.HomeRef.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	def readData(self):
-		self.result_file=open("results/results_pointing_2D/pointing2D_trail7.txt")
+		path=input("Path to file for replay: ")
+
+		self.result_file=open("results/results_pointing_2D/pointing2D_trial26.txt")
+		gotValues=False
 		
 		lines=self.result_file.readlines()
 
 		for i in range(len(lines)):
-			if(i%6==0):
-				timeStamp=float(lines[i])
-			if(i%6==1):
-				mat_line_1=lines[i]
-			if(i%6==2):
-				mat_line_2=lines[i]
-			if(i%6==3):
-				mat_line_3=lines[i]
-			if(i%6==4):
-				mat_line_4=lines[i]
-			if(i%6==5):
-				string=mat_line_1.replace("(","")
-				mat_1=string.split()
-				
-				mat_2=mat_line_2.split()
-				
-				mat_3=mat_line_3.split()
+			check=lines[i].split()
+			
+			if(check):
+				if(check[0]=="TimeStamp:"):
+					timeStamp=float(check[1])
+				if(check[0]=="Error:"):
+					error=float(check[1])
+				if(check[0]=="Pointerpos:"):
+					pointer_mat=self.getMatrix(lines, i+1)
+				if(check[0]=="Homepos:"):
+					home_mat=self.getMatrix(lines, i+1)
+					gotValues=True
 
-				string=mat_line_4.replace(")","")
-				mat_4=string.split()
+				if(gotValues):
+					step=MatrixStep(timeStamp, error, pointer_mat, home_mat)
+					self.queue.put(step)
+					gotValues=False
 
-				matrix=avango.gua.Mat4()
-
-				matrix.set_element(0, 0, float(mat_1[0]))
-				matrix.set_element(0, 1, float(mat_1[1]))
-				matrix.set_element(0, 2, float(mat_1[2]))
-				matrix.set_element(0, 3, float(mat_1[3]))
-				matrix.set_element(1, 0, float(mat_2[0]))
-				matrix.set_element(1, 1, float(mat_2[1]))
-				matrix.set_element(1, 2, float(mat_2[2]))
-				matrix.set_element(1, 3, float(mat_2[3]))
-				matrix.set_element(2, 0, float(mat_3[0]))
-				matrix.set_element(2, 1, float(mat_3[1]))
-				matrix.set_element(2, 2, float(mat_3[2]))
-				matrix.set_element(2, 3, float(mat_3[3]))
-				matrix.set_element(3, 0, float(mat_4[0]))
-				matrix.set_element(3, 1, float(mat_4[1]))
-				matrix.set_element(3, 2, float(mat_4[2]))
-				matrix.set_element(3, 3, float(mat_4[3]))
-
-				step=MatrixStep(timeStamp, matrix)
-				self.queue.put(step)
 
 	def play(self):
 		if(self.step==None):
 			self.step=self.queue.get()
 		if(self.step.TimeStamp<=self.timer.value):
-			self.TransMat.value=self.step.matrix
+			self.HomeMat.value=self.step.HomeMat
+			self.TransMat.value=self.step.PointerMat
 			self.step=None
+
+	def getMatrix(self, lines, index):
+		mat_line_1=lines[index].replace("(","")
+		mat_line_2=lines[index+1]
+		mat_line_3=lines[index+2]
+		mat_line_4=lines[index+3].replace(")","")
+
+		mat_1=mat_line_1.split()
+		mat_2=mat_line_2.split()
+		mat_3=mat_line_3.split()
+		mat_4=mat_line_4.split()
+
+		matrix=avango.gua.Mat4()
+
+		matrix.set_element(0, 0, float(mat_1[0]))
+		matrix.set_element(0, 1, float(mat_1[1]))
+		matrix.set_element(0, 2, float(mat_1[2]))
+		matrix.set_element(0, 3, float(mat_1[3]))
+		matrix.set_element(1, 0, float(mat_2[0]))
+		matrix.set_element(1, 1, float(mat_2[1]))
+		matrix.set_element(1, 2, float(mat_2[2]))
+		matrix.set_element(1, 3, float(mat_2[3]))
+		matrix.set_element(2, 0, float(mat_3[0]))
+		matrix.set_element(2, 1, float(mat_3[1]))
+		matrix.set_element(2, 2, float(mat_3[2]))
+		matrix.set_element(2, 3, float(mat_3[3]))
+		matrix.set_element(3, 0, float(mat_4[0]))
+		matrix.set_element(3, 1, float(mat_4[1]))
+		matrix.set_element(3, 2, float(mat_4[2]))
+		matrix.set_element(3, 3, float(mat_4[3]))
+
+		return matrix
 
 
 
 class MatrixStep:
 	TimeStamp=0.0
-	matrix=avango.gua.SFMatrix4
+	Error=0.0
+	PointerMat=avango.gua.SFMatrix4
+	HomeMat=avango.gua.SFMatrix4
 
-	def __init__(self, stamp, mat):
+	def __init__(self, stamp, error, p_mat, h_mat):
 		self.TimeStamp=stamp
-		self.matrix=mat
+		self.Error=error
+		self.PointerMat=p_mat
+		self.HomeMat=h_mat
 
 			
 
@@ -154,22 +162,22 @@ def start ():
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 	#Meshes
-	tracked_object=loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
 
-	object_transform=avango.gua.nodes.TransformNode(Children=[tracked_object])
+	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.2)
+	home.Transform.value = avango.gua.make_scale_mat(0.15)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
-	#setupEnvironment.getWindow().on_key_press(handle_key)
-	tracking = setupEnvironment.setup(graph)
+	tracking = setupEnvironmentWall.setup(graph)
 
-	graph.Root.value.Children.value.extend([object_transform,home_transform])
+	graph.Root.value.Children.value.extend([pencil_transform, home_transform])
 
-	#tracked_object.Transform.connect_from(tracking.Matrix)
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
 		DeviceService = avango.daemon.DeviceService()
@@ -177,17 +185,15 @@ def start ():
 	pointer_device_sensor.Station.value = "device-pointer"
 
 	pointerstuff = PointerStuff()
-	setattr(pointerstuff, "HomeRef", home)
-	#pointerstuff.TransMat.connect_from(tracking.Matrix)
-	object_transform.Transform.connect_from(pointerstuff.TransMat)
-	#pointerstuff.HomeMat.connect_from(home_transform.Transform)
+	pointerstuff.HomeRef=home
+	
+	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
-	#pointerstuff.HomeRef=home
 
-	setupEnvironment.launch()
+	setupEnvironmentWall.launch()
 
 
 if __name__ == '__main__':

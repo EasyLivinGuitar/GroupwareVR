@@ -53,35 +53,35 @@ class PointerStuff(avango.script.Script):
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
-		self.logData()
-
 		if setupEnvironmentWall.ignoreZ():
 			translation = self.TransMat.value.get_translate()
 			translation.z = 0
 
 			self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
+		self.logData()
+
 	def logData(self):
 		path="results/results_pointing_2D/"
-		if(self.startedTest):
-			if self.created_file==False:
-				self.num_files=len([f for f in os.listdir(path)
-					if os.path.isfile(os.path.join(path, f))])
-				self.created_file=True
-			else:
-				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
-				
-				if(self.Button.value and self.flagPrinted==False):
-					self.result_file.write("==========\n\n")
-					self.flagPrinted=True
-				
-				self.result_file.write(
-					str(self.timer.value)+"\n"
-					+str(self.error)+"\n"
-					+str(self.TransMat.value)+"\n"
-					+str(self.HomeMat.value)+"\n\n")
-				self.result_file.close()
+		# if(self.startedTest):
+		if self.created_file==False:
+			self.num_files=len([f for f in os.listdir(path)
+				if os.path.isfile(os.path.join(path, f))])
+			self.created_file=True
 		else:
+			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+			
+			if(self.Button.value and self.flagPrinted==False):
+				self.result_file.write("==========\n\n")
+				self.flagPrinted=True
+			
+			self.result_file.write(
+				"TimeStamp: "+str(self.timer.value)+"\n"
+				"Error: "+str(self.error)+"\n"
+				"Pointerpos: \n"+str(self.TransMat.value)+"\n"
+				"Homepos: \n"+str(self.HomeMat.value)+"\n\n")
+			self.result_file.close()
+		if(self.startedTest==False):
 			if self.Button.value:
 				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
 				if(self.flagPrinted==False):
