@@ -59,9 +59,10 @@ def setup(graph):
 		Resolution=resolution,
 		EyeDistance = 0.064,
 		EnableStereo = True,
-		OutputWindowName="window",
+		OutputWindowName="window"#,
 		#Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.0)
 		)
+	
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
@@ -98,8 +99,7 @@ def setup(graph):
 	cam.PipelineDescription.value = pipeline_description
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
-
-	graph.Root.value.Children.value=[light, screen]
+	graph.Root.value.Children.value=[light, screen, cam]
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
