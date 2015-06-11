@@ -133,7 +133,7 @@ def launch():
 
 '''if the z value should be locked'''
 def ignoreZ():
-	return True
+	return False
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 

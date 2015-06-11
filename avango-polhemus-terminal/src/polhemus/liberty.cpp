@@ -97,18 +97,18 @@ int Liberty::init() {
 int Liberty::sendInitialCommands() {
 	std::cout << "Please wait..." << std::endl;
 
-	// usleep(1000000); // 3s
-	// std::cout << "Calibrating for first receiver" << std::endl;
+	usleep(2000000); // 3s
+	std::cout << "Calibrating for firasdasdst receiver" << std::endl;
 
-	// if(!sendCommand("a1\r")) {
-	// 	return -1;		
-	// }
+	if(!sendCommand("a1\r")) {
+		return -1;		
+	}
 
-	// std::cout << "Switch: autodetect markers" << std::endl;
-	// usleep(1000000);
-	// if(!sendCommand("@A1\r"))	{
-	// 	return -2;
-	// }
+	std::cout << "Switch: autodetect markers" << std::endl;
+	usleep(1000000);
+	if(!sendCommand("@A1\r"))	{
+		return -2;
+	}
 
 
 	std::cout << "Switch: metric units" << std::endl;
@@ -215,9 +215,9 @@ bool Liberty::sendCommand(std::string cmd) {
 		std::cout << "FATAL ERROR! Connection to tracker lost!" << std::endl;
 		return( false );
 	}
-	
+	std::cout << "sending command: "<< cmd << std::endl;
 	mcnxStruct_.pTrak->WriteTrkData( const_cast<char*>( cmd.c_str() ), cmd.length() );
-
+	std::cout << "sended command: "<< cmd << std::endl;
 	return( true );
 }
 

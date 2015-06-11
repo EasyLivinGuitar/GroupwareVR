@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironmentWall
+import setupEnvironment
 import math
 import os.path
 
@@ -48,6 +48,7 @@ class PointerStuff(avango.script.Script):
 
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
+		print(self.TransMat.value)
 		self.error=self.getDistance()
 
 		
@@ -55,7 +56,7 @@ class PointerStuff(avango.script.Script):
 	def updateTimer(self):
 		self.logData()
 
-		if setupEnvironmentWall.ignoreZ():
+		if setupEnvironment.ignoreZ():
 			translation = self.TransMat.value.get_translate()
 			translation.z = 0
 
@@ -148,14 +149,14 @@ def start ():
 
 	pointerstuff = PointerStuff()
 	#setup
-	setupEnvironmentWall.getWindow().on_key_press(pointerstuff.handle_key)
-	setupEnvironmentWall.setup(graph)
+	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
+	setupEnvironment.setup(graph)
 
 	graph.Root.value.Children.value.extend([home_transform, pencil_transform])
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironmentWall.getOffsetTracking()
-	pointer_device_sensor.Station.value = "pointer-1"
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+	pointer_device_sensor.Station.value = "LATUS-M1"
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
@@ -175,7 +176,7 @@ def start ():
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
 
-	setupEnvironmentWall.launch()
+	setupEnvironment.launch()
 
 if __name__ == '__main__':
   start()
