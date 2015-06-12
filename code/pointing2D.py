@@ -14,18 +14,33 @@ from avango.script import field_has_changed
 class PointerStuff(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
-	HomeMat = avango.gua.SFMatrix4()
 	
+	HomeMat_scale = avango.gua.SFMatrix4()
+	HomeMat = avango.gua.SFMatrix4()
+	HomeMat_old = avango.gua.SFMatrix4()
+
 	timer = avango.SFFloat()
+	time_1=0
+	time_2=0
 	
 	result_file= None
 	created_file=False
 	num_files=0
 
 	startedTest=False
+	endedTest=False
+	evenTrial=False
 	flagPrinted=False
 
 	error=0
+	MT=0
+	ID=0
+	TP=0
+
+	axis=["h", "h+45", "v", "v+45"]
+	current_axis=None
+	current_translations=[]
+	axisDone=True
 
 
 	def __init__(self):
@@ -37,20 +52,30 @@ class PointerStuff(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value:
+			if(self.evenTrial==False):
+				self.time_1=self.timer.value
+				self.evenTrial=True
+
+				if(self.startedTest):
+					self.setMT(self.time_2, self.time_1)
+					self.setTP()
+			else:
+				self.time_2=self.timer.value
+				self.evenTrial=False
+
+				self.setMT(self.time_1, self.time_2)
+				self.setTP()
+
+			self.HomeMat_old.value=self.HomeMat.value
+			self.nextSettingStep()
+
+			self.setID()
+
 			if self.startedTest==False:
 				self.startedTest=True
-				self.HomeMat.value=self.getRandomTranslation()
-			else:
-				self.startedTest=False
-				self.HomeMat.value=avango.gua.make_trans_mat(0, 0, 1)
+				print("Test started.\n")
 		else:
 			self.flagPrinted=False
-
-	@field_has_changed(TransMat)
-	def transMatHasChanged(self):
-		print(self.TransMat.value)
-		self.error=self.getDistance()
-
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -60,35 +85,37 @@ class PointerStuff(avango.script.Script):
 
 			self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
+		self.setError()
 		self.logData()
 
 	def logData(self):
 		path="results/results_pointing_2D/"
-		# if(self.startedTest):
-		if self.created_file==False:
-			self.num_files=len([f for f in os.listdir(path)
-				if os.path.isfile(os.path.join(path, f))])
-			self.created_file=True
-		else:
-			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
-			
-			if(self.Button.value and self.flagPrinted==False):
-				self.result_file.write("==========\n\n")
-				self.flagPrinted=True
-			
-			self.result_file.write(
-				"TimeStamp: "+str(self.timer.value)+"\n"
-				"Error: "+str(self.error)+"\n"
-				"Pointerpos: \n"+str(self.TransMat.value)+"\n"
-				"Homepos: \n"+str(self.HomeMat.value)+"\n\n")
-			self.result_file.close()
-		if(self.startedTest==False):
-			if self.Button.value:
+		if(self.startedTest and self.endedTest==False):
+			if self.created_file==False: #create File 
+				self.num_files=len([f for f in os.listdir(path)
+					if os.path.isfile(os.path.join(path, f))])
+				self.created_file=True
+			else: #write permanent values
 				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
-				if(self.flagPrinted==False):
-					self.result_file.write("----------\n\n")
-					self.flagPrinted=True
+				
+				self.result_file.write(
+					"TimeStamp: "+str(self.timer.value)+"\n"
+					"Error: "+str(self.error)+"\n"
+					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
+					"Homepos: \n"+str(self.HomeMat.value)+"\n\n")
 				self.result_file.close()
+			
+				if self.Button.value: #write resulting values
+					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+					if(self.flagPrinted==False):
+						self.result_file.write(
+							"MT: "+str(self.MT)+"\n"+
+							"ID: "+str(self.ID)+"\n"+
+							"TP: "+str(self.TP)+"\n"+
+							"Total Error: "+str(self.error)+"\n"+
+							"=========================\n\n")
+						self.flagPrinted=True
+					self.result_file.close()
 
 
 
@@ -99,21 +126,87 @@ class PointerStuff(avango.script.Script):
 			avango.gua.make_trans_mat(0.2, -0.2, 1),
 			avango.gua.make_trans_mat(0.2, 0.2, 1),
 			avango.gua.make_trans_mat(0.4, -0.4, 1),
-			avango.gua.make_trans_mat(0.8, 0.8, 1)
+			avango.gua.make_trans_mat(0.8, 0.8, 1),
+			avango.gua.make_trans_mat(0.25, -0.25, 0)
 		]
 
 		index=random.randint(0, len(settings)-1)
 		
 		return settings[index]
 
-	def getDistance(self):
-		trans_x=self.TransMat.value.get_translate()[0]
-		trans_y=self.TransMat.value.get_translate()[1]
-		trans_z=self.TransMat.value.get_translate()[2]
+	def nextSettingStep(self):
+		if(len(self.axis)>0 or len(self.current_translations)>0):
+			if(self.axisDone):
+				index=random.randint(0, len(self.axis)-1)
+				self.current_axis=self.axis[index]
+				del(self.axis[index])
+				self.current_translations=self.getTranslations(self.current_axis)
+				self.axisDone=False
+	
+			if(len(self.current_translations)==0):
+				self.axisDone=True
+				self.nextSettingStep()
+			else:
+				self.HomeMat.value=self.current_translations[0]
+				del(self.current_translations[0])
+		else:
+			self.endedTest=True
+			print("Test ended.\n")
 
-		home_x=self.HomeMat.value.get_translate()[0]
-		home_y=self.HomeMat.value.get_translate()[1]
-		home_z=self.HomeMat.value.get_translate()[2]
+
+	def getTranslations(self, axis):
+		if(axis=="h"):
+			translations=[
+			avango.gua.make_trans_mat(0.25, 0, 0),
+			avango.gua.make_trans_mat(-0.25, 0, 0),
+			avango.gua.make_trans_mat(-0.125, 0, 0),
+			avango.gua.make_trans_mat(0.125, 0, 0),
+			avango.gua.make_trans_mat(0, 0, 0)]
+		if(axis=="h+45"):
+			translations=[
+			avango.gua.make_trans_mat(0.25, 0.25, 0),
+			avango.gua.make_trans_mat(-0.25, -0.25, 0),
+			avango.gua.make_trans_mat(-0.125, -0.125, 0),
+			avango.gua.make_trans_mat(0.125, 0.125, 0),
+			avango.gua.make_trans_mat(0, 0, 0)]
+		if(axis=="v"):
+			translations=[
+			avango.gua.make_trans_mat(0, 0.25, 0),
+			avango.gua.make_trans_mat(0, -0.25, 0),
+			avango.gua.make_trans_mat(0, -0.125, 0),
+			avango.gua.make_trans_mat(0, 0.125, 0),
+			avango.gua.make_trans_mat(0, 0, 0)]
+		if(axis=="v+45"):
+			translations=[
+			avango.gua.make_trans_mat(-0.25, 0.25, 0),
+			avango.gua.make_trans_mat(0.25, -0.25, 0),
+			avango.gua.make_trans_mat(0.125, -0.125, 0),
+			avango.gua.make_trans_mat(-0.125, 0.125, 0),
+			avango.gua.make_trans_mat(0, 0, 0)]
+		return translations
+		
+
+	def getDistance2D(self, target1, target2):
+		trans_x=target1.get_translate()[0]
+		trans_y=target1.get_translate()[1]
+
+		home_x=target2.get_translate()[0]
+		home_y=target2.get_translate()[1]
+
+		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
+		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
+		
+		distance=math.sqrt(trans_home_x_square+trans_home_y_square)
+		return distance
+
+	def getDistance3D(self, target1, target2):
+		trans_x=target1.get_translate()[0]
+		trans_y=target1.get_translate()[1]
+		trans_z=target1.get_translate()[2]
+
+		home_x=target2.get_translate()[0]
+		home_y=target2.get_translate()[1]
+		home_z=target2.get_translate()[2]
 
 		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
 		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
@@ -122,6 +215,27 @@ class PointerStuff(avango.script.Script):
 		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
 		return distance
 
+	def setError(self):
+		if setupEnvironment.air()==False:
+			self.error=self.getDistance2D(self.TransMat.value, self.HomeMat.value)
+		else:
+			self.error=self.getDistance3D(self.TransMat.value, self.HomeMat.value)
+
+	def setID(self):
+		target_size=self.HomeMat_scale.value.get_scale().x*2
+		
+		if setupEnvironment.air()==False:
+			distance=self.getDistance2D(self.HomeMat.value, self.HomeMat_old.value)
+		else:
+			distance=self.getDistance3D(self.HomeMat.value, self.HomeMat_old.value)
+
+		self.ID=math.log10((distance/target_size)+1)/math.log10(2)
+
+	def setMT(self, start, end):
+		self.MT=end-start
+
+	def setTP(self):
+		self.TP=self.ID/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 0:
@@ -137,13 +251,13 @@ def start ():
 	#Meshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.15)
-	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 1))
+	home.Transform.value = avango.gua.make_scale_mat(0.05)
+	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
@@ -156,7 +270,9 @@ def start ():
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+
 	pointer_device_sensor.Station.value = "LATUS-M1"
+
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
@@ -170,6 +286,7 @@ def start ():
 	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 	
 	#connect home with home
+	pointerstuff.HomeMat_scale.connect_from(home.Transform)
 	pointerstuff.HomeMat.connect_from(home_transform.Transform)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
