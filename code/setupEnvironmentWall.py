@@ -122,5 +122,8 @@ def launch():
 def ignoreZ():
 	return True
 
+def air():
+	return False
+
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -1.4, 2.6) 
