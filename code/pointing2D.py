@@ -15,6 +15,7 @@ class PointerStuff(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	
+	HomeMat_scale = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
 	HomeMat_old = avango.gua.SFMatrix4()
 
@@ -221,7 +222,7 @@ class PointerStuff(avango.script.Script):
 			self.error=self.getDistance3D(self.TransMat.value, self.HomeMat.value)
 
 	def setID(self):
-		target_size=(self.HomeMat.value.get_scale()*2).x
+		target_size=self.HomeMat_scale.value.get_scale().x*2
 		
 		if setupEnvironment.air()==False:
 			distance=self.getDistance2D(self.HomeMat.value, self.HomeMat_old.value)
@@ -255,7 +256,7 @@ def start ():
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	home = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	home.Transform.value = avango.gua.make_scale_mat(0.1)
+	home.Transform.value = avango.gua.make_scale_mat(0.05)
 	home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
@@ -285,6 +286,7 @@ def start ():
 	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 	
 	#connect home with home
+	pointerstuff.HomeMat_scale.connect_from(home.Transform)
 	pointerstuff.HomeMat.connect_from(home_transform.Transform)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
