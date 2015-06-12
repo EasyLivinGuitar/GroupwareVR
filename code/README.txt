@@ -10,7 +10,7 @@ $ /opt/local/bin/pstrack2start
    Latus Demon aktualisieren
 =========================================
 
-$ cp ./libavango_polhemus.so /opt/avang/new_renderer/lib/libavango_polhemus.so
+$ cp ./libavango_polhemus.so /opt/avango/new_renderer/lib/libavango_polhemus.so
 
 ================================================
     Start Daemon for Polhemus Latus

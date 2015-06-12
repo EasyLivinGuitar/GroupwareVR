@@ -15,7 +15,7 @@ $ cp ./libavango_polhemus.so /opt/avang/new_renderer/lib/libavango_polhemus.so
 ================================================
     Start Daemon for Polhemus Latus
 ================================================
-$ cd /opt/avango/new_renderer/examples/polhemus; sudo /opt/avango/new_renderer/examples/polhemus/start.sh
+$ cd /opt/avango/new_renderer/examples/polhemus; /opt/avango/new_renderer/examples/polhemus/start.sh
 
 im start skript sollte kein weiterer demon sein
 - start skript ausführen
@@ -27,11 +27,3 @@ im start skript sollte kein weiterer demon sein
 
 $ cp ./LatusTerminal /opt/avango/new_renderer/lib/LatusTerminal
 $ sudo /opt/avango/new_renderer/lib/LatusTerminal
-
-
-================
-Latus scharfschalten
-================
-
-$ sudo /opt/avango/new_renderer/examples/polhemus/polhemus-loader.sh
-
