@@ -210,7 +210,9 @@ def start ():
 
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
-	pointer_device_sensor.Station.value = "pointer-1"
+
+	pointer_device_sensor.Station.value = "LATUS-M1"
+
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"

@@ -27,7 +27,6 @@ export LD_LIBRARY_PATH="$LOCAL_GUACAMOLE/lib":$GUACAMOLE/lib:$LD_LIBRARY_PATH
 # run daemon
 python3.4 ./code/daemon.py > /dev/null &
 
-
 # run program
 if [[ $* == *-d* ]]
 then

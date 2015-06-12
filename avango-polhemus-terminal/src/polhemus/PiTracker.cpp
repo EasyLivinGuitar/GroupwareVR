@@ -145,14 +145,17 @@ int PiTracker::WriteTrkData(void* data,int len){
 
   pthread_mutex_lock(&m_mutex);
 
-  if (m_cnxType==USB_CNX)
+  if (m_cnxType==USB_CNX) {
     bw=WriteUsbData(data,len);
+    //fprintf(stderr,"wroteData\n");
+  }
   else if (m_cnxType==RS232_CNX)
     bw=WriteRs232Data(data,len);
   else
     fprintf(stderr,"No Connection\n");
 
   pthread_mutex_unlock(&m_mutex);
+  // fprintf(stderr,"afterUnlock\n");
   return bw;
 }
 

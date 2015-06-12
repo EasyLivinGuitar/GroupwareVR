@@ -28,3 +28,10 @@ im start skript sollte kein weiterer demon sein
 $ cp ./LatusTerminal /opt/avango/new_renderer/lib/LatusTerminal
 $ sudo /opt/avango/new_renderer/lib/LatusTerminal
 
+
+================
+Latus scharfschalten
+================
+
+$ sudo /opt/avango/new_renderer/examples/polhemus/polhemus-loader.sh
+
