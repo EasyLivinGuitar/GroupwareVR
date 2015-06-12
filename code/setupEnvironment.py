@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 
 from examples_common.GuaVE import GuaVE
+from avango.script import field_has_changed
 
 '''
 Written by Benedikt Vogler and Marcel Gohsen
@@ -104,13 +105,13 @@ def setup(graph):
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
-	'''
-	fieldmanager = FieldManager()
+
+	'''fieldmanager = FieldManager()
 	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	headtracking.TransmitterOffset.value = getOffsetTracking()
 	headtracking.Station.value = "glass-1"
 	fieldmanager.TransMat.connect_from(headtracking.Matrix)
-	cam.Transform.connect_from(fieldmanager.TransMat)
+	cam.Transform.connect_from(fieldmanager.TransMat)'''
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
@@ -120,7 +121,7 @@ class FieldManager(avango.script.Script):
 	
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
-		print(self.TransMat.value)'''
+		print(self.TransMat.value)
 
 def getWindow():
 	return window

@@ -279,6 +279,6 @@ init_keyboard()
 init_lcd_wall_tracking()
 #init_spheron()
 #init_xbox_controllers()
-init_latus()
+#init_latus()
 
 avango.daemon.run(device_list)
