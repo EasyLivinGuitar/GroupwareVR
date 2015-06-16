@@ -140,4 +140,7 @@ def air():
 	return False
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 
+	return avango.gua.make_trans_mat(0.0, -0.0, 0.0)
+
+def getTargetDepth():
+	return 2;

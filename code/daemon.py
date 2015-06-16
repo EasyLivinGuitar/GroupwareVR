@@ -12,9 +12,9 @@ def init_pst_tracking():
 	pst = avango.daemon.DTrack()
 	pst.port = "5020" # PST port
 
-	pst.stations[1] = avango.daemon.Station('head')
 	pst.stations[2] = avango.daemon.Station('pointer')
-	pst.stations[2] = avango.daemon.Station('keyboard')
+	#pst.stations[2] = avango.daemon.Station('pointer')
+	#pst.stations[2] = avango.daemon.Station('keyboard')
 	
 
 	device_list.append(pst)
@@ -271,12 +271,12 @@ def init_latus():
 
 device_list = []
 
-#init_pst_tracking()
+init_pst_tracking()
 init_pointer()
 #init_tuio_input()
 #init_mouse()
 init_keyboard()
-init_lcd_wall_tracking()
+#init_lcd_wall_tracking()
 #init_spheron()
 #init_xbox_controllers()
 #init_latus()

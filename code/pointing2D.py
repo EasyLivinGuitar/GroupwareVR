@@ -45,6 +45,7 @@ class PointerStuff(avango.script.Script):
 
 	def __init__(self):
 		self.super(PointerStuff).__init__()
+		HomeMat = avango.gua.make_trans_mat(0.0, 0.0, setupEnvironment.getTargetDepth())
 
 	def __del__(self):
 		self.result_file.close()
@@ -125,13 +126,13 @@ class PointerStuff(avango.script.Script):
 
 	def getRandomTranslation(self):
 		settings=[
-			avango.gua.make_trans_mat(-0.8, -0.8, 1),
-			avango.gua.make_trans_mat(-0.4, 0.4, 1),
-			avango.gua.make_trans_mat(0.2, -0.2, 1),
-			avango.gua.make_trans_mat(0.2, 0.2, 1),
-			avango.gua.make_trans_mat(0.4, -0.4, 1),
-			avango.gua.make_trans_mat(0.8, 0.8, 1),
-			avango.gua.make_trans_mat(0.25, -0.25, 0)
+			avango.gua.make_trans_mat(-0.8, -0.8, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.4, 0.4, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.2, -0.2, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.2, 0.2, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.4, -0.4, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.8, 0.8, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.25, -0.25, setupEnvironment.getTargetDepth())
 		]
 
 		index=random.randint(0, len(settings)-1)
@@ -161,32 +162,32 @@ class PointerStuff(avango.script.Script):
 	def getTranslations(self, axis):
 		if(axis=="h"):
 			translations=[
-			avango.gua.make_trans_mat(0.25, 0, 0),
-			avango.gua.make_trans_mat(-0.25, 0, 0),
-			avango.gua.make_trans_mat(-0.125, 0, 0),
-			avango.gua.make_trans_mat(0.125, 0, 0),
-			avango.gua.make_trans_mat(0, 0, 0)]
+			avango.gua.make_trans_mat(0.25, 0, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.25, 0, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.125, 0, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.125, 0, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())]
 		if(axis=="h+45"):
 			translations=[
-			avango.gua.make_trans_mat(0.25, 0.25, 0),
-			avango.gua.make_trans_mat(-0.25, -0.25, 0),
-			avango.gua.make_trans_mat(-0.125, -0.125, 0),
-			avango.gua.make_trans_mat(0.125, 0.125, 0),
-			avango.gua.make_trans_mat(0, 0, 0)]
+			avango.gua.make_trans_mat(0.25, 0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.25, -0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.125, -0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.125, 0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())]
 		if(axis=="v"):
 			translations=[
-			avango.gua.make_trans_mat(0, 0.25, 0),
-			avango.gua.make_trans_mat(0, -0.25, 0),
-			avango.gua.make_trans_mat(0, -0.125, 0),
-			avango.gua.make_trans_mat(0, 0.125, 0),
-			avango.gua.make_trans_mat(0, 0, 0)]
+			avango.gua.make_trans_mat(0, 0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, -0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, -0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, 0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())]
 		if(axis=="v+45"):
 			translations=[
-			avango.gua.make_trans_mat(-0.25, 0.25, 0),
-			avango.gua.make_trans_mat(0.25, -0.25, 0),
-			avango.gua.make_trans_mat(0.125, -0.125, 0),
-			avango.gua.make_trans_mat(-0.125, 0.125, 0),
-			avango.gua.make_trans_mat(0, 0, 0)]
+			avango.gua.make_trans_mat(-0.25, 0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.25, -0.25, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0.125, -0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(-0.125, 0.125, setupEnvironment.getTargetDepth()),
+			avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())]
 		return translations
 		
 
@@ -275,7 +276,7 @@ def start ():
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
 
-	pointer_device_sensor.Station.value = "LATUS-M1"
+	pointer_device_sensor.Station.value = "pointer"
 
 
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
@@ -291,7 +292,8 @@ def start ():
 	
 	#connect home with home
 	pointerstuff.HomeMat_scale.connect_from(home.Transform)
-	pointerstuff.HomeMat.connect_from(home_transform.Transform)
+	#commented because redundant?
+	#pointerstuff.HomeMat.connect_from(home_transform.Transform)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
