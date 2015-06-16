@@ -76,6 +76,10 @@ class PointerStuff(avango.script.Script):
 				print("Test started.\n")
 		else:
 			self.flagPrinted=False
+
+	@field_has_changed(TransMat)
+	def TransMatHasChanged(self):
+		print(self.TransMat.value);
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
