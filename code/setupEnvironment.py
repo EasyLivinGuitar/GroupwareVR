@@ -134,7 +134,7 @@ def launch():
 
 '''if the z value should be locked'''
 def ignoreZ():
-	return False
+	return True
 
 def air():
 	return False

@@ -10,6 +10,7 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 class trackingManager(avango.script.Script):
+	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
 	aimMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
@@ -22,7 +23,18 @@ class trackingManager(avango.script.Script):
 		self.startTime = 0
 		self.endTime = 0
 		self.aimRef = None
+		self.backAndForth = False
 		#self.aimRef=None
+
+	@field_has_changed(Button)
+	def button_pressed(self):
+		if self.Button.value==True:
+			if self.backAndForth:
+				self.aimMat.value *= avango.gua.make_rot_mat(40,0,1,0)
+				self.backAndForth=False
+			else:
+				self.aimMat.value *= avango.gua.make_rot_mat(-40,0,1,0)
+				self.backAndForth=True
 
 	@field_has_changed(pencilTransMat)
 	def pencilTransMatHasChanged(self):
@@ -48,8 +60,17 @@ class trackingManager(avango.script.Script):
 		if setupEnvironment.ignoreZ():
 			#erase translation in the matrix and keep rotation
 			rotation = self.pencilTransMat.value.get_rotate()
-			self.pencilTransMat.value = avango.gua.Mat4()
 			self.pencilTransMat.value = avango.gua.make_rot_mat(rotation)
+
+		#erase 2dof
+		if setupEnvironment.air()==False:
+			rotation = self.pencilTransMat.value.get_rotate()
+			rotation.x = 0
+			rotation.z = 0
+			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(rotation)
+
+		#kippe 90 nach oben, so dass man eine Draufsicht hat, erzeugt fehler/bug, dass es kleiner wird
+		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
 
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
@@ -111,8 +132,8 @@ def start ():
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	aim = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_trans_mat(0,0,-10)*avango.gua.make_scale_mat(0.2)
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.3, 0.3, 0.5))
+	aim.Transform.value = avango.gua.make_trans_mat(0,0,0)*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
+	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	setupEnvironment.setup(graph)
@@ -120,20 +141,28 @@ def start ():
 	#add nodes to root
 	graph.Root.value.Children.value.extend([aim, pencil_transform])
 
-
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
-		DeviceService = avango.daemon.DeviceService()
-		)
-	pointer_device_sensor.Station.value = "device-pointer"
-
 	trackManager = trackingManager()
+
+	#listen to position
+	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+
+	pointer_device_sensor.Station.value = "pointer"
+
+	#lsiten to button
+	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+	button_sensor.Station.value="device-pointer"
+
+	trackManager.Button.connect_from(button_sensor.Button0)
+
+
 	trackManager.aimRef = aim
 	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
 	trackManager.aimMat.connect_from(aim.Transform)
+	aim.Transform.connect_from(trackManager.aimMat)
 
 	timer = avango.nodes.TimeSensor()
 	trackManager.timer.connect_from(timer.Time)
-	trackingManager.aimRef=aim
 
 	pencil_transform.Transform.connect_from(trackManager.pencilTransMat)
 
