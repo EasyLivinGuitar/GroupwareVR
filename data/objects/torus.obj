@@ -1,7 +1,6 @@
-# Blender v2.54 (sub 0) OBJ File: 'quit.blend'
+# Blender v2.54 (sub 0) OBJ File: 'torus.blend'
 # www.blender.org
-mtllib Torus.mtl
-o Torus.001
+#o Torus.001
 v 2.179167 -0.818439 -1.094899
 v 2.145673 -0.693439 -1.094899
 v 2.054167 -0.601933 -1.094899
@@ -825,8 +824,8 @@ vn -0.836451 0.500107 0.224128
 vn -0.224097 -0.500107 0.836451
 vn 0.000000 0.000000 -0.999969
 vn -0.836451 0.500107 -0.224097
-g Torus.001_Torus.001
-usemtl (null)
+#g Torus.001_Torus.001
+#usemtl (null)
 s 1
 f 1//1 13//2 14//3 2//4
 f 2//4 14//3 15//5 3//6

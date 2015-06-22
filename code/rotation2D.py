@@ -135,36 +135,44 @@ def start ():
 	aim.Transform.value = avango.gua.make_trans_mat(0,0,0)*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
+	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	torus.Transform.value = avango.gua.make_trans_mat(0,0,0)*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
+	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
+
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	setupEnvironment.setup(graph)
 
 	#add nodes to root
-	graph.Root.value.Children.value.extend([aim, pencil_transform])
+	graph.Root.value.Children.value.extend([aim, torus, pencil_transform])
 
 	trackManager = trackingManager()
 
-	#listen to position
+	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
 
 	pointer_device_sensor.Station.value = "pointer"
 
-	#lsiten to button
+	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
+
+	#connect pencil
+	pencil_transform.Transform.connect_from(trackManager.pencilTransMat)
+
+	#listen to button
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
 
 	trackManager.Button.connect_from(button_sensor.Button0)
 
-
+	#connect aim
 	trackManager.aimRef = aim
-	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
 	trackManager.aimMat.connect_from(aim.Transform)
 	aim.Transform.connect_from(trackManager.aimMat)
 
+	#timer
 	timer = avango.nodes.TimeSensor()
 	trackManager.timer.connect_from(timer.Time)
 
-	pencil_transform.Transform.connect_from(trackManager.pencilTransMat)
 
 	setupEnvironment.launch()
 
