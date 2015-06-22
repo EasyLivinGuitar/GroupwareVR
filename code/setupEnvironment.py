@@ -2,6 +2,8 @@ import avango
 import avango.daemon
 import avango.gua
 import avango.script
+import avango.sound
+import avango.sound.openal
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -40,6 +42,12 @@ window = avango.gua.nodes.GlfwWindow(
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
 
+soundtraverser = avango.sound.nodes.SoundTraverser()
+soundRenderer = avango.sound.openal.nodes.OpenALSoundRenderer()
+soundRenderer.Device.value = ""
+soundtraverser.Renderers.value = [soundRenderer]
+
+cam = avango.gua.nodes.CameraNode()
 
 def setup(graph):
 	light = avango.gua.nodes.LightNode(
@@ -102,6 +110,8 @@ def setup(graph):
 
 	graph.Root.value.Children.value=[light, screen]
 
+	soundRenderer.ListenerPosition.connect_from(cam.Transform)
+
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
@@ -129,8 +139,20 @@ def getWindow():
 def launch():
 	guaVE = GuaVE()
 	guaVE.start(locals(), globals())
+	
+	soundtraverser.RootNode.value = viewer.SceneGraphs.value[0].Root.value
+	soundtraverser.Traverse.value = True
+
+	sound = avango.sound.nodes.SoundSource()
+	viewer.SceneGraphs.value[0].Root.value.Children.value.append(sound)
+	sound.URL.value = "data/sounds/balloon_pop.ogg"
+	sound.Loop.value = False
+
+	viewer.frame()
+	#sound.Play.value = True
 
 	viewer.run()
+	
 
 '''if the z value should be locked'''
 def ignoreZ():

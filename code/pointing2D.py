@@ -6,11 +6,13 @@ import random
 import setupEnvironment
 import math
 import os.path
+import avango.sound
+import avango.sound.openal
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-
+balloonSound = avango.sound.nodes.SoundSource()
 class PointerStuff(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
@@ -77,10 +79,11 @@ class PointerStuff(avango.script.Script):
 				print("Test started.\n")
 		else:
 			self.flagPrinted=False
+		balloonSound.Play.value = True
 
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
-		print(self.TransMat.value);
+		pass#print(self.TransMat.value);
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -266,8 +269,16 @@ def start ():
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
+	#sounds
+	balloonSound = avango.sound.nodes.SoundSource()
+	graph.Root.value.Children.value.append(balloonSound)
+	balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
+	balloonSound.Loop.value = False
+	balloonSound.Play.value = True
+     
+    #setup
 	pointerstuff = PointerStuff()
-	#setup
+	
 	setupEnvironment.getWindow().on_key_press(pointerstuff.handle_key)
 	setupEnvironment.setup(graph)
 
@@ -296,10 +307,12 @@ def start ():
 	#pointerstuff.HomeMat.connect_from(home_transform.Transform)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
+	#setup timer
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
 
 	setupEnvironment.launch()
+
 
 if __name__ == '__main__':
   start()
