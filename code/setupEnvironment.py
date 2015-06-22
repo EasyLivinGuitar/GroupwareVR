@@ -110,18 +110,14 @@ def setup(graph):
 
 	graph.Root.value.Children.value=[light, screen]
 
+	soundtraverser.RootNode.value = graph.Root.value
+	soundtraverser.Traverse.value = True
+
 	soundRenderer.ListenerPosition.connect_from(cam.Transform)
 
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
-
-	'''fieldmanager = FieldManager()
-	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-	headtracking.TransmitterOffset.value = getOffsetTracking()
-	headtracking.Station.value = "glass-1"
-	fieldmanager.TransMat.connect_from(headtracking.Matrix)
-	cam.Transform.connect_from(fieldmanager.TransMat)'''
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
@@ -140,17 +136,6 @@ def launch():
 	guaVE = GuaVE()
 	guaVE.start(locals(), globals())
 	
-	soundtraverser.RootNode.value = viewer.SceneGraphs.value[0].Root.value
-	soundtraverser.Traverse.value = True
-
-	sound = avango.sound.nodes.SoundSource()
-	viewer.SceneGraphs.value[0].Root.value.Children.value.append(sound)
-	sound.URL.value = "data/sounds/balloon_pop.ogg"
-	sound.Loop.value = False
-
-	viewer.frame()
-	#sound.Play.value = True
-
 	viewer.run()
 	
 
@@ -166,3 +151,6 @@ def getOffsetTracking():
 
 def getTargetDepth():
 	return 2;
+
+def logResults():
+	return False
