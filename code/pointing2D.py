@@ -320,7 +320,7 @@ def setupSound():
 	balloonSound = avango.sound.nodes.SoundSource()
 	graph.Root.value.Children.value.extend([balloonSound])
 	balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
-	balloonSound.Loop.value = True
+	balloonSound.Loop.value = False
 	balloonSound.Play.value = True
 
 if __name__ == '__main__':

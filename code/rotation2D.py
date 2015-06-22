@@ -9,10 +9,13 @@ import math
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
+W=5.7 #ID=3 with D=40°
+
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
 	aimMat = avango.gua.SFMatrix4()
+	torusMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	startedTest=False
 
@@ -26,14 +29,28 @@ class trackingManager(avango.script.Script):
 		self.backAndForth = False
 		#self.aimRef=None
 
+	def __del__(self):
+		if setupEnvironment.logResults():
+			self.result_file.close()
+
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value==True:
+			#TODO get error in rotation
+			if abs(self.pencilTransMat.value.get_rotate().y-self.torusMat.value.get_rotate().z)*180 < W:
+				print("HIT")
+			else:
+				print("miss")
+
+			print("Rotation is: "+str(self.pencilTransMat.value.get_rotate().y*360/math.pi))
+
 			if self.backAndForth:
 				self.aimMat.value *= avango.gua.make_rot_mat(40,0,1,0)
+				self.torusMat.value = avango.gua.make_rot_mat(-40,0,0,1) *self.torusMat.value 
 				self.backAndForth=False
 			else:
 				self.aimMat.value *= avango.gua.make_rot_mat(-40,0,1,0)
+				self.torusMat.value = avango.gua.make_rot_mat(40,0,0,1)*self.torusMat.value 
 				self.backAndForth=True
 
 	@field_has_changed(pencilTransMat)
@@ -74,8 +91,9 @@ class trackingManager(avango.script.Script):
 
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
-			
-		self.logData()
+		
+		if setupEnvironment.logResults():	
+			self.logData()
 			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege aim an neue Stelle
@@ -136,7 +154,7 @@ def start ():
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	torus.Transform.value = avango.gua.make_trans_mat(0,0,0)*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
+	torus.Transform.value = avango.gua.make_trans_mat(0,0.16,0.1)*avango.gua.make_scale_mat(0.01)*avango.gua.make_trans_mat(-1,00,0.0)#position*size*center
 	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
@@ -168,6 +186,10 @@ def start ():
 	trackManager.aimRef = aim
 	trackManager.aimMat.connect_from(aim.Transform)
 	aim.Transform.connect_from(trackManager.aimMat)
+
+	#connect torus
+	trackManager.torusMat.connect_from(torus.Transform)
+	torus.Transform.connect_from(trackManager.torusMat)
 
 	#timer
 	timer = avango.nodes.TimeSensor()
