@@ -36,13 +36,20 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value==True:
+			self.tidyMats()
 			#TODO get error in rotation
-			if abs(self.pencilTransMat.value.get_rotate().y-self.torusMat.value.get_rotate().z)*180 < W:
+			if abs(self.pencilTransMat.value.get_rotate().get_angle()-self.torusMat.value.get_rotate().get_angle())*180 < W:
 				print("HIT")
 			else:
 				print("miss")
 
-			print("Rotation is: "+str(self.pencilTransMat.value.get_rotate().y*360/math.pi))
+			a = self.pencilTransMat.value.get_rotate()
+			b = self.torusMat.value.get_rotate()
+			a.normalize()
+			b.normalize()
+			b.conjugate()
+			c=math.acos(a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w)
+			print("Rotation is: "+str( 180*c/math.pi) )
 
 			if self.backAndForth:
 				self.aimMat.value *= avango.gua.make_rot_mat(40,0,1,0)
@@ -74,20 +81,8 @@ class trackingManager(avango.script.Script):
 
 	@field_has_changed(timer)
 	def updateTimer(self):
-		if setupEnvironment.ignoreZ():
-			#erase translation in the matrix and keep rotation
-			rotation = self.pencilTransMat.value.get_rotate()
-			self.pencilTransMat.value = avango.gua.make_rot_mat(rotation)
-
-		#erase 2dof
-		if setupEnvironment.air()==False:
-			rotation = self.pencilTransMat.value.get_rotate()
-			rotation.x = 0
-			rotation.z = 0
-			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(rotation)
-
-		#kippe 90 nach oben, so dass man eine Draufsicht hat, erzeugt fehler/bug, dass es kleiner wird
-		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
+		self.tidyMats()
+		
 
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
@@ -97,6 +92,21 @@ class trackingManager(avango.script.Script):
 			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege aim an neue Stelle
+
+	def tidyMats(self):
+		#erase translation in the matrix and keep rotation and scale
+		if setupEnvironment.ignoreZ():
+			self.pencilTransMat.value = avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())*avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())
+
+		#erase 2dof
+		if setupEnvironment.air()==False:
+			#get angle between rotation and y axis
+			q = self.pencilTransMat.value.get_rotate()
+			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
+			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0)
+
+		#kippe 90 nach oben, so dass man eine Draufsicht hat, erzeugt fehler/bug, dass es kleiner wird
+		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
 
 	def nextSettingStep(self):
 		pass#placeholder
