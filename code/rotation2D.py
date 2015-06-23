@@ -9,7 +9,14 @@ import math
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-W=5.7 #ID=3 with D=40°
+r=0.16 #circle radius
+
+#fitt's law parameter
+D=40 #in degrees
+ID=4 #fitt's law
+W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
+
+torusWidth = r*math.tan(W*math.pi/180)
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
@@ -37,27 +44,52 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			self.tidyMats()
-			#TODO get error in rotation
-			if abs(self.pencilTransMat.value.get_rotate().get_angle()-self.torusMat.value.get_rotate().get_angle())*180 < W:
+			
+			#quaternion to euler has an error with the z axis
+			a = self.pencilTransMat.value.get_rotate()
+			a.normalize()
+			aEuler = [
+				math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
+				math.asin(2*(a.x*a.z-a.w*a.y)),
+				math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))+math.pi/2
+			]
+			print("P:"+str(a)+" => "+str(aEuler))
+
+			b = self.torusMat.value.get_rotate()
+			b.normalize()
+			bEuler = [
+				math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
+				math.asin(2*(b.x*b.z-b.w*b.y)),
+				math.atan2(2*(b.x*b.w+b.y*b.z), 1-2*(b.z**2+b.w**2))
+			]
+			print("T:"+str(b)+" => "+str(bEuler))
+		
+			error =[
+				(aEuler[0]-bEuler[0])*180/math.pi, #Y
+				(aEuler[1]-bEuler[1])*180/math.pi, #?
+				(aEuler[2]-bEuler[2])*180/math.pi, #?
+				0 #gesamt
+			]
+			error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+			print("Error Gesamt:"+str( error[3] )+"\n"+
+				"Y: "+str( error[0] )+"\n"
+				"?: "+str( error[1] )+"\n"
+				"?: "+str( error[2] )+"\n"
+			)
+
+			if error[3] < W/2:
 				print("HIT")
 			else:
-				print("miss")
+				print("MISS")
 
-			a = self.pencilTransMat.value.get_rotate()
-			b = self.torusMat.value.get_rotate()
-			a.normalize()
-			b.normalize()
-			b.conjugate()
-			c=math.acos(a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w)
-			print("Rotation is: "+str( 180*c/math.pi) )
-
+			#move target
 			if self.backAndForth:
-				self.aimMat.value *= avango.gua.make_rot_mat(40,0,1,0)
-				self.torusMat.value = avango.gua.make_rot_mat(-40,0,0,1) *self.torusMat.value 
+				self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
+				self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
 				self.backAndForth=False
 			else:
-				self.aimMat.value *= avango.gua.make_rot_mat(-40,0,1,0)
-				self.torusMat.value = avango.gua.make_rot_mat(40,0,0,1)*self.torusMat.value 
+				self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
+				self.torusMat.value = avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
 				self.backAndForth=True
 
 	@field_has_changed(pencilTransMat)
@@ -96,7 +128,7 @@ class trackingManager(avango.script.Script):
 	def tidyMats(self):
 		#erase translation in the matrix and keep rotation and scale
 		if setupEnvironment.ignoreZ():
-			self.pencilTransMat.value = avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())*avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())
+			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,setupEnvironment.getTargetDepth(),0)*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
 
 		#erase 2dof
 		if setupEnvironment.air()==False:
@@ -105,7 +137,7 @@ class trackingManager(avango.script.Script):
 			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
 			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0)
 
-		#kippe 90 nach oben, so dass man eine Draufsicht hat, erzeugt fehler/bug, dass es kleiner wird
+		#kippe 90 nach oben, so dass man eine Draufsicht hat
 		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
 
 	def nextSettingStep(self):
@@ -154,17 +186,17 @@ def start ():
 
 	#Meshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
+	pencil.Transform.value= avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	aim = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_trans_mat(0,0,0)*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
+	aim.Transform.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(0.02)*avango.gua.make_rot_mat(-90,1,0,0)
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	torus.Transform.value = avango.gua.make_trans_mat(0,0.16,0.1)*avango.gua.make_scale_mat(0.01)*avango.gua.make_trans_mat(-1,00,0.0)#position*size*center
+	torus.Transform.value = avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)#position*size
 	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
