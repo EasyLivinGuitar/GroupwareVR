@@ -150,7 +150,7 @@ def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.0, 0.0)
 
 def getTargetDepth():
-	return 1;
+	return 1.4;
 
 def logResults():
 	return False

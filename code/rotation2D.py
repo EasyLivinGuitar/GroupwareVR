@@ -18,6 +18,7 @@ W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
 
 torusWidth = r*math.tan(W*math.pi/180)
 
+
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
@@ -43,54 +44,7 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value==True:
-			self.tidyMats()
-			
-			#quaternion to euler has an error with the z axis
-			a = self.pencilTransMat.value.get_rotate()
-			a.normalize()
-			aEuler = [
-				math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
-				math.asin(2*(a.x*a.z-a.w*a.y)),
-				math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))+math.pi/2
-			]
-			print("P:"+str(a)+" => "+str(aEuler))
-
-			b = self.torusMat.value.get_rotate()
-			b.normalize()
-			bEuler = [
-				math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
-				math.asin(2*(b.x*b.z-b.w*b.y)),
-				math.atan2(2*(b.x*b.w+b.y*b.z), 1-2*(b.z**2+b.w**2))
-			]
-			print("T:"+str(b)+" => "+str(bEuler))
-		
-			error =[
-				(aEuler[0]-bEuler[0])*180/math.pi, #Y
-				(aEuler[1]-bEuler[1])*180/math.pi, #?
-				(aEuler[2]-bEuler[2])*180/math.pi, #?
-				0 #gesamt
-			]
-			error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
-			print("Error Gesamt:"+str( error[3] )+"\n"+
-				"Y: "+str( error[0] )+"\n"
-				"?: "+str( error[1] )+"\n"
-				"?: "+str( error[2] )+"\n"
-			)
-
-			if error[3] < W/2:
-				print("HIT")
-			else:
-				print("MISS")
-
-			#move target
-			if self.backAndForth:
-				self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
-				self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
-				self.backAndForth=False
-			else:
-				self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
-				self.torusMat.value = avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
-				self.backAndForth=True
+			self.nextSettingStep()
 
 	@field_has_changed(pencilTransMat)
 	def pencilTransMatHasChanged(self):
@@ -141,7 +95,54 @@ class trackingManager(avango.script.Script):
 		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
 
 	def nextSettingStep(self):
-		pass#placeholder
+		self.tidyMats()
+		
+		#quaternion to euler has an error with the z axis
+		a = self.pencilTransMat.value.get_rotate()
+		a.normalize()
+		aEuler = [
+			math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
+			math.asin(2*(a.x*a.z-a.w*a.y)),
+			math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))+math.pi/2
+		]
+		print("P:"+str(a)+" => "+str(aEuler))
+
+		b = self.torusMat.value.get_rotate()
+		b.normalize()
+		bEuler = [
+			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
+			math.asin(2*(b.x*b.z-b.w*b.y)),
+			math.atan2(2*(b.x*b.w+b.y*b.z), 1-2*(b.z**2+b.w**2))
+		]
+		print("T:"+str(b)+" => "+str(bEuler))
+	
+		error =[
+			(aEuler[0]-bEuler[0])*180/math.pi, #Y
+			(aEuler[1]-bEuler[1])*180/math.pi, #?
+			(aEuler[2]-bEuler[2])*180/math.pi, #?
+			0 #gesamt
+		]
+		error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+		print("Error Gesamt:"+str( error[3] )+"\n"+
+			"Y: "+str( error[0] )+"\n"
+			"?: "+str( error[1] )+"\n"
+			"?: "+str( error[2] )+"\n"
+		)
+
+		if error[3] < W/2:
+			print("HIT")
+		else:
+			print("MISS")
+
+		#move target
+		if self.backAndForth:
+			self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
+			self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.backAndForth=False
+		else:
+			self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
+			self.torusMat.value = avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.backAndForth=True
 
 	def logData(self):
 		path="results/results_pointing_2D/"
@@ -172,11 +173,14 @@ class trackingManager(avango.script.Script):
 						self.flagPrinted=True
 					self.result_file.close()
 
+
+trackManager = trackingManager()
 def handle_key(key, scancode, action, mods):
 	if action == 0:
-		print(key)
+		#print(key)
 		#32 is space 335 is num_enter
 		if key == 335:
+			trackManager.nextSettingStep()
 			print("check if achieved the goal")
 
 
@@ -199,13 +203,12 @@ def start ():
 	torus.Transform.value = avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)#position*size
 	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
+
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	setupEnvironment.setup(graph)
 
 	#add nodes to root
 	graph.Root.value.Children.value.extend([aim, torus, pencil_transform])
-
-	trackManager = trackingManager()
 
 	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
