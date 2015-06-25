@@ -9,7 +9,7 @@ import math
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-r=0.16 #circle radius
+r=0.15 #circle radius
 
 #fitt's law parameter
 D=40 #in degrees
@@ -68,7 +68,6 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(timer)
 	def updateTimer(self):
 		self.tidyMats()
-		
 
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
@@ -78,6 +77,9 @@ class trackingManager(avango.script.Script):
 			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege aim an neue Stelle
+
+		#kippe 90 nach oben, so dass man eine Draufsicht hat
+		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value	
 
 	def tidyMats(self):
 		#erase translation in the matrix and keep rotation and scale
@@ -91,8 +93,6 @@ class trackingManager(avango.script.Script):
 			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
 			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0)
 
-		#kippe 90 nach oben, so dass man eine Draufsicht hat
-		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value
 
 	def nextSettingStep(self):
 		self.tidyMats()
@@ -100,15 +100,18 @@ class trackingManager(avango.script.Script):
 		#quaternion to euler has an error with the z axis
 		a = self.pencilTransMat.value.get_rotate()
 		a.normalize()
+		'''
 		aEuler = [
 			math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
 			math.asin(2*(a.x*a.z-a.w*a.y)),
-			math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))+math.pi/2
+			math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))
 		]
 		print("P:"+str(a)+" => "+str(aEuler))
+		'''
 
 		b = self.torusMat.value.get_rotate()
 		b.normalize()
+		'''
 		bEuler = [
 			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
 			math.asin(2*(b.x*b.z-b.w*b.y)),
@@ -128,8 +131,14 @@ class trackingManager(avango.script.Script):
 			"?: "+str( error[1] )+"\n"
 			"?: "+str( error[2] )+"\n"
 		)
+		error = error[3]
+		'''
 
-		if error[3] < W/2:
+		print("P: "+str(a))
+		print("T: "+str(b))
+		error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
+		print (error)
+		if error < W/2:
 			print("HIT")
 		else:
 			print("MISS")
@@ -173,17 +182,14 @@ class trackingManager(avango.script.Script):
 						self.flagPrinted=True
 					self.result_file.close()
 
-
-trackManager = trackingManager()
 def handle_key(key, scancode, action, mods):
 	if action == 0:
 		#print(key)
 		#32 is space 335 is num_enter
 		if key == 335:
 			trackManager.nextSettingStep()
-			print("check if achieved the goal")
 
-
+trackManager = trackingManager()
 def start ():
 	graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
