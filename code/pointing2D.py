@@ -216,7 +216,7 @@ class PointerStuff(avango.script.Script):
 		return distance
 
 	def setError(self):
-		if setupEnvironment.air()==False:
+		if setupEnvironment.space3D()==False:
 			self.error=self.getDistance2D(self.TransMat.value, self.HomeMat.value)
 		else:
 			self.error=self.getDistance3D(self.TransMat.value, self.HomeMat.value)
@@ -224,7 +224,7 @@ class PointerStuff(avango.script.Script):
 	def setID(self):
 		target_size=self.HomeMat_scale.value.get_scale().x*2
 		
-		if setupEnvironment.air()==False:
+		if setupEnvironment.space3D()==False:
 			distance=self.getDistance2D(self.HomeMat.value, self.HomeMat_old.value)
 		else:
 			distance=self.getDistance3D(self.HomeMat.value, self.HomeMat_old.value)

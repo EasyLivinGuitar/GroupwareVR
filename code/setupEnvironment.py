@@ -136,7 +136,7 @@ def launch():
 def ignoreZ():
 	return False
 
-def air():
+def space3D():
 	return False
 
 def getOffsetTracking():
