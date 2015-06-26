@@ -19,8 +19,10 @@ How to setup a new test case:
 
 Then start the scene with the according start.sh
 '''
+timer=avango.nodes.TimeSensor()
 
 
+res_pass = avango.gua.nodes.ResolvePassDescription()
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -33,8 +35,8 @@ def print_graph(root_node):
 viewer = avango.gua.nodes.Viewer()
 
 resolution = avango.gua.Vec2ui(1920, 1080)
-screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
-#screenSize = avango.gua.Vec2(1., 0.495) # in meters
+#screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
+screenSize = avango.gua.Vec2(1.445, 0.81) # in meters
 window = avango.gua.nodes.GlfwWindow(
 		Size=resolution,
 		LeftResolution=resolution,
@@ -75,12 +77,10 @@ def setup(graph):
 		Name="screen",
 		Width=screenSize.x,
 		Height=screenSize.y,
-		#Transform=avango.gua.make_rot_mat(180 , 0.0, 0.0, 0.0),
 		Children=[cam]
 		)
 
 	#Sieht netter aus
-	res_pass = avango.gua.nodes.ResolvePassDescription()
 	res_pass.EnableSSAO.value = True
 	res_pass.SSAOIntensity.value = 4.0
 	res_pass.SSAOFalloff.value = 10.0
@@ -107,6 +107,14 @@ def setup(graph):
 	cam.PipelineDescription.value = pipeline_description
 	cam.PipelineDescription.value.EnableABuffer.value=True
 
+	#Setup headtracking
+	head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+	head_device_sensor.TransmitterOffset.value = getOffsetTracking()
+
+	head_device_sensor.Station.value = "glasses"
+
+	cam.Transform.connect_from(head_device_sensor.Matrix)
+
 
 	graph.Root.value.Children.value=[light, screen]
 
@@ -121,13 +129,24 @@ def setup(graph):
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
+	timer= avango.SFFloat()
+	time= 0
 
 	def __init__(self):
+
 		self.super(FieldManager).__init__()
 	
 	@field_has_changed(TransMat)
 	def transMatHasChanged(self):
 		print(self.TransMat.value)
+
+	@field_has_changed(timer)
+	def update(self):
+		if(self.timer.value>=self.time):
+			res_pass.BackgroundColor.value=avango.gua.Color(0, 0, 0)
+
+manager=FieldManager()
+manager.timer.connect_from(timer.Time)
 
 def getWindow():
 	return window
@@ -135,9 +154,22 @@ def getWindow():
 def launch():
 	guaVE = GuaVE()
 	guaVE.start(locals(), globals())
-	
+	'''
+	balloonSound = avango.sound.nodes.SoundSource()
+	balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
+	balloonSound.Loop.value = True
+	balloonSound.Play.value = True
+	viewer.SceneGraphs.value[0].Root.value.Children.value.extend([balloonSound])
+	'''
+	viewer.frame
+	#balloonSound.Play.value = True
 	viewer.run()
+
+def setBackgroundColor(color, time):
+	manager.time=timer.Time.value+time
 	
+	res_pass.BackgroundColor.value=color
+
 
 '''if the z value should be locked'''
 def ignoreZ():
@@ -147,10 +179,14 @@ def space3D():
 	return False
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.0, 0.0)
+	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
 
 def getTargetDepth():
 	return 1.4;
 
 def logResults():
 	return False
+
+'''if true needs a button press or next step, if false then autodetects'''
+def onButtonPress():
+	return True

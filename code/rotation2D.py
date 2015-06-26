@@ -18,6 +18,12 @@ W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
 
 torusWidth = r*math.tan(W*math.pi/180)
 
+graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
+loader = avango.gua.nodes.TriMeshLoader() #Create Loader
+pencil_transform = avango.gua.nodes.TransformNode()
+aim = avango.gua.nodes.TransformNode()
+torus = avango.gua.nodes.TransformNode()
+
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
@@ -87,7 +93,7 @@ class trackingManager(avango.script.Script):
 			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,setupEnvironment.getTargetDepth(),0)*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
 
 		#erase 2dof
-		if setupEnvironment.air()==False:
+		if setupEnvironment.space3D()==False:
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate()
 			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
@@ -191,10 +197,11 @@ def handle_key(key, scancode, action, mods):
 
 trackManager = trackingManager()
 def start ():
-	graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
-	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
-	#Meshes
+	setupEnvironment.getWindow().on_key_press(handle_key)
+	setupEnvironment.setup(graph)
+
+	#loadMeshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	pencil.Transform.value= avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
@@ -209,13 +216,10 @@ def start ():
 	torus.Transform.value = avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)#position*size
 	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
-
-	setupEnvironment.getWindow().on_key_press(handle_key)
-	setupEnvironment.setup(graph)
-
 	#add nodes to root
 	graph.Root.value.Children.value.extend([aim, torus, pencil_transform])
 
+	
 	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
@@ -248,6 +252,7 @@ def start ():
 
 
 	setupEnvironment.launch()
+
 
 if __name__ == '__main__':
   start()

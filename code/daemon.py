@@ -26,6 +26,7 @@ def init_art_test_tracking():
 	_art.port= "5001"
 
 	_art.stations[1] = avango.daemon.Station('pointer')
+	_art.stations[2] = avango.daemon.Station('glasses')
 
 	device_list.append(_art)
 
