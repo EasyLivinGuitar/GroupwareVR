@@ -13,11 +13,10 @@ r=0.15 #circle radius
 
 #fitt's law parameter
 D=40 #in degrees
-ID=4 #fitt's law
+ID=2 #fitt's law
 W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
 
 torusWidth = r*math.tan(W*math.pi/180)
-
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
@@ -71,86 +70,27 @@ class trackingManager(avango.script.Script):
 
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
-		
+			
 		if setupEnvironment.logResults():	
 			self.logData()
 			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege aim an neue Stelle
 
-		#kippe 90 nach oben, so dass man eine Draufsicht hat
-		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value	
-
 	def tidyMats(self):
 		#erase translation in the matrix and keep rotation and scale
 		if setupEnvironment.ignoreZ():
-			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,setupEnvironment.getTargetDepth(),0)*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
-
-		#erase 2dof
-		if setupEnvironment.air()==False:
-			#get angle between rotation and y axis
-			q = self.pencilTransMat.value.get_rotate()
-			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
-			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0)
-
+			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
 
 	def nextSettingStep(self):
 		self.tidyMats()
-		
-		#quaternion to euler has an error with the z axis
-		a = self.pencilTransMat.value.get_rotate()
-		a.normalize()
-		'''
-		aEuler = [
-			math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
-			math.asin(2*(a.x*a.z-a.w*a.y)),
-			math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))
-		]
-		print("P:"+str(a)+" => "+str(aEuler))
-		'''
-
-		b = self.torusMat.value.get_rotate()
-		b.normalize()
-		'''
-		bEuler = [
-			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
-			math.asin(2*(b.x*b.z-b.w*b.y)),
-			math.atan2(2*(b.x*b.w+b.y*b.z), 1-2*(b.z**2+b.w**2))
-		]
-		print("T:"+str(b)+" => "+str(bEuler))
-	
-		error =[
-			(aEuler[0]-bEuler[0])*180/math.pi, #Y
-			(aEuler[1]-bEuler[1])*180/math.pi, #?
-			(aEuler[2]-bEuler[2])*180/math.pi, #?
-			0 #gesamt
-		]
-		error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
-		print("Error Gesamt:"+str( error[3] )+"\n"+
-			"Y: "+str( error[0] )+"\n"
-			"?: "+str( error[1] )+"\n"
-			"?: "+str( error[2] )+"\n"
-		)
-		error = error[3]
-		'''
-
-		print("P: "+str(a))
-		print("T: "+str(b))
-		error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
-		print (error)
-		if error < W/2:
-			print("HIT")
-		else:
-			print("MISS")
-
-		#move target
 		if self.backAndForth:
-			self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
+			self.aimMat.value *= avango.gua.make_rot_mat(D,1,1,0)
 			self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
 			self.backAndForth=False
 		else:
-			self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
-			self.torusMat.value = avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.aimMat.value *= avango.gua.make_rot_mat(-D,1,1,0)
+			self.torusMat.value = avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(D,-1,0,1)*avango.gua.make_trans_mat(0, r, 0)*avango.gua.make_scale_mat(torusWidth)
 			self.backAndForth=True
 
 	def logData(self):
@@ -184,7 +124,6 @@ class trackingManager(avango.script.Script):
 
 def handle_key(key, scancode, action, mods):
 	if action == 0:
-		#print(key)
 		#32 is space 335 is num_enter
 		if key == 335:
 			trackManager.nextSettingStep()

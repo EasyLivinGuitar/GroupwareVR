@@ -104,11 +104,11 @@ int Liberty::sendInitialCommands() {
 	// 	return -1;		
 	// }
 
-	std::cout << "Switch: autodetect markers" << std::endl;
-	usleep(1000000);
-	if(!sendCommand("@A1\r"))	{
-		return -2;
-	}
+	// std::cout << "Switch: autodetect markers" << std::endl;
+	// usleep(1000000);
+	// if(!sendCommand("@A1\r"))	{
+	// 	return -2;
+	// }
 
 
 	std::cout << "Switch: metric units" << std::endl;

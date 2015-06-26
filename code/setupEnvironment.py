@@ -2,6 +2,8 @@ import avango
 import avango.daemon
 import avango.gua
 import avango.script
+import avango.sound
+import avango.sound.openal
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -40,6 +42,12 @@ window = avango.gua.nodes.GlfwWindow(
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
 
+soundtraverser = avango.sound.nodes.SoundTraverser()
+soundRenderer = avango.sound.openal.nodes.OpenALSoundRenderer()
+soundRenderer.Device.value = ""
+soundtraverser.Renderers.value = [soundRenderer]
+
+cam = avango.gua.nodes.CameraNode()
 
 def setup(graph):
 	light = avango.gua.nodes.LightNode(
@@ -102,16 +110,14 @@ def setup(graph):
 
 	graph.Root.value.Children.value=[light, screen]
 
+	soundtraverser.RootNode.value = graph.Root.value
+	soundtraverser.Traverse.value = True
+
+	soundRenderer.ListenerPosition.connect_from(cam.Transform)
+
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
-
-	'''fieldmanager = FieldManager()
-	headtracking = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-	headtracking.TransmitterOffset.value = getOffsetTracking()
-	headtracking.Station.value = "glass-1"
-	fieldmanager.TransMat.connect_from(headtracking.Matrix)
-	cam.Transform.connect_from(fieldmanager.TransMat)'''
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
@@ -129,15 +135,22 @@ def getWindow():
 def launch():
 	guaVE = GuaVE()
 	guaVE.start(locals(), globals())
-
+	
 	viewer.run()
+	
 
 '''if the z value should be locked'''
 def ignoreZ():
-	return False
+	return True
 
 def space3D():
 	return False
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -1.0, 0.0) 
+	return avango.gua.make_trans_mat(0.0, -0.0, 0.0)
+
+def getTargetDepth():
+	return 1.4;
+
+def logResults():
+	return False

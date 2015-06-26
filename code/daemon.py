@@ -12,19 +12,27 @@ def init_pst_tracking():
 	pst = avango.daemon.DTrack()
 	pst.port = "5020" # PST port
 
-	pst.stations[1] = avango.daemon.Station('head')
 	pst.stations[2] = avango.daemon.Station('pointer')
-	pst.stations[2] = avango.daemon.Station('keyboard')
+	#pst.stations[2] = avango.daemon.Station('pointer')
+	#pst.stations[2] = avango.daemon.Station('keyboard')
 	
 
 	device_list.append(pst)
 
 	print("PST Tracking started!")
 
+def init_art_test_tracking():
+	_art=avango.daemon.DTrack()
+	_art.port= "5001"
+
+	_art.stations[1] = avango.daemon.Station('pointer')
+
+	device_list.append(_art)
+
 def init_lcd_wall_tracking():
 	
 	_dtrack=avango.daemon.DTrack()
-	_dtrack.port= "5000"
+	_dtrack.port= "5020"
 
 	_dtrack.stations[5] = avango.daemon.Station('glass-1')
 	_dtrack.stations[4] = avango.daemon.Station('rift')
@@ -251,21 +259,21 @@ def init_xbox_controllers():
 			print("XBox Controllers NOT found!")
 			return
 
-def init_latus():	
-	# enable logging for detailed information on device setup
-	avango.enable_logging()
+# def init_latus():	
+# 	# enable logging for detailed information on device setup
+# 	avango.enable_logging()
 
-	# create a station for each target you want to track
-	s1 = avango.daemon.Station('LATUS-M1')
-	s2 = avango.daemon.Station('LATUS-M2')
+# 	# create a station for each target you want to track
+# 	s1 = avango.daemon.Station('LATUS-M1')
+# 	s2 = avango.daemon.Station('LATUS-M2')
 
-	# create instance of Polhemus
-	polhemus = avango.daemon.polhemus.Polhemus()
+# 	# create instance of Polhemus
+# 	polhemus = avango.daemon.polhemus.Polhemus()
 
-	# add stations (index should correspond to the number of the Marker)
-	polhemus.stations[1] = s1
-	polhemus.stations[2] = s2
-	device_list.append(polhemus)
+# 	# add stations (index should correspond to the number of the Marker)
+# 	polhemus.stations[1] = s1
+# 	polhemus.stations[2] = s2
+# 	device_list.append(polhemus)
 
 
 
@@ -273,10 +281,11 @@ device_list = []
 
 #init_pst_tracking()
 init_pointer()
+init_art_test_tracking()
 #init_tuio_input()
 #init_mouse()
 init_keyboard()
-init_lcd_wall_tracking()
+#init_lcd_wall_tracking()
 #init_spheron()
 #init_xbox_controllers()
 #init_latus()
