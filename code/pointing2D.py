@@ -120,7 +120,7 @@ class PointerManager(avango.script.Script):
 						self.flagPrinted=True
 					self.result_file.close()
 
-	def test(self):
+	def next(self):
 		if(self.startedTest==False):
 			self.setStartTranslation()
 			self.time_1=self.timer.value
@@ -147,12 +147,12 @@ class PointerManager(avango.script.Script):
 				self.miss()
 
 	def hit(self):
-		print("Hell Yeah")
-		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.2)
+		print("HIT")
+		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 
 	def miss(self):
-		print("Oh fuck")
-		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.2)
+		print("MISS")
+		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 
 	def getRandomTranslation(self):
@@ -237,12 +237,12 @@ class PointerManager(avango.script.Script):
 
 	def handle_key(self, key, scancode, action, mods):
 		balloonSound.Play.value = True
-		if action == 0:
+		if action == 1:
 			#32 is space 335 is num_enter
 			if key==32:
 				#balloonSound.Play.value = True
 				#self.AimMat.value=self.getRandomTranslation()
-				self.test()
+				self.next()
 
 			
 
