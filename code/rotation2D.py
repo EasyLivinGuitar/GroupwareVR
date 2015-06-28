@@ -12,7 +12,7 @@ from avango.script import field_has_changed
 r=0.15 #circle radius
 
 #fitt's law parameter
-D=40 #in degrees
+D=45 #in degrees
 ID=4 #fitt's law
 W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
 
@@ -85,26 +85,29 @@ class trackingManager(avango.script.Script):
 			#bewege aim an neue Stelle
 
 		#kippe 90 nach oben, so dass man eine Draufsicht hat
-		self.pencilTransMat.value = avango.gua.make_rot_mat(90,1,0,0)*self.pencilTransMat.value	
+		self.pencilTransMat.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0,0,-setupEnvironment.getTargetDepth())*self.pencilTransMat.value	
 
 	def tidyMats(self):
 		#erase translation in the matrix and keep rotation and scale
 		if setupEnvironment.ignoreZ():
-			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,setupEnvironment.getTargetDepth(),0)*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
+			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
 
 		#erase 2dof
 		if setupEnvironment.space3D()==False:
 			#get angle between rotation and y axis
-			q = self.pencilTransMat.value.get_rotate()
-			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation
-			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0)
+			q = self.pencilTransMat.value.get_rotate_scale_corrected()
+			q.z =0 #tried to fix to remove roll
+			q.x = 0 #tried to fix to remove roll
+			q.normalize()
+			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation, has also roll in it
+			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #keep translation and add rotation
 
 
 	def nextSettingStep(self):
 		self.tidyMats()
 		
 		#quaternion to euler has an error with the z axis
-		a = self.pencilTransMat.value.get_rotate()
+		a = self.pencilTransMat.value.get_rotate_scale_corrected()
 		a.normalize()
 		'''
 		aEuler = [
@@ -115,8 +118,12 @@ class trackingManager(avango.script.Script):
 		print("P:"+str(a)+" => "+str(aEuler))
 		'''
 
-		b = self.torusMat.value.get_rotate()
+		b = self.torusMat.value.get_rotate_scale_corrected()
 		b.normalize()
+
+		#hack to make the error fit
+		b.y = b.z
+		b.z = 0
 		'''
 		bEuler = [
 			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
@@ -143,11 +150,14 @@ class trackingManager(avango.script.Script):
 		print("P: "+str(a))
 		print("T: "+str(b))
 		error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
+		error *=180/math.pi
 		print (error)
 		if error < W/2:
 			print("HIT")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 		else:
 			print("MISS")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 		#move target
 		if self.backAndForth:
@@ -189,10 +199,9 @@ class trackingManager(avango.script.Script):
 					self.result_file.close()
 
 def handle_key(key, scancode, action, mods):
-	if action == 0:
-		#print(key)
+	if action == 1:
 		#32 is space 335 is num_enter
-		if key == 335:
+		if key==32 or key==335:
 			trackManager.nextSettingStep()
 
 trackManager = trackingManager()

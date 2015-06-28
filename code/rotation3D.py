@@ -123,9 +123,9 @@ class trackingManager(avango.script.Script):
 					self.result_file.close()
 
 def handle_key(key, scancode, action, mods):
-	if action == 0:
+	if action == 1:
 		#32 is space 335 is num_enter
-		if key == 335:
+		if key==32 or key==335:
 			trackManager.nextSettingStep()
 
 trackManager = trackingManager()

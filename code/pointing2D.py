@@ -239,9 +239,7 @@ class PointerManager(avango.script.Script):
 		balloonSound.Play.value = True
 		if action == 1:
 			#32 is space 335 is num_enter
-			if key==32:
-				#balloonSound.Play.value = True
-				#self.AimMat.value=self.getRandomTranslation()
+			if key==32 or key==335:
 				self.next()
 
 			
