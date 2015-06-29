@@ -280,11 +280,10 @@ def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
 
 def getTargetDepth():
-	return 0.0;
+	return 0.0
 
 def logResults():
 	return False
-
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
 	return True

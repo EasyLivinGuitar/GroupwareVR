@@ -35,6 +35,9 @@ class PointerManager(avango.script.Script):
 
 	BaseMat = avango.gua.SFMatrix4()
 
+	TransMat_old_x_translate = 0
+	point_of_turn = 0
+
 	timer = avango.SFFloat()
 	time_1=0
 	time_2=0
@@ -70,14 +73,26 @@ class PointerManager(avango.script.Script):
 	def button_pressed(self):
 		if(setupEnvironment.onButtonPress()):
 			if(self.Button.value):
-				self.test()
+				self.next()
 			else:
 				self.flagPrinted=False
 
 
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
-		pass #print(self.TransMat.value)
+		if(setupEnvironment.onButtonPress()==False):
+			if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
+				if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
+					self.point_of_turn=self.TransMat.value.get_translate().x
+					
+					self.next()
+			else: #Aim is left
+				if(self.TransMat.value.get_translate().x > self.TransMat_old_x_translate): 
+					self.point_of_turn=self.TransMat.value.get_translate().x
+
+					self.next()
+
+			self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -126,6 +141,7 @@ class PointerManager(avango.script.Script):
 			self.time_1=self.timer.value
 			self.evenTrial=True
 			self.startedTest=True
+			self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
 			print("Test started.\n")
 		else:
 			self.setID()
@@ -235,7 +251,8 @@ class PointerManager(avango.script.Script):
 		print("Time: " + str(self.MT))
 
 	def setTP(self):
-		self.TP=self.ID/self.MT
+		if(self.MT>0):
+			self.TP=self.ID/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:

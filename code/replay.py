@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironmentWall
+import setupEnvironment
 import math
 import queue
 import os.path
@@ -15,6 +15,7 @@ from avango.script import field_has_changed
 class PointerStuff(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
 	HomeMat = avango.gua.SFMatrix4()
+	HomeMat_scale = avango.gua.SFMatrix4()
 	isInside = False
 	
 	timer = avango.SFFloat()
@@ -35,7 +36,7 @@ class PointerStuff(avango.script.Script):
 	def transMatHasChanged(self):
 		distance=self.getDistance()
 
-		if distance < 0.1:
+		if distance < self.HomeMat_scale.value.get_scale().x/2:
 			self.inRange()
 		else: 
 			self.outRange()
@@ -76,7 +77,7 @@ class PointerStuff(avango.script.Script):
 	def readData(self):
 		path=input("Path to file for replay: ")
 
-		self.result_file=open("results/results_pointing_2D/pointing2D_trial26.txt")
+		self.result_file=open(path)
 		gotValues=False
 		
 		lines=self.result_file.readlines()
@@ -174,7 +175,7 @@ def start ():
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
-	tracking = setupEnvironmentWall.setup(graph)
+	tracking = setupEnvironment.setup(graph)
 
 	graph.Root.value.Children.value.extend([pencil_transform, home_transform])
 
@@ -187,14 +188,17 @@ def start ():
 	pointerstuff = PointerStuff()
 	pointerstuff.HomeRef=home
 	
+	pointerstuff.HomeMat_scale.connect_from(home.Transform)
 	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
 
 	timer = avango.nodes.TimeSensor()
 	pointerstuff.timer.connect_from(timer.Time)
 
-	setupEnvironmentWall.launch()
+	setupEnvironment.launch(globals())
 
 
 if __name__ == '__main__':
   start()
+
+  #results/results_pointing_2D/pointing2D_trial0.txt
