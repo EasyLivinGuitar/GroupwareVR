@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 import avango.sound
 import avango.sound.openal
+import math
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -184,12 +185,96 @@ def playSound(sound):
 		if (sound == "miss"):
 			missSound.Play.value = True
 
+
+## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
+# @param MATRIX The rotation matrix to be converted.
+def get_euler_angles(MATRIX):
+
+  q = MATRIX.get_rotate_scale_corrected()
+
+  sqx = q.x * q.x
+  sqy = q.y * q.y
+  sqz = q.z * q.z
+  sqw = q.w * q.w
+
+  unit = sqx + sqy + sqz + sqw # if normalised is one, otherwise is correction factor
+  test = (q.x * q.y) + (q.z * q.w)
+
+  if test > 1:
+    yaw = 0.0
+    roll = 0.0
+    pitch = 0.0
+
+  if test > (0.49999 * unit): # singularity at north pole
+    yaw = 2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/2.0
+    pitch = 0.0
+  elif test < (-0.49999 * unit): # singularity at south pole
+    yaw = -2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/-2.0
+    pitch = 0.0
+  else:
+    yaw = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * sqy - 2.0 * sqz)
+    roll = math.asin(2.0 * test)
+    pitch = math.atan2(2.0 * q.x * q.w - 2.0 * q.y * q.z, 1.0 - 2.0 * sqx - 2.0 * sqz)
+
+  if yaw < 0.0:
+    yaw += 2.0 * math.pi
+
+  if pitch < 0:
+    pitch += 2 * math.pi
+
+  if roll < 0:
+    roll += 2 * math.pi
+
+  return yaw, pitch, roll 
+
+def getRotationError3D(aMat,bMat):
+	#quaternion to euler has an error with the z axis
+	a = aMat.get_rotate_scale_corrected()
+	a.normalize()
+	
+	aEuler = get_euler_angles(aMat)
+	print("P:"+str(a)+" => "+str(aEuler))
+	
+
+	b = bMat.get_rotate_scale_corrected()
+	b.normalize()
+
+	#hack to make the error fit
+	b.y = b.z
+	b.z =   0
+	
+	bEuler = get_euler_angles(bMat)
+	print("T:"+str(b)+" => "+str(bEuler))
+
+	error =[
+		(aEuler[0]-bEuler[0])*180/math.pi, #Y
+		(aEuler[1]-bEuler[1])*180/math.pi, #?
+		(aEuler[2]-bEuler[2])*180/math.pi, #?
+		0 #gesamt
+	]
+	error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+	
+	'''
+	print("P: "+str(a))
+	print("T: "+str(b))
+	error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
+	error *=180/math.pi
+	'''
+	return error
+
+
+
+'''Settings'''
+
+
 '''if the z value should be locked'''
 def ignoreZ():
 	return True
 
 def space3D():
-	return False
+	return True
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)

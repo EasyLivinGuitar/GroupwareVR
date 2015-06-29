@@ -52,25 +52,6 @@ class trackingManager(avango.script.Script):
 		if self.Button.value==True:
 			self.nextSettingStep()
 
-	@field_has_changed(pencilTransMat)
-	def pencilTransMatHasChanged(self):
-		pass
-		#calculate error
-		# currentRot = self.pencilTransMat.value.get_rotate().get_axis()*self.pencilTransMat.value.get_rotate().get_angle()
-
-		# aimRot = self.aimMat.value.get_rotate().get_axis()*self.pencilTransMat.value.get_rotate().get_angle()
-
-		# error = currentRot - aimRot
-		# error_x_square = (currentRot[0] - aimRot[0])*(currentRot[0] - aimRot[0])
-		# error_y_square = (currentRot[1] - aimRot[1])*(currentRot[1] - aimRot[1])
-		# error_z_square = (currentRot[2] - aimRot[2])*(currentRot[2] - aimRot[2])
-		
-		# distance=math.sqrt(error_x_square+error_y_square+error_z_square)
-		# if distance < 0.5:
-		# 	self.inRange()
-		# else: 
-		# 	self.outRange()
-
 	@field_has_changed(timer)
 	def updateTimer(self):
 		self.tidyMats()
@@ -99,60 +80,20 @@ class trackingManager(avango.script.Script):
 			q.z =0 #tried to fix to remove roll
 			q.x = 0 #tried to fix to remove roll
 			q.normalize()
-			yRot = -math.asin(2*(q.x*q.z-q.w*q.y))#get euler y rotation, has also roll in it
+			yRot = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * q.y**2- 2.0 * q.z**2)#get euler y rotation, has also roll in it
 			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #keep translation and add rotation
-
 
 	def nextSettingStep(self):
 		self.tidyMats()
 		
-		#quaternion to euler has an error with the z axis
-		a = self.pencilTransMat.value.get_rotate_scale_corrected()
-		a.normalize()
-		'''
-		aEuler = [
-			math.atan2(2*(a.x*a.y+a.z*a.w), 1-2*(a.y**2+a.z**2)),
-			math.asin(2*(a.x*a.z-a.w*a.y)),
-			math.atan2(2*(a.x*a.w+a.y*a.z), 1-2*(a.z**2+a.w**2))
-		]
-		print("P:"+str(a)+" => "+str(aEuler))
-		'''
-
-		b = self.torusMat.value.get_rotate_scale_corrected()
-		b.normalize()
-
-		#hack to make the error fit
-		b.y = b.z
-		b.z =   0
-		'''
-		bEuler = [
-			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
-			math.asin(2*(b.x*b.z-b.w*b.y)),
-			math.atan2(2*(b.x*b.w+b.y*b.z), 1-2*(b.z**2+b.w**2))
-		]
-		print("T:"+str(b)+" => "+str(bEuler))
-	
-		error =[
-			(aEuler[0]-bEuler[0])*180/math.pi, #Y
-			(aEuler[1]-bEuler[1])*180/math.pi, #?
-			(aEuler[2]-bEuler[2])*180/math.pi, #?
-			0 #gesamt
-		]
-		error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+		error = setupEnvironment.getRotationError3D(self.pencilTransMat.value, self.torusMat.value)
 		print("Error Gesamt:"+str( error[3] )+"\n"+
-			"Y: "+str( error[0] )+"\n"
-			"?: "+str( error[1] )+"\n"
-			"?: "+str( error[2] )+"\n"
-		)
-		error = error[3]
-		'''
+				"Y: "+str( error[0] )+"\n"
+				"R: "+str( error[1] )+"\n"
+				"P: "+str( error[2] )+"\n"
+			)
 
-		print("P: "+str(a))
-		print("T: "+str(b))
-		error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
-		error *=180/math.pi
-		print (error)
-		if error < W/2:
+		if error[3] < W/2:
 			print("HIT")
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 		else:
