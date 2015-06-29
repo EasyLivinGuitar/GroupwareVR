@@ -186,7 +186,7 @@ def start ():
 	trackManager.timer.connect_from(timer.Time)
 
 
-	setupEnvironment.launch()
+	setupEnvironment.launch(globals())
 
 if __name__ == '__main__':
   start()

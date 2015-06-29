@@ -44,10 +44,13 @@ window = avango.gua.nodes.GlfwWindow(
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
 		)
 
+#sound
 soundtraverser = avango.sound.nodes.SoundTraverser()
 soundRenderer = avango.sound.openal.nodes.OpenALSoundRenderer()
 soundRenderer.Device.value = ""
 soundtraverser.Renderers.value = [soundRenderer]
+balloonSound = avango.sound.nodes.SoundSource()
+missSound = avango.sound.nodes.SoundSource()
 
 cam = avango.gua.nodes.CameraNode()
 
@@ -123,6 +126,16 @@ def setup(graph):
 
 	soundRenderer.ListenerPosition.connect_from(cam.Transform)
 
+	balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
+	balloonSound.Loop.value = False
+	balloonSound.Play.value = True
+	graph.Root.value.Children.value.extend([balloonSound])
+
+	missSound.URL.value = "data/sounds/miss.ogg"
+	missSound.Loop.value = False
+	missSound.Play.value = True
+	graph.Root.value.Children.value.extend([missSound])
+
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
@@ -151,18 +164,12 @@ manager.timer.connect_from(timer.Time)
 def getWindow():
 	return window
 
-def launch():
+def launch(otherlocals):
 	guaVE = GuaVE()
-	guaVE.start(locals(), globals())
-	'''
-	balloonSound = avango.sound.nodes.SoundSource()
-	balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
-	balloonSound.Loop.value = True
-	balloonSound.Play.value = True
-	viewer.SceneGraphs.value[0].Root.value.Children.value.extend([balloonSound])
-	'''
-	viewer.frame
-	#balloonSound.Play.value = True
+	z = globals().copy()
+	z.update(otherlocals)
+	guaVE.start(locals(), z)
+		
 	viewer.run()
 
 def setBackgroundColor(color, time):
@@ -170,6 +177,12 @@ def setBackgroundColor(color, time):
 	
 	res_pass.BackgroundColor.value=color
 
+def playSound(sound):
+	if (sound == "balloon"):
+		balloonSound.Play.value = True
+	else:
+		if (sound == "miss"):
+			missSound.Play.value = True
 
 '''if the z value should be locked'''
 def ignoreZ():
@@ -182,7 +195,7 @@ def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
 
 def getTargetDepth():
-	return 0.5;
+	return 0.0;
 
 def logResults():
 	return False

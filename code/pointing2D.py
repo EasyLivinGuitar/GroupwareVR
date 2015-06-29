@@ -148,10 +148,12 @@ class PointerManager(avango.script.Script):
 
 	def hit(self):
 		print("HIT")
+		setupEnvironment.playSound("balloon")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 
 	def miss(self):
 		print("MISS")
+		setupEnvironment.playSound("miss")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 
@@ -236,7 +238,6 @@ class PointerManager(avango.script.Script):
 		self.TP=self.ID/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
-		balloonSound.Play.value = True
 		if action == 1:
 			#32 is space 335 is num_enter
 			if key==32 or key==335:
@@ -271,13 +272,6 @@ def start ():
 
 	graph.Root.value.Children.value.extend([aim_transform, base_transform, pencil_transform])
 
-	#sound
-	# balloonSound = avango.sound.nodes.SoundSource()
-	# balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
-	# balloonSound.Loop.value = True
-	# balloonSound.Play.value = True
-	# graph.Root.value.Children.value.extend([balloonSound])
-
 	#connections
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
@@ -307,7 +301,7 @@ def start ():
 	timer = avango.nodes.TimeSensor()
 	pointerManager.timer.connect_from(timer.Time)
 
-	setupEnvironment.launch()
+	setupEnvironment.launch(globals())
 
 
 if __name__ == '__main__':

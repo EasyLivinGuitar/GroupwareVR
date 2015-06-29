@@ -123,7 +123,7 @@ class trackingManager(avango.script.Script):
 
 		#hack to make the error fit
 		b.y = b.z
-		b.z = 0
+		b.z =   0
 		'''
 		bEuler = [
 			math.atan2(2*(b.x*b.y+b.z*b.w), 1-2*(b.y**2+b.z**2)),
@@ -260,7 +260,7 @@ def start ():
 	trackManager.timer.connect_from(timer.Time)
 
 
-	setupEnvironment.launch()
+	setupEnvironment.launch(globals())
 
 
 if __name__ == '__main__':
