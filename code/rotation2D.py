@@ -5,6 +5,7 @@ import avango.script
 import random
 import setupEnvironment
 import math
+import os.path
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -31,7 +32,14 @@ class trackingManager(avango.script.Script):
 	aimMat = avango.gua.SFMatrix4()
 	torusMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
-	startedTest=False
+	
+	startedTest = False
+	endedTest = False
+
+	created_file =  False
+	flagPrinted = False
+
+	error=[]
 
 
 	def __init__(self):
@@ -51,6 +59,8 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			self.nextSettingStep()
+		else:
+			self.flagPrinted = False
 
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -84,16 +94,17 @@ class trackingManager(avango.script.Script):
 			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #keep translation and add rotation
 
 	def nextSettingStep(self):
+		self.startedTest=True
 		self.tidyMats()
 		
-		error = setupEnvironment.getRotationError3D(self.pencilTransMat.value, self.torusMat.value)
-		print("Error Gesamt:"+str( error[3] )+"\n"+
-				"Y: "+str( error[0] )+"\n"
-				"R: "+str( error[1] )+"\n"
-				"P: "+str( error[2] )+"\n"
+		self.error = setupEnvironment.getRotationError3D(self.pencilTransMat.value, self.torusMat.value)
+		print("Error Gesamt:"+str( self.error[3] )+"\n"+
+				"Y: "+str( self.error[0] )+"\n"
+				"R: "+str( self.error[1] )+"\n"
+				"P: "+str( self.error[2] )+"\n"
 			)
 
-		if error[3] < W/2:
+		if self.error[3] < W/2:
 			print("HIT")
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 		else:
@@ -111,24 +122,24 @@ class trackingManager(avango.script.Script):
 			self.backAndForth=True
 
 	def logData(self):
-		path="results/results_pointing_2D/"
+		path="results/results_rotation_2D/"
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
 				self.created_file=True
 			else: #write permanent values
-				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+				self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".txt", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"
-					"Error: "+str(self.error)+"\n"
-					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
-					"Homepos: \n"+str(self.HomeMat.value)+"\n\n")
+					"Error: "+str(self.error[3])+"\n"
+					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"
+					"Homepos: \n"+str(self.aimMat.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
-					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+					self.result_file=open(path+"rotation_trial"+str(self.num_files)+".txt", "a+")
 					if(self.flagPrinted==False):
 						self.result_file.write(
 							"MT: "+str(self.MT)+"\n"+

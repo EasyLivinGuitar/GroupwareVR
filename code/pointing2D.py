@@ -14,8 +14,9 @@ from avango.script import field_has_changed
 
 #fitt's law parameter
 D=0.9 #in meter
-ID=2 #fitt's law
-W=D/(2**ID-1) #in meter, Fitt's Law umgeformt nach W
+ID=[4, 5, 6] #fitt's law
+N=5
+W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgeformt nach W
 
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
@@ -34,6 +35,7 @@ class PointerManager(avango.script.Script):
 	AimMat = avango.gua.SFMatrix4()
 
 	BaseMat = avango.gua.SFMatrix4()
+	BaseMat_scale = avango.gua.SFMatrix4()
 
 	TransMat_old_x_translate = 0
 	point_of_turn = 0
@@ -56,10 +58,8 @@ class PointerManager(avango.script.Script):
 	ID=0
 	TP=0
 
-	axis=["h", "h+45", "v", "v+45"]
-	current_axis=None
-	current_translations=[]
-	axisDone=True
+	current_index = 0
+	counter = 0
 
 	def __init__(self):
 		self.super(PointerManager).__init__()
@@ -71,7 +71,7 @@ class PointerManager(avango.script.Script):
 
 	@field_has_changed(Button)
 	def button_pressed(self):
-		if(setupEnvironment.onButtonPress()):
+		if(setupEnvironment.onButtonPress() and self.endedTest==False):
 			if(self.Button.value):
 				self.next()
 			else:
@@ -144,23 +144,34 @@ class PointerManager(avango.script.Script):
 			self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
 			print("Test started.\n")
 		else:
-			self.setID()
-			self.nextSettingStep()
-			if(self.evenTrial):
-				self.time_2=self.timer.value
-				self.evenTrial=False
-				self.setMT(self.time_1, self.time_2)
+			if(self.counter==N):
+				self.counter=0
+				self.current_index=self.current_index+1
 			else:
-				self.time_1=self.timer.value
-				self.evenTrial=True
-				self.setMT(self.time_2, self.time_1)
-			self.setID()
-			self.setTP()
+				self.counter=self.counter+1
 
-			if(self.error<=self.AimMat_scale.value.get_scale().x/2):
-				self.hit() 
+			if(self.current_index==len(W)):
+				self.current_index=0
+				self.endedTest=True
 			else:
-				self.miss()
+				self.setID(self.current_index)
+				self.nextSettingStep()
+				if(self.evenTrial):
+					self.time_2=self.timer.value
+					self.evenTrial=False
+					self.setMT(self.time_1, self.time_2)
+				else:
+					self.time_1=self.timer.value
+					self.evenTrial=True
+					self.setMT(self.time_2, self.time_1)
+				self.setID(self.current_index)
+				#self.setTP(0)
+
+				if(self.error<=self.AimMat_scale.value.get_scale().x/2):
+					self.hit() 
+				else:
+					self.miss()
+
 
 	def hit(self):
 		print("HIT")
@@ -193,10 +204,16 @@ class PointerManager(avango.script.Script):
 		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 
 	def nextSettingStep(self):
+
+		print(self.current_index)
 		temp = self.BaseMat.value
 		self.AimMat_old = self.AimMat
-		self.BaseMat.value = self.AimMat.value
+		self.BaseMat.value = self.AimMat.value 
 		self.AimMat.value = temp
+
+		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
+		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
+		
 		
 
 	def getDistance2D(self, target1, target2):
@@ -234,7 +251,7 @@ class PointerManager(avango.script.Script):
 		else:
 			self.error=self.getDistance3D(self.TransMat.value, self.AimMat.value)
 
-	def setID(self):
+	def setID(self, index):
 		# target_size=self.AimMat_scale.value.get_scale().x*2
 		
 		# if setupEnvironment.space3D()==False:
@@ -243,16 +260,16 @@ class PointerManager(avango.script.Script):
 		# 	distance=self.getDistance3D(self.AimMat.value, self.AimMat_old.value)
 
 		# self.ID=math.log10((distance/target_size)+1)/math.log10(2)
-		self.ID = ID
+		self.ID = ID[index]
 		print("ID: "+ str(self.ID))
 
 	def setMT(self, start, end):
 		self.MT=end-start
 		print("Time: " + str(self.MT))
 
-	def setTP(self):
+	def setTP(self, index):
 		if(self.MT>0):
-			self.TP=self.ID/self.MT
+			self.TP=self.ID[index]/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:
@@ -277,11 +294,11 @@ def start ():
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	aim = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_scale_mat(W)
+	aim.Transform.value = avango.gua.make_scale_mat(W[0])
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
 
 	base = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	base.Transform.value = avango.gua.make_scale_mat(W)
+	base.Transform.value = avango.gua.make_scale_mat(W[0])
 	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0, 0.2, 0.1))
 
 	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
@@ -313,6 +330,9 @@ def start ():
 
 	pointerManager.BaseMat.connect_from(base_transform.Transform)
 	base_transform.Transform.connect_from(pointerManager.BaseMat)
+
+	pointerManager.BaseMat_scale.connect_from(base.Transform)
+	base.Transform.connect_from(pointerManager.BaseMat_scale)
 
 	#setup timer
 	timer = avango.nodes.TimeSensor()

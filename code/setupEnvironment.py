@@ -283,7 +283,7 @@ def getTargetDepth():
 	return 0.0
 
 def logResults():
-	return False
+	return True
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
 	return True
