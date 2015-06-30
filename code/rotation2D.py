@@ -66,6 +66,7 @@ class trackingManager(avango.script.Script):
 	def updateTimer(self):
 		self.tidyMats()
 
+	
 		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
 		#	self.isInside = False
 		
@@ -75,15 +76,12 @@ class trackingManager(avango.script.Script):
 			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
 			#bewege aim an neue Stelle
 
-		#kippe 90 nach oben, so dass man eine Draufsicht hat
-		self.pencilTransMat.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0,0,-setupEnvironment.getTargetDepth())*self.pencilTransMat.value	
-
 	def tidyMats(self):
 		#erase translation in the matrix and keep rotation and scale
 		if setupEnvironment.ignoreZ():
 			self.pencilTransMat.value = avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())*avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
 
-		#erase 2dof
+		#erase 2dof, unstable operation, calling this twice destroys the rotation information
 		if setupEnvironment.space3D()==False:
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate_scale_corrected()
@@ -91,20 +89,21 @@ class trackingManager(avango.script.Script):
 			q.x = 0 #tried to fix to remove roll
 			q.normalize()
 			yRot = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * q.y**2- 2.0 * q.z**2)#get euler y rotation, has also roll in it
-			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #keep translation and add rotation
+			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())#keep translation
+			self.pencilTransMat.value *= avango.gua.make_rot_mat(yRot*180.0/math.pi,0,0,1) #add rotation
+
 
 	def nextSettingStep(self):
 		self.startedTest=True
-		self.tidyMats()
-		
-		self.error = setupEnvironment.getRotationError3D(self.pencilTransMat.value, self.torusMat.value)
-		print("Error Gesamt:"+str( self.error[3] )+"\n"+
-				"Y: "+str( self.error[0] )+"\n"
-				"R: "+str( self.error[1] )+"\n"
-				"P: "+str( self.error[2] )+"\n"
-			)
+		self.error = setupEnvironment.getRotationError1D(
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.torusMat.value.get_rotate_scale_corrected()
+		)
+		print("P:"+str( self.pencilTransMat.value.get_rotate_scale_corrected() )+"")
+		print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
+		print("Error Gesamt:"+str( self.error )+"°")
 
-		if self.error[3] < W/2:
+		if self.error < W/2:
 			print("HIT")
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 		else:
@@ -164,7 +163,7 @@ def start ():
 
 	#loadMeshes
 	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value= avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
+	pencil.Transform.value= avango.gua.make_rot_mat(90, 1, 0, 0)*avango.gua.make_rot_mat(180, 0, 1, 0)*avango.gua.make_scale_mat(0.02)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])

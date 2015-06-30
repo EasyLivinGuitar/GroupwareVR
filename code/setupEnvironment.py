@@ -264,6 +264,15 @@ def getRotationError3D(aMat,bMat):
 	'''
 	return error
 
+'''
+get rotation error between two rotations
+'''
+def getRotationError1D(rotA, rotB):
+	matA = avango.gua.make_rot_mat(rotA)
+	matB = avango.gua.make_rot_mat(rotB)
+
+	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
+	return diffRotMat.get_rotate_scale_corrected().get_angle()
 
 
 '''Settings'''
@@ -274,7 +283,7 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return True
+	return False
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
@@ -283,7 +292,7 @@ def getTargetDepth():
 	return 0.0
 
 def logResults():
-	return True
+	return False
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
 	return True
