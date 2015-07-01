@@ -84,6 +84,23 @@ class trackingManager(avango.script.Script):
 
 	def nextSettingStep(self):
 		self.tidyMats()
+
+		self.error = setupEnvironment.getRotationError1D(
+			(avango.gua.make_rot_mat(-90,1,0,0)*self.pencilTransMat.value).get_rotate_scale_corrected(),
+			self.torusMat.value.get_rotate_scale_corrected()
+		)
+
+		print("P:"+str( (avango.gua.make_rot_mat(-90,1,0,0)*self.pencilTransMat.value).get_rotate_scale_corrected() )+"")
+		print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
+		print("Error Gesamt:"+str( self.error )+"°")
+
+		if self.error < W/2:
+			print("HIT:" + str(self.error)+"°")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+		else:
+			print("MISS:" + str(self.error)+"°")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+
 		if self.backAndForth:
 			self.aimMat.value *= avango.gua.make_rot_mat(D,1,1,0)
 			self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
@@ -92,6 +109,8 @@ class trackingManager(avango.script.Script):
 			self.aimMat.value *= avango.gua.make_rot_mat(-D,1,1,0)
 			self.torusMat.value = avango.gua.make_trans_mat(0, 0, setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(D,-1,0,1)*avango.gua.make_trans_mat(0, r, 0)*avango.gua.make_scale_mat(torusWidth)
 			self.backAndForth=True
+
+
 
 	def logData(self):
 		path="results/results_pointing_2D/"
