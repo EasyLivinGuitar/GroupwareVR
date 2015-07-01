@@ -99,15 +99,12 @@ class trackingManager(avango.script.Script):
 			self.pencilTransMat.value.get_rotate_scale_corrected(),
 			self.torusMat.value.get_rotate_scale_corrected()
 		)
-		print("P:"+str( self.pencilTransMat.value.get_rotate_scale_corrected() )+"")
-		print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
-		print("Error Gesamt:"+str( self.error )+"°")
 
 		if self.error < W/2:
-			print("HIT")
+			print("HIT:" + str(self.error)+"°")
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 		else:
-			print("MISS")
+			print("MISS:" + str(self.error)+"°")
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 		#move target
