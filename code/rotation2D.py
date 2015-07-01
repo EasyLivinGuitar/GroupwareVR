@@ -91,7 +91,7 @@ class trackingManager(avango.script.Script):
 			q.z =0 #tried to fix to remove roll
 			q.x = 0 #tried to fix to remove roll
 			q.normalize()
-			yRot = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * q.y**2- 2.0 * q.z**2)#get euler y rotation, has also roll in it
+			yRot = setupEnvironment.get_euler_angles(avango.gua.make_rot_mat(q))[0]#get euler y rotation, has also roll in it
 			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())#keep translation
 			self.pencilTransMat.value *= avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #add rotation
 		else:
@@ -112,8 +112,8 @@ class trackingManager(avango.script.Script):
 			self.torusMat.value.get_rotate_scale_corrected()
 		)
 
-		print("P:"+str( pencilRot )+"")
-		print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
+		#print("P:"+str( pencilRot )+"")
+		#print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
 
 		if self.error < W/2:
 			print("HIT:" + str(self.error)+"°")
@@ -125,7 +125,7 @@ class trackingManager(avango.script.Script):
 		#move target
 		if self.backAndForth:
 			self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
-			self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.torusMat.value = avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
 			self.backAndForth=False
 		else:
 			self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
