@@ -13,8 +13,8 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 #fitt's law parameter
-D=0.9 #in meter
-ID=[4, 5, 6] #fitt's law
+D=0.5 #in meter
+ID=[3, 4, 5] #fitt's law
 N=5
 W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgeformt nach W
 
@@ -136,42 +136,44 @@ class PointerManager(avango.script.Script):
 					self.result_file.close()
 
 	def next(self):
-		if(self.startedTest==False):
-			self.setStartTranslation()
-			self.time_1=self.timer.value
-			self.evenTrial=True
-			self.startedTest=True
-			self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
-			print("Test started.\n")
+		if(self.endedTest==False):	
+			if(self.startedTest==False):
+				self.setStartTranslation()
+				self.time_1=self.timer.value
+				self.evenTrial=True
+				self.startedTest=True
+				self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
+				print("Test started.\n")
+			else:
+				if(self.counter==N):
+					self.counter=0
+					self.current_index=self.current_index+1
+				else:
+					self.counter=self.counter+1
+
+				if(self.current_index==len(W)):
+					self.current_index=0
+					self.endedTest=True
+				else:
+					self.setID(self.current_index)
+					self.nextSettingStep()
+					if(self.evenTrial):
+						self.time_2=self.timer.value
+						self.evenTrial=False
+						self.setMT(self.time_1, self.time_2)
+					else:
+						self.time_1=self.timer.value
+						self.evenTrial=True
+						self.setMT(self.time_2, self.time_1)
+					self.setID(self.current_index)
+					self.setTP(self.current_index)
+
+					if(self.error<=self.AimMat_scale.value.get_scale().x/2):
+						self.hit() 
+					else:
+						self.miss()
 		else:
-			if(self.counter==N):
-				self.counter=0
-				self.current_index=self.current_index+1
-			else:
-				self.counter=self.counter+1
-
-			if(self.current_index==len(W)):
-				self.current_index=0
-				self.endedTest=True
-			else:
-				self.setID(self.current_index)
-				self.nextSettingStep()
-				if(self.evenTrial):
-					self.time_2=self.timer.value
-					self.evenTrial=False
-					self.setMT(self.time_1, self.time_2)
-				else:
-					self.time_1=self.timer.value
-					self.evenTrial=True
-					self.setMT(self.time_2, self.time_1)
-				self.setID(self.current_index)
-				#self.setTP(0)
-
-				if(self.error<=self.AimMat_scale.value.get_scale().x/2):
-					self.hit() 
-				else:
-					self.miss()
-
+			print("Test ended")
 
 	def hit(self):
 		print("HIT")
@@ -269,7 +271,7 @@ class PointerManager(avango.script.Script):
 
 	def setTP(self, index):
 		if(self.MT>0):
-			self.TP=self.ID[index]/self.MT
+			self.TP=ID[index]/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:
@@ -326,6 +328,7 @@ def start ():
 	
 	#connect aim with aim
 	pointerManager.AimMat_scale.connect_from(aim.Transform)
+	aim.Transform.connect_from(pointerManager.AimMat_scale)
 	aim_transform.Transform.connect_from(pointerManager.AimMat)
 
 	pointerManager.BaseMat.connect_from(base_transform.Transform)

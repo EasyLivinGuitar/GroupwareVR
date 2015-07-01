@@ -14,8 +14,8 @@ r=0.15 #circle radius
 
 #fitt's law parameter
 D=45 #in degrees
-ID=4 #fitt's law
-W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
+ID=[4, 5, 6] #fitt's law
+W=D/(2**ID[0]-1) #in degrees, Fitt's Law umgeformt nach W
 
 torusWidth = r*math.tan(W*math.pi/180)
 
