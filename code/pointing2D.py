@@ -96,12 +96,19 @@ class PointerManager(avango.script.Script):
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
+		translation = self.TransMat.value.get_translate()
+		if not setupEnvironment.space3D():
+			self.TransMat.value = avango.gua.make_rot_mat(90, 1, 0, 0)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
+			tmp = translation.y
+			translation.y = -translation.z-setupEnvironment.getOffsetTracking().get_translate().y
+			translation.z = tmp
+
 		if setupEnvironment.ignoreZ():
-			translation = self.TransMat.value.get_translate()
 			translation.z = 0
 
-			self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
+		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
+	
 		self.setError()
 		if setupEnvironment.logResults():
 			self.logData()
@@ -280,7 +287,6 @@ class PointerManager(avango.script.Script):
 				self.next()
 
 			
-
 def start ():
     #setup
 	pointerManager = PointerManager()
@@ -289,9 +295,8 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/tracked_object_pointing.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value=avango.gua.make_rot_mat(270, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
+	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/new_object_pointing.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 1))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 

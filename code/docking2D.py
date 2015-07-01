@@ -10,95 +10,139 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
+r=0.15 #circle radius
+
+#fitt's law parameter
+D=45 #in degrees
+ID=4 #fitt's law
+W=D/(2**ID-1) #in degrees, Fitt's Law umgeformt nach W
+
+torusWidth = r*math.tan(W*math.pi/180)
+
+graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
+loader = avango.gua.nodes.TriMeshLoader() #Create Loader
+pencil_transform = avango.gua.nodes.TransformNode()
+aim = avango.gua.nodes.TransformNode()
+torus = avango.gua.nodes.TransformNode()
+
+
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
-
-	PencilMat = avango.gua.SFMatrix4()
-
-	AimMat_old = avango.gua.SFMatrix4()
-	AimMat_scale = avango.gua.SFMatrix4()
-	AimMat = avango.gua.SFMatrix4()
-
+	pencilTransMat = avango.gua.SFMatrix4()
+	aimMat = avango.gua.SFMatrix4()
+	torusMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
-	time_1 = 0
-	time_2 = 0
-
-	result_file = None
-	created_file = False
-	num_files = 0
-
+	
 	startedTest = False
 	endedTest = False
-	evenTrial = False
+
+	created_file =  False
 	flagPrinted = False
 
-	rot_error=0
-	trans_error=0
-	MT=0
-	ID=0
-	TP=0
+	error=[]
+
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
+		self.isInside = False;
+		self.startTime = 0
+		self.endTime = 0
+		self.aimRef = None
+		self.backAndForth = False
+		#self.aimRef=None
+
+	def __del__(self):
+		if setupEnvironment.logResults():
+			self.result_file.close()
 
 	@field_has_changed(Button)
 	def button_pressed(self):
-		if self.Button.value:
-			if(self.evenTrial==False):
-				self.time_1=self.timer.value
-				self.evenTrial=True
-
-				if(self.startedTest):
-					self.setMT(self.time_2, self.time_1)
-					self.setTP()
-			else:
-				self.time_2=self.timer.value
-				self.evenTrial=False
-
-				self.setMT(self.time_1, self.time_2)
-				self.setTP()
-
-			self.AimMat_old.value=self.AimMat.value
+		if self.Button.value==True:
 			self.nextSettingStep()
-
-			self.setID()
-
-			if self.startedTest==False:
-				self.startedTest=True
-				print("Test started.\n")
 		else:
-			self.flagPrinted=False
-		
+			self.flagPrinted = False
+
 	@field_has_changed(timer)
 	def updateTimer(self):
+		self.tidyMats()
+
+	
+		#if self.timer.value-self.startTime > 2 and self.isInside==True: #timer abbgelaufen:
+		#	self.isInside = False
+		
+		if setupEnvironment.logResults():	
+			self.logData()
+			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
+			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
+			#bewege aim an neue Stelle
+
+	def tidyMats(self):
+		#erase translation in the matrix and keep rotation and scale
 		if setupEnvironment.ignoreZ():
-			translation = self.PencilMat.value.get_translate()
-			translation.z = 0
+			self.pencilTransMat.value = (avango.gua.make_scale_mat(self.pencilTransMat.value.get_scale())
+				*avango.gua.make_trans_mat(
+					self.pencilTransMat.value.get_translate().x,
+					-self.pencilTransMat.value.get_translate().z-setupEnvironment.getOffsetTracking().get_translate().y,
+					setupEnvironment.getTargetDepth()
+					)
+				*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
+			)
 
-			self.PencilMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.PencilMat.value.get_rotate())
+		#erase 2dof, unstable operation, calling this twice destroys the rotation information
+		if setupEnvironment.space3D()==False:
+			#get angle between rotation and y axis
+			q = self.pencilTransMat.value.get_rotate_scale_corrected()
+			q.z =0 #tried to fix to remove roll
+			q.x = 0 #tried to fix to remove roll
+			q.normalize()
+			yRot = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * q.y**2- 2.0 * q.z**2)#get euler y rotation, has also roll in it
+			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())#keep translation
+			self.pencilTransMat.value *= avango.gua.make_rot_mat(yRot*180.0/math.pi,0,0,1) #add rotation
 
-		self.setError()
-		self.logData()
+
+	def nextSettingStep(self):
+		self.startedTest=True
+		self.error = setupEnvironment.getRotationError1D(
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.torusMat.value.get_rotate_scale_corrected()
+		)
+
+		if self.error < W/2:
+			print("HIT:" + str(self.error)+"°")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+		else:
+			print("MISS:" + str(self.error)+"°")
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+
+		#move target
+		if self.backAndForth:
+			self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
+			self.torusMat.value = avango.gua.make_rot_mat(0,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.backAndForth=False
+		else:
+			self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
+			self.torusMat.value = avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.backAndForth=True
 
 	def logData(self):
-		path="results/results_docking_2D/"
+		path="results/results_rotation_2D/"
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
 				self.created_file=True
 			else: #write permanent values
-				self.result_file=open(path+"docking2D_trial"+str(self.num_files)+".txt", "a+")
+				self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".txt", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"
-					"Error: "+str(self.error)+"\n"
-					"Pointerpos: \n"+str(self.PencilMat.value)+"\n"
-					"Homepos: \n"+str(self.AimMat.value)+"\n\n")
+					"Error: "+str(self.error[3])+"\n"
+					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"
+					"Homepos: \n"+str(self.aimMat.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
-					self.result_file=open(path+"docking2D_trial"+str(self.num_files)+".txt", "a+")
+					self.result_file=open(path+"rotation_trial"+str(self.num_files)+".txt", "a+")
 					if(self.flagPrinted==False):
 						self.result_file.write(
 							"MT: "+str(self.MT)+"\n"+
@@ -109,128 +153,70 @@ class trackingManager(avango.script.Script):
 						self.flagPrinted=True
 					self.result_file.close()
 
-	def nextSettingStep(self):
-		print("Next")
+def handle_key(key, scancode, action, mods):
+	if action == 1:
+		#32 is space 335 is num_enter
+		if key==32 or key==335:
+			trackManager.nextSettingStep()
 
-	def getDistance2D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
+trackManager = trackingManager()
+def start ():
 
-		home_x=target2.get_translate()[0]
-		home_y=target2.get_translate()[1]
+	setupEnvironment.getWindow().on_key_press(handle_key)
+	setupEnvironment.setup(graph)
 
-		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
-		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
-		
-		distance=math.sqrt(trans_home_x_square+trans_home_y_square)
-		return distance
-
-	def getDistance3D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
-		trans_z=target1.get_translate()[2]
-
-		home_x=target2.get_translate()[0]
-		home_y=target2.get_translate()[1]
-		home_z=target2.get_translate()[2]
-
-		trans_home_x_square=(trans_x - home_x)*(trans_x - home_x)
-		trans_home_y_square=(trans_y - home_y)*(trans_y - home_y)
-		trans_home_z_square=(trans_z - home_z)*(trans_z - home_z)
-		
-		distance=math.sqrt(trans_home_x_square+trans_home_y_square+trans_home_z_square)
-		return distance
-
-	def setError(self):
-		if setupEnvironment.space3D()==False:
-			distance=self.getDistance2D(self.PencilMat.value, self.AimMat.value)
-		else:
-			distance=self.getDistance3D(self.PencilMat.value, self.AimMat.value)
-
-		self.trans_error=distance
-		pencil_rot=self.PencilMat.value.get_rotate().get_axis() 
-			* self.PencilMat.value.get_rotate.get_angle()
-
-		aim_rot=self.AimMat.value.get_rotate().get_axis()
-			* self.AimMat.value.get_rotate.get_angle()
-
-		delta=pencil_rot-aim_rot
-
-		delta_x_square = error.x*error.x
-		delta_y_square = error.y*error.y
-		delta_z_square = error.z*error.z
-
-		self.rot_error=math.sqrt(delta_x_square+delta_y_square+delta_z_square)
-
-
-
-	def setID(self):
-		target_size=self.AimMat_scale.value.get_scale().x*2
-		
-		if setupEnvironment.space3D()==False:
-			distance=self.getDistance2D(self.AimMat.value, self.AimMat_old.value)
-		else:
-			distance=self.getDistance3D(self.AimMat.value, self.AimMat_old.value)
-
-		self.ID=math.log10((distance/target_size)+1)/math.log10(2)
-
-	def setMT(self, start, end):
-		self.MT=end-start
-
-	def setTP(self):
-		self.TP=self.ID/self.MT
-
-def start():
-	graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
-	loader = avango.gua.nodes.TriMeshLoader() #Create Loader
-
-	#Meshes
-	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
+	#loadMeshes
+	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/new_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil.Transform.value= avango.gua.make_rot_mat(90, 1, 0, 0)
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
-	aim = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_scale_mat(0.05)
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
+	aim = loader.create_geometry_from_file("tracked_object", "data/objects/new_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aim.Transform.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())
+	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
-	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
+	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	torus.Transform.value = avango.gua.make_trans_mat(0, r, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)#position*size
+	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
-	trackingmanager = trackingManager()
+	#add nodes to root
+	graph.Root.value.Children.value.extend([aim, torus, pencil_transform])
 
-	#setup
-	#setupEnvironment.getWindow().on_key_press(trackingmanager.handle_key)
-	setupEnvironment.setup(graph)
-
-	graph.Root.value.Children.value.extend([aim_transform, pencil_transform])
-
+	
+	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
 
-	pointer_device_sensor.Station.value = "LATUS-M1"
+	pointer_device_sensor.Station.value = "pointer"
 
+	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
 
+	#connect pencil
+	pencil_transform.Transform.connect_from(trackManager.pencilTransMat)
+
+	#listen to button
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
 
-	trackingmanager.Button.connect_from(button_sensor.Button0)
-	
-	#connect transmat with matrix from deamon
-	trackingmanager.PencilMat.connect_from(pointer_device_sensor.Matrix)
-	
-	#connect object at the place of transmat
-	pencil_transform.Transform.connect_from(trackingmanager.PencilMat)
-	
-	#connect home with home
-	trackingmanager.AimMat.connect_from(aim_transform.Transform)
-	trackingmanager.AimMat_scale.connect_from(aim.Transform)
-	aim_transform.Transform.connect_from(trackingmanager.AimMat)
+	trackManager.Button.connect_from(button_sensor.Button0)
 
+	#connect aim
+	trackManager.aimRef = aim
+	trackManager.aimMat.connect_from(aim.Transform)
+	aim.Transform.connect_from(trackManager.aimMat)
+
+	#connect torus
+	trackManager.torusMat.connect_from(torus.Transform)
+	torus.Transform.connect_from(trackManager.torusMat)
+
+	#timer
 	timer = avango.nodes.TimeSensor()
-	trackingmanager.timer.connect_from(timer.Time)
+	trackManager.timer.connect_from(timer.Time)
 
-	setupEnvironment.launch()
+
+	setupEnvironment.launch(globals())
+
 
 if __name__ == '__main__':
   start()
