@@ -295,4 +295,7 @@ def logResults():
 	return False
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
-	return True
+	return False
+
+def useAutoDetect():
+	return False

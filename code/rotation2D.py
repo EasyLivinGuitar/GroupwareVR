@@ -174,14 +174,14 @@ def start ():
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
-	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/new_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil], Transform=avango.gua.make_rot_mat(90,1,0,0))
 
-	aim = loader.create_geometry_from_file("tracked_object", "data/objects/new_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_rot_mat(180, 0, 1, 0)*avango.gua.make_rot_mat(180, 0, 0, 1)
+	aim = loader.create_geometry_from_file("tracked_object", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aim.Transform.value = avango.gua.make_trans_mat(0,0,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(-90,1,0,0)
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
