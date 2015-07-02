@@ -296,9 +296,10 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
 	pencil.Transform.value = avango.gua.make_scale_mat(1)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.5, 0.5, 1.0))
+	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 	pencil.Material.value.EnableBackfaceCulling.value = False
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
