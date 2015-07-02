@@ -298,7 +298,7 @@ def start ():
 
 	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	pencil.Transform.value = avango.gua.make_scale_mat(1)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 1))
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.5))
 	pencil.Material.value.EnableBackfaceCulling.value = False
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
