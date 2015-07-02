@@ -95,7 +95,7 @@ def setup(graph):
 	res_pass.EnvironmentLightingColor.value = avango.gua.Color(0.1, 0.1, 0.1)
 	res_pass.ToneMappingMode.value = avango.gua.ToneMappingMode.UNCHARTED
 	res_pass.Exposure.value = 1.0
-	res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
+	res_pass.BackgroundColor.value = avango.gua.Color(1, 1, 1)
 
 	anti_aliasing = avango.gua.nodes.SSAAPassDescription()
 
@@ -157,7 +157,7 @@ class FieldManager(avango.script.Script):
 	@field_has_changed(timer)
 	def update(self):
 		if(self.timer.value>=self.time):
-			res_pass.BackgroundColor.value=avango.gua.Color(0, 0, 0)
+			res_pass.BackgroundColor.value=avango.gua.Color(1, 1, 1)
 
 manager=FieldManager()
 manager.timer.connect_from(timer.Time)
