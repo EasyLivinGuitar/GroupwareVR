@@ -85,7 +85,7 @@ def setup(graph):
 		)
 
 	#Sieht netter aus
-	res_pass.EnableSSAO.value = True
+	res_pass.EnableSSAO.value = False
 	res_pass.SSAOIntensity.value = 4.0
 	res_pass.SSAOFalloff.value = 10.0
 	res_pass.SSAORadius.value = 7.0
