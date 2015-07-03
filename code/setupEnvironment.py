@@ -166,6 +166,7 @@ def getWindow():
 	return window
 
 def launch(otherlocals):
+	print("Launch")
 	guaVE = GuaVE()
 	z = globals().copy()
 	z.update(otherlocals)
@@ -291,7 +292,7 @@ def getTargetDepth():
 	return 0.4
 
 def logResults():
-	return False
+	return True
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
 	return False

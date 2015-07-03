@@ -61,6 +61,8 @@ class PointerManager(avango.script.Script):
 	current_index = 0
 	counter = 0
 
+	hit=False
+
 	def __init__(self):
 		self.super(PointerManager).__init__()
 		AimMat = avango.gua.make_trans_mat(0.0, 0.0, setupEnvironment.getTargetDepth())
@@ -122,23 +124,25 @@ class PointerManager(avango.script.Script):
 					if os.path.isfile(os.path.join(path, f))])
 				self.created_file=True
 			else: #write permanent values
-				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".replay", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"
 					"Error: "+str(self.error)+"\n"
 					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
-					"Homepos: \n"+str(self.AimMat.value)+"\n\n")
+					"Aimpos: \n"+str(self.AimMat.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
-					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".txt", "a+")
+					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
 						self.result_file.write(
+							"HT: "+str(self.hit)+"\n"+
 							"MT: "+str(self.MT)+"\n"+
 							"ID: "+str(self.ID)+"\n"+
 							"TP: "+str(self.TP)+"\n"+
-							"Total Error: "+str(self.error)+"\n"+
+							"W : "+str(W[self.current_index])+"\n"
+							"Last Error: "+str(self.error)+"\n"+
 							"=========================\n\n")
 						self.flagPrinted=True
 					self.result_file.close()
@@ -185,11 +189,13 @@ class PointerManager(avango.script.Script):
 
 	def hit(self):
 		print("HIT")
+		self.hit=True
 		setupEnvironment.playSound("balloon")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 
 	def miss(self):
 		print("MISS")
+		self.hit=False
 		setupEnvironment.playSound("miss")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
@@ -286,6 +292,10 @@ class PointerManager(avango.script.Script):
 			#32 is space 335 is num_enter
 			if key==32 or key==335:
 				self.next()
+				self.Button.value=True
+		else:
+			self.Button.value=False
+			self.flagPrinted=False
 
 			
 def start ():

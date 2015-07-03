@@ -44,6 +44,7 @@ class PointerStuff(avango.script.Script):
 
 	@field_has_changed(timer)
 	def updateTimer(self):
+		print("Timer changed")
 		if self.read==False:
 			self.readData()
 			self.read=True
@@ -83,6 +84,7 @@ class PointerStuff(avango.script.Script):
 		lines=self.result_file.readlines()
 
 		for i in range(len(lines)):
+			#print(i)
 			check=lines[i].split()
 			
 			if(check):
@@ -92,7 +94,7 @@ class PointerStuff(avango.script.Script):
 					error=float(check[1])
 				if(check[0]=="Pointerpos:"):
 					pointer_mat=self.getMatrix(lines, i+1)
-				if(check[0]=="Homepos:"):
+				if(check[0]=="Aimpos:"):
 					home_mat=self.getMatrix(lines, i+1)
 					gotValues=True
 
@@ -175,30 +177,32 @@ def start ():
 
 	home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
-	tracking = setupEnvironment.setup(graph)
+	setupEnvironment.setup(graph)
 
 	graph.Root.value.Children.value.extend([pencil_transform, home_transform])
-
-
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(
-		DeviceService = avango.daemon.DeviceService()
-		)
-	pointer_device_sensor.Station.value = "device-pointer"
 
 	pointerstuff = PointerStuff()
 	pointerstuff.HomeRef=home
 	
+	print("Connect aim")
 	pointerstuff.HomeMat_scale.connect_from(home.Transform)
-	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 	home_transform.Transform.connect_from(pointerstuff.HomeMat)
+	
+	print("Connect pencil")
+	pencil_transform.Transform.connect_from(pointerstuff.TransMat)
 
+	
 	timer = avango.nodes.TimeSensor()
+	print("Connect timer")
 	pointerstuff.timer.connect_from(timer.Time)
 
+	print("Launch")
 	setupEnvironment.launch(globals())
 
 
 if __name__ == '__main__':
+  print("Start")
   start()
 
   #results/results_pointing_2D/pointing2D_trial0.txt
+  #results/results_pointing_2D/pointing2D_trial10.replay
