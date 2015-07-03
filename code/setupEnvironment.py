@@ -188,9 +188,8 @@ def playSound(sound):
 
 ## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
 # @param MATRIX The rotation matrix to be converted.
-def get_euler_angles(MATRIX):
+def get_euler_angles(q):
 
-  q = MATRIX.get_rotate_scale_corrected()
 
   sqx = q.x * q.x
   sqy = q.y * q.y
@@ -234,7 +233,7 @@ def getRotationError3D(aMat,bMat):
 	a = aMat.get_rotate_scale_corrected()
 	a.normalize()
 	
-	aEuler = get_euler_angles(aMat)
+	aEuler = get_euler_angles(a)
 	print("P:"+str(a)+" => "+str(aEuler))
 	
 
@@ -245,7 +244,7 @@ def getRotationError3D(aMat,bMat):
 	b.y = b.z
 	b.z =   0
 	
-	bEuler = get_euler_angles(bMat)
+	bEuler = get_euler_angles(b)
 	print("T:"+str(b)+" => "+str(bEuler))
 
 	error =[
@@ -283,16 +282,19 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return False
+	return True
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
 
 def getTargetDepth():
-	return 0.0
+	return 0.4
 
 def logResults():
 	return False
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
-	return True
+	return False
+
+def useAutoDetect():
+	return False

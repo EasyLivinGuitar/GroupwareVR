@@ -80,19 +80,20 @@ class PointerManager(avango.script.Script):
 
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
-		if(setupEnvironment.onButtonPress()==False):
-			if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
-				if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
-					self.point_of_turn=self.TransMat.value.get_translate().x
-					
-					self.next()
-			else: #Aim is left
-				if(self.TransMat.value.get_translate().x > self.TransMat_old_x_translate): 
-					self.point_of_turn=self.TransMat.value.get_translate().x
+		if setupEnvironment.useAutoDetect():
+			if(setupEnvironment.onButtonPress()==False and self.endedTest==False):
+				if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
+					if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
+						self.point_of_turn=self.TransMat.value.get_translate().x
+						
+						self.next()
+				else: #Aim is left
+					if(self.TransMat.value.get_translate().x > self.TransMat_old_x_translate): 
+						self.point_of_turn=self.TransMat.value.get_translate().x
 
-					self.next()
+						self.next()
 
-			self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
+				self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -295,14 +296,18 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/new_object_pointing.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 1))
+	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
+	pencil.Transform.value = avango.gua.make_scale_mat(1)
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.5, 0.5, 1.0))
+	#pencil.Material.value.set_uniform("Emissivity", 1.0)
+	pencil.Material.value.EnableBackfaceCulling.value = False
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	aim = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aim.Transform.value = avango.gua.make_scale_mat(W[0])
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
+	#aim.Material.value.enableBackfaceCulling.value = False
 
 	base = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	base.Transform.value = avango.gua.make_scale_mat(W[0])
