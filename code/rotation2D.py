@@ -11,13 +11,17 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 r=0.16 #circle radius
+r1 =0.15 #circle des stabes
+r2 = 0.05#länge des stabes
+
 
 #fitt's law parameter
 D=45 #in degrees
 ID=[4, 5, 6] #fitt's law
 W=D/(2**ID[0]-1) #in degrees, Fitt's Law umgeformt nach W
 
-torus1Width = r*math.tan(W*math.pi/180)
+torus1Width = 2*r*math.tan(W/2*math.pi/180)
+torus2Width = 2*math.tan(90-W/2*math.pi/180)*(r2-math.tan(W/2*math.pi/180)*r1)
 
 screenOffsetBottom=-0.1
 
@@ -205,7 +209,7 @@ def start ():
 
 	if setupEnvironment.space3D():
 		torus2 = loader.create_geometry_from_file("torus", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		torus2.Transform.value = avango.gua.make_trans_mat(0.02, 0, -r+0.02)*avango.gua.make_scale_mat(torus1Width)*avango.gua.make_rot_mat(90,0,1,0)#position*size
+		torus2.Transform.value = avango.gua.make_trans_mat(r2, 0, -r1)*avango.gua.make_scale_mat(torus2Width)*avango.gua.make_rot_mat(90,0,1,0)#position*size
 		torus2.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 		everyObject.Children.value.append(torus2)
 
