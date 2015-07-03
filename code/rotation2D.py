@@ -17,22 +17,22 @@ D=45 #in degrees
 ID=[4, 5, 6] #fitt's law
 W=D/(2**ID[0]-1) #in degrees, Fitt's Law umgeformt nach W
 
-torusWidth = r*math.tan(W*math.pi/180)
+torus1Width = r*math.tan(W*math.pi/180)
 
 screenOffsetBottom=-0.1
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
-aim = avango.gua.nodes.TransformNode()
-torus = avango.gua.nodes.TransformNode()
+aimPencil = avango.gua.nodes.TransformNode()
+torus1 = avango.gua.nodes.TransformNode()
 
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
-	aimMat = avango.gua.SFMatrix4()
-	torusMat = avango.gua.SFMatrix4()
+	aimPencilMat = avango.gua.SFMatrix4()
+	torus1Mat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
 	startedTest = False
@@ -49,9 +49,9 @@ class trackingManager(avango.script.Script):
 		self.isInside = False;
 		self.startTime = 0
 		self.endTime = 0
-		self.aimRef = None
+		self.aimPencilRef = None
 		self.backAndForth = False
-		#self.aimRef=None
+		#self.aimPencilRef=None
 
 	def __del__(self):
 		if setupEnvironment.logResults():
@@ -74,38 +74,30 @@ class trackingManager(avango.script.Script):
 		
 		if setupEnvironment.logResults():	
 			self.logData()
-			#self.aimMat.value *= avango.gua.make_trans_mat(500,0,0) 
-			#getattr(self, "aimRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
-			#bewege aim an neue Stelle
+			#self.aimPencilMat.value *= avango.gua.make_trans_mat(500,0,0) 
+			#getattr(self, "aimPencilRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
+			#bewege aimPencil an neue Stelle
 
 	def tidyMats(self):
-		#erase translation in the matrix and keep rotation and scale
-		if setupEnvironment.ignoreZ():
+	
+		#erase 2dof, unstable operation, calling this twice destroys the rotation information
+		if setupEnvironment.space3D():
 			self.pencilTransMat.value = (
-				avango.gua.make_trans_mat(0,setupEnvironment.getTargetDepth(), -screenOffsetBottom)#move to origin
-				*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
-				* avango.gua.make_trans_mat(0,0,-r)#move up to rotate around back
+				avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected()) #add rotation
+				* avango.gua.make_trans_mat(0,0,-r)
 			)
 		else:
-			self.pencilTransMat.value = (
-				avango.gua.make_trans_mat(
-					self.pencilTransMat.value.get_translate().x,
-					self.pencilTransMat.value.get_translate().y-setupEnvironment.getOffsetTracking().get_translate().y,
-					self.pencilTransMat.value.get_translate().z-setupEnvironment.getOffsetTracking().get_translate().z
-				)
-				*avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate())
-			)
-
-		#erase 2dof, unstable operation, calling this twice destroys the rotation information
-		if not setupEnvironment.space3D():
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate_scale_corrected()
 			q.z = 0 #tried to fix to remove roll
 			q.x = 0 #tried to fix to remove roll
 			q.normalize()
 			yRot = setupEnvironment.get_euler_angles(q)[0]#get euler y rotation, has also roll in it
-			self.pencilTransMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())#keep translation
-			self.pencilTransMat.value *= avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #add rotation
+			self.pencilTransMat.value = (
+				avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #add rotation
+				* avango.gua.make_trans_mat(0,0,-r)
+			)#keep translation
+				
 
 
 
@@ -114,17 +106,14 @@ class trackingManager(avango.script.Script):
 
 		#hack for order of rotation, switches y and z axis
 		pencilRot = self.pencilTransMat.value.get_rotate_scale_corrected()
-		tmp = pencilRot.y
-		pencilRot.y =  pencilRot.z
-		pencilRot.z =  tmp
 
 		self.error = setupEnvironment.getRotationError1D(
 			pencilRot,
-			self.torusMat.value.get_rotate_scale_corrected()
+			self.torus1Mat.value.get_rotate_scale_corrected()
 		)
 
 		#print("P:"+str( pencilRot )+"")
-		#print("T:"+str( self.torusMat.value.get_rotate_scale_corrected() )+"")
+		#print("T:"+str( self.torus1Mat.value.get_rotate_scale_corrected() )+"")
 
 		if self.error < W/2:
 			print("HIT:" + str(self.error)+"°")
@@ -135,12 +124,12 @@ class trackingManager(avango.script.Script):
 
 		#move target
 		if self.backAndForth:
-			self.aimMat.value *= avango.gua.make_rot_mat(D,0,1,0)
-			self.torusMat.value = avango.gua.make_trans_mat(0, r+screenOffsetBottom, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)
+			self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
+			self.torus1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width)
 			self.backAndForth=False
 		else:
-			self.aimMat.value *= avango.gua.make_rot_mat(-D,0,1,0)
-			self.torusMat.value = avango.gua.make_trans_mat(0, screenOffsetBottom, setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(D,0,0,1)*avango.gua.make_trans_mat(0, r, 0)*avango.gua.make_scale_mat(torusWidth)
+			self.aimPencilMat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)
+			self.torus1Mat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width)
 			self.backAndForth=True
 
 	def logData(self):
@@ -157,7 +146,7 @@ class trackingManager(avango.script.Script):
 					"TimeStamp: "+str(self.timer.value)+"\n"
 					"Error: "+str(self.error[3])+"\n"
 					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"
-					"Homepos: \n"+str(self.aimMat.value)+"\n\n")
+					"Homepos: \n"+str(self.aimPencilMat.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
@@ -185,24 +174,43 @@ def start ():
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
-	pencil = loader.create_geometry_from_file("tracked_object", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
-	pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1.0))
+	pencil = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/thin_pointer_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
+	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
+	pencil.Material.value.EnableBackfaceCulling.value = False
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
 
-	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil], Transform=avango.gua.make_rot_mat(90,1,0,0))
 
-	aim = loader.create_geometry_from_file("tracked_object", "data/objects/pointer_object_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_trans_mat(0,screenOffsetBottom,setupEnvironment.getTargetDepth())*avango.gua.make_rot_mat(-90,1,0,0)
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
+	pencil_transform = avango.gua.nodes.TransformNode(
+		Children=[pencil]#, 
+		#Transform=avango.gua.make_trans_mat(0, screenOffsetBottom, setupEnvironment.getTargetDepth())
+	)
 
-	torus = loader.create_geometry_from_file("torus", "data/objects/torus.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	torus.Transform.value = avango.gua.make_trans_mat(0, r+screenOffsetBottom, setupEnvironment.getTargetDepth())*avango.gua.make_scale_mat(torusWidth)#position*size
-	torus.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
+	aimPencil = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/thin_pointer_abstract.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aimPencil.Transform.value = avango.gua.make_trans_mat(0, 0, -r)
+	aimPencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
+
+	torus1 = loader.create_geometry_from_file("torus", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	torus1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width)#position*size
+	torus1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
+
+
+
+
+	everyObject = avango.gua.nodes.TransformNode(
+		Children=[aimPencil, torus1, pencil_transform], 
+		Transform=avango.gua.make_trans_mat(0, screenOffsetBottom, setupEnvironment.getTargetDepth())
+	)
+
+	if setupEnvironment.space3D():
+		torus2 = loader.create_geometry_from_file("torus", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		torus2.Transform.value = avango.gua.make_trans_mat(0.02, 0, -r+0.02)*avango.gua.make_scale_mat(torus1Width)*avango.gua.make_rot_mat(90,0,1,0)#position*size
+		torus2.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
+		everyObject.Children.value.append(torus2)
 
 	#add nodes to root
-	graph.Root.value.Children.value.extend([aim, torus, pencil_transform])
+	graph.Root.value.Children.value.append(everyObject)
 
 	
 	#listen to tracked position of pointer
@@ -222,14 +230,14 @@ def start ():
 
 	trackManager.Button.connect_from(button_sensor.Button0)
 
-	#connect aim
-	trackManager.aimRef = aim
-	trackManager.aimMat.connect_from(aim.Transform)
-	aim.Transform.connect_from(trackManager.aimMat)
+	#connect aimPencil
+	trackManager.aimPencilRef = aimPencil
+	trackManager.aimPencilMat.connect_from(aimPencil.Transform)
+	aimPencil.Transform.connect_from(trackManager.aimPencilMat)
 
-	#connect torus
-	trackManager.torusMat.connect_from(torus.Transform)
-	torus.Transform.connect_from(trackManager.torusMat)
+	#connect torus1
+	trackManager.torus1Mat.connect_from(torus1.Transform)
+	torus1.Transform.connect_from(trackManager.torus1Mat)
 
 	#timer
 	timer = avango.nodes.TimeSensor()
