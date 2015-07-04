@@ -15,10 +15,10 @@ from avango.script import field_has_changed
 #fitt's law parameter
 D=0.5 #in meter
 ID=[3, 4, 5] #fitt's law
-N=5
+N=5 #number of tests per ID
 W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgeformt nach W
 
-FRAMES_FOR_SPEED=4
+FRAMES_FOR_SPEED=4 #How many frames token to calculate speed
 
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
