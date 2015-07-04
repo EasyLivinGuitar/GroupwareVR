@@ -283,7 +283,7 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return True
+	return False
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
@@ -295,7 +295,7 @@ def logResults():
 	return True
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
-	return False
+	return True
 
 def useAutoDetect():
 	return False

@@ -18,6 +18,8 @@ ID=[3, 4, 5] #fitt's law
 N=5
 W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgeformt nach W
 
+FRAMES_FOR_SPEED=4
+
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -40,9 +42,14 @@ class PointerManager(avango.script.Script):
 	TransMat_old_x_translate = 0
 	point_of_turn = 0
 
+	TransTranslation1=avango.gua.Vec3()
+	TransTranslation2=avango.gua.Vec3()
+
 	timer = avango.SFFloat()
 	time_1=0
 	time_2=0
+	start_time=0
+	end_time=0
 	
 	result_file= None
 	created_file=False
@@ -54,6 +61,7 @@ class PointerManager(avango.script.Script):
 	flagPrinted=False
 
 	error=0
+	last_error=0
 	MT=0
 	ID=0
 	TP=0
@@ -61,7 +69,11 @@ class PointerManager(avango.script.Script):
 	current_index = 0
 	counter = 0
 
-	hit=False
+	goal = False
+
+	current_speed = 0
+	frame_counter = 0
+
 
 	def __init__(self):
 		self.super(PointerManager).__init__()
@@ -73,8 +85,9 @@ class PointerManager(avango.script.Script):
 
 	@field_has_changed(Button)
 	def button_pressed(self):
-		if(setupEnvironment.onButtonPress() and self.endedTest==False):
+		if(self.endedTest==False):
 			if(self.Button.value):
+				self.last_error=self.error
 				self.next()
 			else:
 				self.flagPrinted=False
@@ -111,7 +124,7 @@ class PointerManager(avango.script.Script):
 
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
-	
+		self.setSpeed()
 		self.setError()
 		if setupEnvironment.logResults():
 			self.logData()
@@ -127,8 +140,9 @@ class PointerManager(avango.script.Script):
 				self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".replay", "a+")
 				
 				self.result_file.write(
-					"TimeStamp: "+str(self.timer.value)+"\n"
-					"Error: "+str(self.error)+"\n"
+					"TimeStamp: "+str(self.timer.value)+"\n"+
+					"Error: "+str(self.error)+"\n"+
+					"Speed: "+str(self.current_speed)+"\n"
 					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
 					"Aimpos: \n"+str(self.AimMat.value)+"\n\n")
 				self.result_file.close()
@@ -137,12 +151,12 @@ class PointerManager(avango.script.Script):
 					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
 						self.result_file.write(
-							"HT: "+str(self.hit)+"\n"+
+							"HT: "+str(self.goal)+"\n"+
 							"MT: "+str(self.MT)+"\n"+
 							"ID: "+str(self.ID)+"\n"+
 							"TP: "+str(self.TP)+"\n"+
 							"W : "+str(W[self.current_index])+"\n"
-							"Last Error: "+str(self.error)+"\n"+
+							"Last Error: "+str(self.last_error)+"\n"+
 							"=========================\n\n")
 						self.flagPrinted=True
 					self.result_file.close()
@@ -179,7 +193,6 @@ class PointerManager(avango.script.Script):
 						self.setMT(self.time_2, self.time_1)
 					self.setID(self.current_index)
 					self.setTP(self.current_index)
-
 					if(self.error<=self.AimMat_scale.value.get_scale().x/2):
 						self.hit() 
 					else:
@@ -189,13 +202,13 @@ class PointerManager(avango.script.Script):
 
 	def hit(self):
 		print("HIT")
-		self.hit=True
+		self.goal=True
 		setupEnvironment.playSound("balloon")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 
 	def miss(self):
 		print("MISS")
-		self.hit=False
+		self.goal=False
 		setupEnvironment.playSound("miss")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
@@ -220,8 +233,6 @@ class PointerManager(avango.script.Script):
 		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 
 	def nextSettingStep(self):
-
-		print(self.current_index)
 		temp = self.BaseMat.value
 		self.AimMat_old = self.AimMat
 		self.BaseMat.value = self.AimMat.value 
@@ -268,14 +279,6 @@ class PointerManager(avango.script.Script):
 			self.error=self.getDistance3D(self.TransMat.value, self.AimMat.value)
 
 	def setID(self, index):
-		# target_size=self.AimMat_scale.value.get_scale().x*2
-		
-		# if setupEnvironment.space3D()==False:
-		# 	distance=self.getDistance2D(self.AimMat.value, self.AimMat_old.value)
-		# else:
-		# 	distance=self.getDistance3D(self.AimMat.value, self.AimMat_old.value)
-
-		# self.ID=math.log10((distance/target_size)+1)/math.log10(2)
 		self.ID = ID[index]
 		print("ID: "+ str(self.ID))
 
@@ -286,6 +289,28 @@ class PointerManager(avango.script.Script):
 	def setTP(self, index):
 		if(self.MT>0):
 			self.TP=ID[index]/self.MT
+
+	def setSpeed(self):
+		if(self.frame_counter == 0):
+			self.TransTranslation1=self.TransMat.value.get_translate()
+			self.start_time=self.timer.value
+			self.frame_counter=self.frame_counter+1
+		else: 
+			if(self.frame_counter == FRAMES_FOR_SPEED):
+				self.TransTranslation2=self.TransMat.value.get_translate()
+				self.end_time=self.timer.value
+				self.frame_counter=0
+				div=self.TransTranslation2-self.TransTranslation1
+				length=math.sqrt(div.x**2 + div.y**2 + div.z**2)
+				time=self.end_time-self.start_time
+				self.current_speed=length/time
+
+				if(self.current_speed<10**-3):
+					self.current_speed=0
+			else:
+				self.frame_counter=self.frame_counter+1
+
+
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:
