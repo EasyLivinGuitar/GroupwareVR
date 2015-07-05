@@ -30,9 +30,9 @@ python3.4 ./code/daemon.py > /dev/null &
 # run program
 if [[ $* == *-d* ]]
 then
-cd "$DIR" && gdb --args python3.4 ./code/rotation.py
+cd "$DIR" && gdb --args python3.4 ./code/rotation2D.py
 else
-cd "$DIR" && python3.4 ./code/rotation.py
+cd "$DIR" && python3.4 ./code/rotation2D.py
 fi
 
 # kill daemon
