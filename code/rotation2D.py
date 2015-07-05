@@ -29,14 +29,14 @@ graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 aimPencil = avango.gua.nodes.TransformNode()
-torus1 = avango.gua.nodes.TransformNode()
+disk1 = avango.gua.nodes.TransformNode()
 
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
 	aimPencilMat = avango.gua.SFMatrix4()
-	torus1Mat = avango.gua.SFMatrix4()
+	disk1Mat = avango.gua.SFMatrix4()
 	cylinder1Mat = avango.gua.SFMatrix4()
 	cylinder2Mat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
@@ -147,17 +147,14 @@ class trackingManager(avango.script.Script):
 
 		if(self.current_index==len(W)):
 			self.endedTest=True
-
-		#hack for order of rotation, switches y and z axis
-		pencilRot = self.pencilTransMat.value.get_rotate_scale_corrected()
-
+			
 		self.error = setupEnvironment.getRotationError1D(
-			pencilRot,
-			self.torus1Mat.value.get_rotate_scale_corrected()
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.disk1Mat.value.get_rotate_scale_corrected()
 		)
 
 		#print("P:"+str( pencilRot )+"")
-		#print("T:"+str( self.torus1Mat.value.get_rotate_scale_corrected() )+"")
+		#print("T:"+str( self.disk1Mat.value.get_rotate_scale_corrected() )+"")
 		if(self.current_index < len(W)):
 			if self.error < W[self.current_index]/2:
 				print("HIT:" + str(self.error)+"°")
@@ -171,7 +168,7 @@ class trackingManager(avango.script.Script):
 			#move target
 			if self.backAndForth:
 				self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
-				self.torus1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				self.disk1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=False
 			else:
 				self.backAndForth=True
@@ -182,12 +179,12 @@ class trackingManager(avango.script.Script):
 					else:
 						rotateAroundX=0
 					self.aimPencilMat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)
-					self.torus1Mat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+					self.disk1Mat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				else:
 					if THREEDIMTASK:
 						self.backAndForthAgain=False
 					self.aimPencilMat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
-					self.torus1Mat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+					self.disk1Mat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 
 			if(self.evenTrial==False):
 				self.time1=self.timer.value
@@ -288,13 +285,13 @@ def start ():
 	aimPencil.Transform.value = avango.gua.make_trans_mat(0, 0, -r)
 	aimPencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
-	torus1 = loader.create_geometry_from_file("torus", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	torus1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
-	torus1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
+	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
+	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
 
 	everyObject = avango.gua.nodes.TransformNode(
-		Children = [aimPencil, torus1, pencil_transform], 
+		Children = [aimPencil, disk1, pencil_transform], 
 		Transform = setupEnvironment.getCenterPosition()
 	)
 
@@ -341,9 +338,9 @@ def start ():
 	trackManager.aimPencilMat.connect_from(aimPencil.Transform)
 	aimPencil.Transform.connect_from(trackManager.aimPencilMat)
 
-	#connect torus1
-	trackManager.torus1Mat.connect_from(torus1.Transform)
-	torus1.Transform.connect_from(trackManager.torus1Mat)
+	#connect disk1
+	trackManager.disk1Mat.connect_from(disk1.Transform)
+	disk1.Transform.connect_from(trackManager.disk1Mat)
 
 	#timer
 	timer = avango.nodes.TimeSensor()
