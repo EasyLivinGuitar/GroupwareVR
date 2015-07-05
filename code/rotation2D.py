@@ -20,9 +20,8 @@ D=45 #in degrees
 ID=[4, 5, 6] #fitt's law
 N=5 #number of tests per ID
 W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
-print(W[0])
 
-torus1Width = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+targetDiameter = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -93,15 +92,15 @@ class trackingManager(avango.script.Script):
 			rot = self.pencilTransMat.value.get_rotate_scale_corrected()
 			if self.backAndForth:
 				self.cylinder1Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, torus1Width[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 				self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, -torus1Width[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 			else:
 				#own first, then move to tip of pinter
 				self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				* avango.gua.make_trans_mat(r2*0.9, torus1Width[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				* avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 				self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				*avango.gua.make_trans_mat(r2*0.9, -torus1Width[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -169,11 +168,11 @@ class trackingManager(avango.script.Script):
 			#move target
 			if self.backAndForth:
 				self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
-				self.torus1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width[self.current_index])
+				self.torus1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=False
 			else:
 				self.aimPencilMat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)
-				self.torus1Mat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width[self.current_index])
+				self.torus1Mat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=True
 
 			if(self.evenTrial==False):
@@ -273,7 +272,7 @@ def start ():
 	aimPencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	torus1 = loader.create_geometry_from_file("torus", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	torus1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(torus1Width[0])#position*size
+	torus1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
 	torus1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
 
@@ -284,7 +283,7 @@ def start ():
 
 	if setupEnvironment.space3D():
 		cylinder1 = loader.create_geometry_from_file("cylinder", "data/objects/cylinder.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		cylinder1.Transform.value = avango.gua.make_trans_mat(r2, torus1Width[0]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.0001,80)#position*size
+		cylinder1.Transform.value = avango.gua.make_trans_mat(r2, targetDiameter[0]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.0001,80)#position*size
 		cylinder1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 		everyObject.Children.value.append(cylinder1)
 		#connect cylinder1
@@ -292,7 +291,7 @@ def start ():
 		cylinder1.Transform.connect_from(trackManager.cylinder1Mat)
 
 		cylinder2 = loader.create_geometry_from_file("cylinder", "data/objects/cylinder.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		cylinder2.Transform.value = avango.gua.make_trans_mat(r2, -torus1Width[0]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.0001,80)#position*size
+		cylinder2.Transform.value = avango.gua.make_trans_mat(r2, -targetDiameter[0]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.0001,80)#position*size
 		cylinder2.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 		everyObject.Children.value.append(cylinder2)
 		#connect cylinder2
