@@ -10,6 +10,8 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
+THREEDIMTASK=True
+
 r=0.16 #circle radius
 r1 =0.15 #circle des stabes
 r2 = 0.05#länge des stabes
@@ -61,7 +63,6 @@ class trackingManager(avango.script.Script):
 
 	evenTrial=False
 
-
 	def __init__(self):
 		self.super(trackingManager).__init__()
 		self.isInside = False;
@@ -69,6 +70,7 @@ class trackingManager(avango.script.Script):
 		self.endTime = 0
 		self.aimPencilRef = None
 		self.backAndForth = False
+		self.backAndForthAgain = False;
 		#self.aimPencilRef=None
 
 	def __del__(self):
@@ -90,11 +92,15 @@ class trackingManager(avango.script.Script):
 		if(not self.endedTest):
 			#attach pipes to cursor
 			rot = self.pencilTransMat.value.get_rotate_scale_corrected()
+			if THREEDIMTASK:
+				rotateAroundX=1
+			else:
+				rotateAroundX=0
 			if self.backAndForth:
 				self.cylinder1Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				*avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 				self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-				*avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				*avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 			else:
 				#own first, then move to tip of pinter
 				self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
@@ -113,7 +119,6 @@ class trackingManager(avango.script.Script):
 			#bewege aimPencil an neue Stelle
 
 	def tidyMats(self):
-	
 		#erase 2dof, unstable operation, calling this twice destroys the rotation information
 		if setupEnvironment.space3D():
 			self.pencilTransMat.value = (
@@ -132,8 +137,6 @@ class trackingManager(avango.script.Script):
 				* avango.gua.make_trans_mat(0,0,-r)
 			)#keep translation
 				
-
-
 
 	def nextSettingStep(self):
 		self.startedTest=True
@@ -171,9 +174,20 @@ class trackingManager(avango.script.Script):
 				self.torus1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=False
 			else:
-				self.aimPencilMat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)
-				self.torus1Mat.value = avango.gua.make_rot_mat(D,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=True
+				if not self.backAndForthAgain:
+					self.backAndForthAgain=True
+					if THREEDIMTASK:
+						rotateAroundX=1
+					else:
+						rotateAroundX=0
+					self.aimPencilMat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)
+					self.torus1Mat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				else:
+					if THREEDIMTASK:
+						self.backAndForthAgain=False
+					self.aimPencilMat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
+					self.torus1Mat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 
 			if(self.evenTrial==False):
 				self.time1=self.timer.value
@@ -192,7 +206,10 @@ class trackingManager(avango.script.Script):
 		
 
 	def logData(self):
-		path="results/results_rotation_2D/"
+		if THREEDIMTASK:
+			path="results/results_rotation_3D/"
+		else:
+			path="results/results_rotation_2D/"
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
