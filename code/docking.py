@@ -10,7 +10,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-THREEDIMTASK=True
+THREEDIMTASK=False
 
 r=0.16 #circle radius
 r1 =0.15 #circle des stabes
@@ -18,12 +18,13 @@ r2 = 0.05#länge des stabes
 
 
 #fitt's law parameter
-D=45 #in degrees
+D_rot=45 #in degrees
+D_trans=0.5 #in meter
 ID=[4, 5, 6] #fitt's law
 N=5 #number of tests per ID
-W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
-
-targetDiameter = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+W_rot=[D_rot/(2**(ID[0]/2)-1), D_rot/(2**(ID[1]/2)-1), D_rot/(2**(ID[2]/2)-1)] #in degrees, Fitt's Law umgeformt nach W
+W_trans=[D_trans/(2**(ID[0]/2)-1), D_trans/(2**(ID[1]/2)-1), D_trans/(2**(ID[2]/2)-1)] #in degrees, Fitt's Law umgeformt nach W
+targetDiameter = [2*r*math.tan(W_rot[0]/2*math.pi/180), 2*r*math.tan(W_rot[1]/2*math.pi/180), 2*r*math.tan(W_rot[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -97,23 +98,17 @@ class trackingManager(avango.script.Script):
 			else:
 				rotateAroundX=0
 			if self.backAndForth:
-				if (self.backAndForthAgain):
-					self.cylinder1Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
-					self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
-				else:
-					#own first, then move to tip of pinter
-					self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_rot_mat(-D, 0,0,1) * avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
-					self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_rot_mat(-D, 0,0,1) * avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				#own first, then move to tip of pinter
+				self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
+					*avango.gua.make_rot_mat(-D_rot, 0,0,1) * avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
+					*avango.gua.make_rot_mat(-D_rot, 0,0,1) * avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 			else:
 				#own first, then move to tip of pinter
-					self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
-					self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
-						*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				self.cylinder1Mat.value =  (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
+					*avango.gua.make_trans_mat(r2*0.9, targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
+				self.cylinder2Mat.value = (avango.gua.make_trans_mat((avango.gua.make_rot_mat(rot)*avango.gua.make_trans_mat(0, 0, -r1)).get_translate())
+					*avango.gua.make_trans_mat(r2*0.9, -targetDiameter[self.current_index]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.001,80))
 
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -127,12 +122,8 @@ class trackingManager(avango.script.Script):
 
 	def tidyMats(self):
 		#erase 2dof, unstable operation, calling this twice destroys the rotation information
-		if setupEnvironment.space3D():
-			self.pencilTransMat.value = (
-				avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected()) #add rotation
-				* avango.gua.make_trans_mat(0,0,-r)
-			)
-		else:
+		if not setupEnvironment.space3D():
+			#disable rotation in invalid directions
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate_scale_corrected()
 			q.z = 0 #tried to fix to remove roll
@@ -140,9 +131,16 @@ class trackingManager(avango.script.Script):
 			q.normalize()
 			yRot = setupEnvironment.get_euler_angles(q)[0]#get euler y rotation, has also roll in it
 			self.pencilTransMat.value = (
-				avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #add rotation
-				* avango.gua.make_trans_mat(0,0,-r)
-			)#keep translation
+				avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate().x, 0, self.pencilTransMat.value.get_translate().z)
+				* avango.gua.make_rot_mat(yRot*180.0/math.pi,0,1,0) #add rotation
+			)
+
+		self.pencilTransMat.value = (
+			avango.gua.make_trans_mat(0, 0.4,-setupEnvironment.getOffsetTracking().get_translate().z)
+			* avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())
+			* avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected()) #add rotation
+		)
+
 				
 
 	def nextSettingStep(self):
@@ -152,7 +150,7 @@ class trackingManager(avango.script.Script):
 			self.current_index=self.current_index+1
 			self.counter=0
 
-		if(self.current_index==len(W)):
+		if(self.current_index==len(W_rot)):
 			self.endedTest=True
 
 		self.error = setupEnvironment.getRotationError1D(
@@ -162,8 +160,8 @@ class trackingManager(avango.script.Script):
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disk1Mat.value.get_rotate_scale_corrected() )+"")
-		if(self.current_index < len(W)):
-			if self.error < W[self.current_index]/2:
+		if(self.current_index < len(W_rot)):
+			if self.error < W_rot[self.current_index]/2:
 				print("HIT:" + str(self.error)+"°")
 				self.goal=True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
@@ -174,24 +172,13 @@ class trackingManager(avango.script.Script):
 
 			#move target
 			if self.backAndForth:
-				self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
-				self.disk1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				self.aimPencilMat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_trans_mat(0, 0, -r)
+				self.disk1Mat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				self.backAndForth=False
 			else:
 				self.backAndForth=True
-				if not self.backAndForthAgain:
-					self.backAndForthAgain=True
-					if THREEDIMTASK:
-						rotateAroundX=1
-					else:
-						rotateAroundX=0
-					self.aimPencilMat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)
-					self.disk1Mat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
-				else:
-					if THREEDIMTASK:
-						self.backAndForthAgain=False
-					self.aimPencilMat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
-					self.disk1Mat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				self.aimPencilMat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
+				self.disk1Mat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 
 			if(self.evenTrial==False):
 				self.time1=self.timer.value
@@ -211,16 +198,16 @@ class trackingManager(avango.script.Script):
 
 	def logData(self):
 		if THREEDIMTASK:
-			path="results/results_rotation_3D/"
+			path="results/docking_3D/"
 		else:
-			path="results/results_rotation_2D/"
+			path="results/docking_2D/"
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
 				self.created_file=True
 			else: #write permanent values
-				self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".replay", "a+")
+				self.result_file=open(path+"docking_trial"+str(self.num_files)+".replay", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
@@ -230,14 +217,14 @@ class trackingManager(avango.script.Script):
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
-					self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
+					self.result_file=open(path+"docking_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
 						self.result_file.write(
 							"HT: "+str(self.goal)+"\n"+
 							"MT: "+str(self.MT)+"\n"+
 							"ID: "+str(self.ID)+"\n"+
 							"TP: "+str(self.TP)+"\n"+
-							"W : "+str(W[self.current_index])+"\n"
+							"W : "+str(W_rot[self.current_index])+"\n"
 							"Total Error: "+str(self.error)+"\n"+
 							"=========================\n\n")
 						self.flagPrinted=True
@@ -299,7 +286,7 @@ def start ():
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [aimPencil, disk1, pencil_transform], 
-		Transform = setupEnvironment.getCenterPosition()
+		Transform = setupEnvironment.getCenterPosition()*avango.gua.make_scale_mat(4)
 	)
 
 	if setupEnvironment.space3D():

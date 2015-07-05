@@ -229,8 +229,8 @@ class PointerManager(avango.script.Script):
 		return settings[index]
 
 	def setStartTranslation(self):
-		self.AimMat.value=avango.gua.make_trans_mat(D/2, 0, 0)
-		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
+		self.AimMat.value=avango.gua.make_trans_mat(D/2, 0.1, 0)
+		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0.1, 0)
 
 	def nextSettingStep(self):
 		temp = self.BaseMat.value
@@ -240,7 +240,6 @@ class PointerManager(avango.script.Script):
 
 		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
 		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
-		
 		
 
 	def getDistance2D(self, target1, target2):
@@ -350,7 +349,6 @@ def start ():
 
 	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
 	base_transform=avango.gua.nodes.TransformNode(Children=[base])
-
 
 
 	everyObject = avango.gua.nodes.TransformNode(

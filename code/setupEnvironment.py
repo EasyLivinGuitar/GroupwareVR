@@ -290,7 +290,7 @@ def getOffsetTracking():
 
 '''get the position pf the cetner where the pointer and the aim is located'''
 def getCenterPosition():
-	return avango.gua.make_trans_mat(0.0, -0.2, 0.45)*avango.gua.make_scale_mat(4)
+	return avango.gua.make_trans_mat(0.0, -0.2, 0.3)
 
 def logResults():
 	return False
