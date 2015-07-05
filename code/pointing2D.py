@@ -77,7 +77,7 @@ class PointerManager(avango.script.Script):
 
 	def __init__(self):
 		self.super(PointerManager).__init__()
-		AimMat = avango.gua.make_trans_mat(0.0, 0.0, setupEnvironment.getTargetDepth())
+		AimMat = avango.gua.make_trans_mat(0.0, 0.0, 0)
 
 	def __del__(self):
 		if setupEnvironment.logResults():
@@ -215,13 +215,13 @@ class PointerManager(avango.script.Script):
 
 	def getRandomTranslation(self):
 		settings=[
-			avango.gua.make_trans_mat(-0.8, -0.8, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(-0.4, 0.4, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(0.2, -0.2, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(0.2, 0.2, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(0.4, -0.4, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(0.8, 0.8, setupEnvironment.getTargetDepth()),
-			avango.gua.make_trans_mat(0.25, -0.25, setupEnvironment.getTargetDepth())
+			avango.gua.make_trans_mat(-0.8, -0.8, 0),
+			avango.gua.make_trans_mat(-0.4, 0.4, 0),
+			avango.gua.make_trans_mat(0.2, -0.2, 0),
+			avango.gua.make_trans_mat(0.2, 0.2, 0),
+			avango.gua.make_trans_mat(0.4, -0.4, 0),
+			avango.gua.make_trans_mat(0.8, 0.8, 0),
+			avango.gua.make_trans_mat(0.25, -0.25, 0)
 		]
 
 		index=random.randint(0, len(settings)-1)
@@ -351,7 +351,14 @@ def start ():
 	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
 	base_transform=avango.gua.nodes.TransformNode(Children=[base])
 
-	graph.Root.value.Children.value.extend([aim_transform, base_transform, pencil_transform])
+
+
+	everyObject = avango.gua.nodes.TransformNode(
+		Children = [aim_transform, base_transform, pencil_transform], 
+		Transform = setupEnvironment.getCenterPosition()
+	)
+
+	graph.Root.value.Children.value.append(everyObject)
 
 	#connections
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())

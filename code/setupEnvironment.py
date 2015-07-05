@@ -283,16 +283,18 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return False
+	return True
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
 
-def getTargetDepth():
-	return 0.4
+'''get the position pf the cetner where the pointer and the aim is located'''
+def getCenterPosition():
+	return avango.gua.make_trans_mat(0.0, -0.2, 0.45)*avango.gua.make_scale_mat(4)
 
 def logResults():
-	return True
+	return False
+
 '''if true needs a button press or next step, if false then autodetects'''
 def onButtonPress():
 	return True
