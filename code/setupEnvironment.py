@@ -286,7 +286,7 @@ def space3D():
 	return True
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.65)
+	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.45)
 
 '''get the position pf the cetner where the pointer and the aim is located'''
 def getCenterPosition():

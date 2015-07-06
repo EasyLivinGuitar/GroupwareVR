@@ -57,7 +57,6 @@ class PointerManager(avango.script.Script):
 
 	startedTest=False
 	endedTest=False
-	evenTrial=False
 	flagPrinted=False
 
 	error=0
@@ -166,9 +165,8 @@ class PointerManager(avango.script.Script):
 			if(self.startedTest==False):
 				self.setStartTranslation()
 				self.time_1=self.timer.value
-				self.evenTrial=True
 				self.startedTest=True
-				self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
+				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
 				print("Test started.\n")
 			else:
 				if(self.counter==N):
@@ -179,18 +177,11 @@ class PointerManager(avango.script.Script):
 
 				if(self.current_index==len(W)):
 					self.current_index=0
-					self.endedTest=True
+					self.endedTest = True
 				else:
 					self.setID(self.current_index)
 					self.nextSettingStep()
-					if(self.evenTrial):
-						self.time_2=self.timer.value
-						self.evenTrial=False
-						self.setMT(self.time_1, self.time_2)
-					else:
-						self.time_1=self.timer.value
-						self.evenTrial=True
-						self.setMT(self.time_2, self.time_1)
+					self.setMT(self.time_1, self.timer.value)
 					self.setID(self.current_index)
 					self.setTP(self.current_index)
 					if(self.error<=self.AimMat_scale.value.get_scale().x/2):

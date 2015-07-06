@@ -19,12 +19,16 @@ r2 = 0.05#länge des stabes
 
 #fitt's law parameter
 D_rot=45 #in degrees
-D_trans=0.5 #in meter
+D_trans=0.2 #in meter
 ID=[4, 5, 6] #fitt's law
 N=5 #number of tests per ID
-W_rot=[D_rot/(2**(ID[0]/2)-1), D_rot/(2**(ID[1]/2)-1), D_rot/(2**(ID[2]/2)-1)] #in degrees, Fitt's Law umgeformt nach W
-W_trans=[D_trans/(2**(ID[0]/2)-1), D_trans/(2**(ID[1]/2)-1), D_trans/(2**(ID[2]/2)-1)] #in degrees, Fitt's Law umgeformt nach W
-targetDiameter = [2*r*math.tan(W_rot[0]/2*math.pi/180), 2*r*math.tan(W_rot[1]/2*math.pi/180), 2*r*math.tan(W_rot[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+W_rot=[]
+W_trans=[]
+targetDiameter=[]
+for i in range(0, len(ID)):
+	W_rot.append(D_rot/(2**(ID[i]/2)-1)) #in degrees, Fitt's Law umgeformt nach W
+	W_trans.append(D_trans/(2**(ID[i]/2)-1)) #in degrees, Fitt's Law umgeformt nach W
+	targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -37,12 +41,12 @@ class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
 	aimPencilMat = avango.gua.SFMatrix4()
+	aimHullMat = avango.gua.SFMatrix4()
 	disk1Mat = avango.gua.SFMatrix4()
 	cylinder1Mat = avango.gua.SFMatrix4()
 	cylinder2Mat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
-	time1=0
 	time2=0
 
 	startedTest = False
@@ -62,13 +66,11 @@ class trackingManager(avango.script.Script):
 
 	goal=False
 
-	evenTrial=False
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
 		self.isInside = False;
 		self.startTime = 0
-		self.endTime = 0
 		self.aimPencilRef = None
 		self.backAndForth = False
 		self.backAndForthAgain = False;
@@ -136,7 +138,7 @@ class trackingManager(avango.script.Script):
 			)
 
 		self.pencilTransMat.value = (
-			avango.gua.make_trans_mat(0, 0.4,-setupEnvironment.getOffsetTracking().get_translate().z)
+			avango.gua.make_trans_mat(0, 0.0,-setupEnvironment.getOffsetTracking().get_translate().z)
 			* avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())
 			* avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected()) #add rotation
 		)
@@ -170,24 +172,34 @@ class trackingManager(avango.script.Script):
 				self.goal=False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
+			if THREEDIMTASK:
+				rotateAroundX = 1
+			else:
+				rotateAroundX = 0
+
 			#move target
 			if self.backAndForth:
-				self.aimPencilMat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_trans_mat(0, 0, -r)
-				self.disk1Mat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				self.aimPencilMat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)
+				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(
+					(W_trans[self.current_index]+10)/10,
+					(W_trans[self.current_index]+4)/4,
+					(W_trans[self.current_index]+15)/15,
+				)
+				self.disk1Mat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, r) * avango.gua.make_scale_mat(targetDiameter[self.current_index]) #copy from aim
+
 				self.backAndForth=False
 			else:
 				self.backAndForth=True
-				self.aimPencilMat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
-				self.disk1Mat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+				self.aimPencilMat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)
+				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(
+					(W_trans[self.current_index]+0.10)/0.10,
+					(W_trans[self.current_index]+0.04)/0.04,
+					(W_trans[self.current_index]+0.15)/0.15,
+				)
+				self.disk1Mat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, r) * avango.gua.make_scale_mat(targetDiameter[self.current_index]) #copy from aim
 
-			if(self.evenTrial==False):
-				self.time1=self.timer.value
-				self.evenTrial=True
-				self.setMT(self.time2, self.time1)
-			else:
-				self.time2=self.timer.value
-				self.evenTrial=False
-				self.setMT(self.time1, self.time2)
+			self.setMT(self.startTime, self.timer.value)
+			self.startTime = self.timer.value
 
 			self.counter=self.counter+1
 			self.setID(self.current_index)
@@ -279,13 +291,17 @@ def start ():
 	aimPencil.Transform.value = avango.gua.make_trans_mat(0, 0, -r)
 	aimPencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
+	aimBalloon = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aimBalloon.Transform.value = avango.gua.make_trans_mat(0, 0, r)
+	aimBalloon.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.4, 0.3, 0.1))
+
 	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
 	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
 
 
 	everyObject = avango.gua.nodes.TransformNode(
-		Children = [aimPencil, disk1, pencil_transform], 
+		Children = [aimPencil, aimBalloon, disk1, pencil_transform], 
 		Transform = setupEnvironment.getCenterPosition()*avango.gua.make_scale_mat(4)
 	)
 
@@ -331,6 +347,8 @@ def start ():
 	trackManager.aimPencilRef = aimPencil
 	trackManager.aimPencilMat.connect_from(aimPencil.Transform)
 	aimPencil.Transform.connect_from(trackManager.aimPencilMat)
+	trackManager.aimHullMat.connect_from(aimBalloon.Transform)
+	aimBalloon.Transform.connect_from(trackManager.aimHullMat)
 
 	#connect disk1
 	trackManager.disk1Mat.connect_from(disk1.Transform)
