@@ -180,22 +180,14 @@ class trackingManager(avango.script.Script):
 			#move target
 			if self.backAndForth:
 				self.aimPencilMat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_rot_mat(-D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)
-				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(
-					(W_trans[self.current_index]+10)/10,
-					(W_trans[self.current_index]+4)/4,
-					(W_trans[self.current_index]+15)/15,
-				)
+				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(W_trans[self.current_index])
 				self.disk1Mat.value = avango.gua.make_trans_mat(-D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, r) * avango.gua.make_scale_mat(targetDiameter[self.current_index]) #copy from aim
 
 				self.backAndForth=False
 			else:
 				self.backAndForth=True
 				self.aimPencilMat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)
-				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(
-					(W_trans[self.current_index]+0.10)/0.10,
-					(W_trans[self.current_index]+0.04)/0.04,
-					(W_trans[self.current_index]+0.15)/0.15,
-				)
+				self.aimHullMat.value = self.aimPencilMat.value*avango.gua.make_scale_mat(W_trans[self.current_index])
 				self.disk1Mat.value = avango.gua.make_trans_mat(D_trans/2,0,0)*avango.gua.make_rot_mat(D_rot/2, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, r) * avango.gua.make_scale_mat(targetDiameter[self.current_index]) #copy from aim
 
 			self.setMT(self.startTime, self.timer.value)
@@ -292,7 +284,7 @@ def start ():
 	aimPencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.3, 0.3, 0.5))
 
 	aimBalloon = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aimBalloon.Transform.value = avango.gua.make_trans_mat(0, 0, r)
+	aimBalloon.Transform.value = avango.gua.make_trans_mat(0, 0, r)*avango.gua.make_scale_mat(0.2)
 	aimBalloon.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 0.4, 0.3, 0.1))
 
 	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
