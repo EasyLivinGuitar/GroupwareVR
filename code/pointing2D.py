@@ -96,7 +96,7 @@ class PointerManager(avango.script.Script):
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
 		if setupEnvironment.useAutoDetect():
-			if(setupEnvironment.onButtonPress()==False and self.endedTest==False):
+			if(setupEnvironment.useAutoDetect()==True and self.endedTest==False):
 				if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
 					if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
 						self.point_of_turn=self.TransMat.value.get_translate().x
@@ -315,7 +315,6 @@ class PointerManager(avango.script.Script):
 		if action == 1:
 			#32 is space 335 is num_enter
 			if key==32 or key==335:
-				self.next()
 				self.Button.value=True
 		else:
 			self.Button.value=False
