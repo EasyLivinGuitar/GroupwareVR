@@ -16,14 +16,22 @@ r=0.16 #circle radius
 r1 =0.15 #circle des stabes
 r2 = 0.05#länge des stabes
 
+rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
+			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
 
-#fitt's law parameter
-D=45 #in degrees
-ID=[4, 5, 6] #fitt's law
+rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
+			avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
+
 N=5 #number of tests per ID
-W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
+#fitt's law parameter
+if(setupEnvironment.randomTargets):
+	D=[setupEnvironment.getRotationError1D(rotation2D[0], rotation2D[1])] #in degrees
+else:
+	D=45
+	ID=[4, 5, 6] #fitt's law
+	W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
 
-targetDiameter = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+	targetDiameter = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -173,25 +181,30 @@ class trackingManager(avango.script.Script):
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 			#move target
-			if self.backAndForth:
-				self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
-				self.disk1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
-				self.backAndForth=False
-			else:
-				self.backAndForth=True
-				if not self.backAndForthAgain:
-					self.backAndForthAgain=True
-					if THREEDIMTASK:
-						rotateAroundX=1
+			
+			if(setupEnvironment.randomTargets()==False):
+				if self.backAndForth:
+					self.aimPencilMat.value = avango.gua.make_trans_mat(0, 0, -r)
+					self.disk1Mat.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+					self.backAndForth=False
+				else:
+					self.backAndForth=True
+					if not self.backAndForthAgain:
+						self.backAndForthAgain=True
+						if THREEDIMTASK:
+							rotateAroundX=1
+						else:
+							rotateAroundX=0
+						self.aimPencilMat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)
+						self.disk1Mat.value = avango.gua.make_rot_mat(D,rotateAroundX,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 					else:
 						rotateAroundX=0
 					self.aimPencilMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)
 					self.disk1Mat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 				else:
-					if THREEDIMTASK:
-						self.backAndForthAgain=False
-					self.aimPencilMat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)
-					self.disk1Mat.value = avango.gua.make_rot_mat(-D,0,0,1)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
+					rotation=self.getRandomRotation2D()
+					self.aimPencilMat.value = rotation*avango.gua.make_trans_mat(0, 0, -r)
+					self.disk1Mat.value = rotation*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[self.current_index])
 
 			if(self.evenTrial==False):
 				self.time1=self.timer.value
@@ -207,6 +220,22 @@ class trackingManager(avango.script.Script):
 			self.setTP(self.current_index)
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
+
+	def getRandomRotation3D(self):
+		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
+			avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
+
+		index=random.randint(0, len(settings)-1)
+
+		return settings[index]
+
+	def getRandomRotation2D(self):
+		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
+			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
+
+		index=random.randint(0, len(settings)-1)
+
+		return settings[index]
 		
 
 	def logData(self):
