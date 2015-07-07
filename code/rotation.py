@@ -16,7 +16,7 @@ r = 0.16 #circle radius
 r1 = 0.15 #circle des stabes
 r2 = 0.05#länge des stabes
 
-r_spitze=0.015
+r_spitze=0.05
 
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
@@ -27,14 +27,21 @@ rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 N=5 #number of tests per ID
 ID=[4, 5, 6] #fitt's law
 
-if setupEnvironment.randomTargets():
-	D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
-	W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
-else:
-	D=45
-	W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
+W=[]
 
-targetDiameter = [2*r*math.tan(W[0]/2*math.pi/180), 2*r*math.tan(W[1]/2*math.pi/180), 2*r*math.tan(W[2]/2*math.pi/180)]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+for i in range(0, len(ID)):
+	if setupEnvironment.randomTargets():
+		D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
+		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
+	else:
+		D=45
+		W.append(D/(2**ID[0]-1))
+
+targetDiameter = [
+	2*r_spitze*math.tan(W[0]/2*math.pi/180),
+	2*r_spitze*math.tan(W[1]/2*math.pi/180),
+	2*r_spitze*math.tan(W[2]/2*math.pi/180)
+]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -283,10 +290,10 @@ def start ():
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
-	pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS)
+	pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
-	pencil.Material.value.EnableBackfaceCulling.value = False
+	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
+	#pencil.Material.value.EnableBackfaceCulling.value = False
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
 	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
