@@ -55,8 +55,8 @@ class PointerManager(avango.script.Script):
 	created_file=False
 	num_files=0
 
-	startedTest=False
-	endedTest=False
+	startedTests=False
+	endedTests=False
 	flagPrinted=False
 
 	error=0
@@ -84,7 +84,7 @@ class PointerManager(avango.script.Script):
 
 	@field_has_changed(Button)
 	def button_pressed(self):
-		if(self.endedTest==False):
+		if(self.endedTests==False):
 			if(self.Button.value):
 				self.last_error=self.error
 				self.next()
@@ -95,7 +95,7 @@ class PointerManager(avango.script.Script):
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
 		if setupEnvironment.useAutoDetect():
-			if(setupEnvironment.useAutoDetect()==True and self.endedTest==False):
+			if(setupEnvironment.useAutoDetect()==True and self.endedTests==False):
 				if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
 					if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
 						self.point_of_turn=self.TransMat.value.get_translate().x
@@ -130,7 +130,7 @@ class PointerManager(avango.script.Script):
 
 	def logData(self):
 		path="results/results_pointing_2D/"
-		if(self.startedTest and self.endedTest==False):
+		if(self.startedTests and self.endedTests==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
@@ -161,13 +161,13 @@ class PointerManager(avango.script.Script):
 					self.result_file.close()
 
 	def next(self):
-		if(self.endedTest==False):	
-			if(self.startedTest==False):
+		if(self.endedTests==False):	
+			if(self.startedTests==False):
 				self.setStartTranslation()
 				self.time_1=self.timer.value
-				self.startedTest=True
+				self.startedTests=True
 				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
-				print("Test started.\n")
+				print("Tests started.\n")
 			else:
 				if(self.counter==N):
 					self.counter=0
@@ -177,19 +177,19 @@ class PointerManager(avango.script.Script):
 
 				if(self.current_index==len(W)):
 					self.current_index=0
-					self.endedTest = True
+					self.endedTests = True
+					setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 1), 1)
+					print("Tests finished")
 				else:
 					self.setID(self.current_index)
 					self.nextSettingStep()
 					self.setMT(self.time_1, self.timer.value)
 					self.setID(self.current_index)
 					self.setTP(self.current_index)
-					if(self.error<=self.AimMat_scale.value.get_scale().x/2):
+					if(self.error <= self.AimMat_scale.value.get_scale().x/2):
 						self.hit() 
 					else:
 						self.miss()
-		else:
-			print("Test ended")
 
 	def hit(self):
 		print("HIT")
@@ -220,8 +220,8 @@ class PointerManager(avango.script.Script):
 		return settings[index]
 
 	def setStartTranslation(self):
-		self.AimMat.value=avango.gua.make_trans_mat(D/2, 0.1, 0)
-		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0.1, 0)
+		self.AimMat.value=avango.gua.make_trans_mat(D/2, 0, 0)
+		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 
 	def nextSettingStep(self):
 		temp = self.BaseMat.value
@@ -322,7 +322,7 @@ def start ():
 
 	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/thin_pointer_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
 	pencil.Transform.value = avango.gua.make_scale_mat(1)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.5, 0.5, 1.0))
+	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 1.0, 1.0, 1.0))
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 	pencil.Material.value.EnableBackfaceCulling.value = False
 
@@ -330,12 +330,12 @@ def start ():
 
 	aim = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aim.Transform.value = avango.gua.make_scale_mat(W[0])
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0, 0, 1))
+	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
 	#aim.Material.value.enableBackfaceCulling.value = False
 
 	base = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	base.Transform.value = avango.gua.make_scale_mat(W[0])
-	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0, 0.2, 0.1))
+	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 
 	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
 	base_transform=avango.gua.nodes.TransformNode(Children=[base])

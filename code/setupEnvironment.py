@@ -283,14 +283,14 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return False
+	return True
 
 def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.50)
+	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
 
 '''get the position pf the cetner where the pointer and the aim is located'''
 def getCenterPosition():
-	return avango.gua.make_trans_mat(0.0, -0.2, 0.3)
+	return avango.gua.make_trans_mat(0.0, 0, 0.38)
 
 def logResults():
 	return False
