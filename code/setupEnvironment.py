@@ -300,4 +300,4 @@ def useAutoDetect():
 	return False
 
 def randomTargets():
-	return True
+	return False
