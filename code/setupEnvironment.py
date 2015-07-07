@@ -283,7 +283,7 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return True
+	return False
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
@@ -322,11 +322,15 @@ class logManager(avango.script.Script):
 	trial=0
 	button_clicks=0
 	succesful_clicks=0
+	success=None
 	hit_type=None
 	hit_time=0
 	hit_error_t=0
 	hit_error_r=0
+	overshoots=0
 	throughput=0
+	peak_acceleration=0
+	movement_continuity_t=0
 
 	header_printed=False
 
@@ -379,6 +383,9 @@ class logManager(avango.script.Script):
 		self.button_clicks=clicks
 		self.succesful_clicks=clicks_s
 
+	def setSuccess(self, suc):
+		self.success=suc
+
 	def setHit(self, h_type, h_time, error_t, error_r):
 		self.hit_type=h_type
 		self.hit_time=h_time
@@ -386,9 +393,18 @@ class logManager(avango.script.Script):
 		self.hit_error_r=error_r
 		self.setThroughput()
 
+	def setOvershoots(self, shoots):
+		self.overshoots=shoots
+
 	def setThroughput(self):
 		if(self.hit_time>0):
 			self.throughput=self.ID_combined/self.hit_time
+
+	def setMovementContinuity(self, peak_acc, first_point_acc):
+		self.peak_acceleration=peak_acc
+		if(peak_acc>0):
+			self.movement_continuity_t=first_point_acc/peak_acc
+
 
 	def log(self, result_file):
 		if(self.header_printed==False):
@@ -411,11 +427,15 @@ class logManager(avango.script.Script):
 				"TRIAL | "+
 				"BUTTON CLICKS | "+
 				"SUCCESFULL CLICKS | " +
+				"SUCCESS | "+
 				"HIT_TYPE | "+
 				"HIT_TIME | "+
 				"HIT_ERROR_T | "+
 				"HIT_ERROR_R | "+
+				"OVERSHOOTS | "+
 				"THROUGHPUT | "+
+				"PEAK_ACCELERATION | "+
+				"MOVEMENT_CONTINUITY_T | "+
 				"\n \n")
 			self.header_printed=True
 
@@ -438,9 +458,13 @@ class logManager(avango.script.Script):
 			str(self.trial)+" | "+
 			str(self.button_clicks)+" | "+
 			str(self.succesful_clicks)+" | "+
+			str(self.success)+" | "+
 			str(self.hit_type)+" | "+
 			str(self.hit_time)+" | "+
 			str(self.hit_error_t)+" | "+
 			str(self.hit_error_r)+" | "+
+			str(self.overshoots)+" | "+
 			str(self.throughput)+" | "+
-			"\n=========================\n\n")
+			str(self.peak_acceleration)+" | "+
+			str(self.movement_continuity_t)+" | "+
+			"\n")

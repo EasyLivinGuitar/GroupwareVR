@@ -18,7 +18,11 @@ ID=[3, 4, 5] #fitt's law
 N=5 #number of tests per ID
 W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgeformt nach W
 
-FRAMES_FOR_SPEED=4 #How many frames token to calculate speed
+FRAMES_FOR_SPEED=4 #How many frames token to calculate speed and acceleration
+
+THRESHHOLD=0.1
+
+FRAMES_FOR_AUTODETECT=5 #How many frames you have to be under the speed threshold to detect
 
 logmanager=setupEnvironment.logManager()
 
@@ -52,6 +56,8 @@ class PointerManager(avango.script.Script):
 	time_2=0
 	start_time=0
 	end_time=0
+	start_time2=0
+	end_time2=0
 	
 	result_file= None
 	created_file=False
@@ -61,25 +67,36 @@ class PointerManager(avango.script.Script):
 	endedTests=False
 	flagPrinted=False
 
+	current_index = 0
+	counter = 0
+
+	speed_time1=0
+	speed_time2=0
+
+	current_speed = 0
+	current_acceleration = 0
+	peak_acceleration=0
+	first_reversal_acceleration=0
+	frame_counter = 0
+
+	low_speed_counter=0
+
+	inside=False
+	first=True
+
+
 	# Logging
 	userID=0
 	group=0
 	trial=0
 	hits=0
-
+	goal = False
 	error=0
 	last_error=0
 	MT=0
 	ID=0
 	TP=0
-
-	current_index = 0
-	counter = 0
-
-	goal = False
-
-	current_speed = 0
-	frame_counter = 0
+	overshoots=0
 
 
 	def __init__(self):
@@ -103,7 +120,7 @@ class PointerManager(avango.script.Script):
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
 		if setupEnvironment.useAutoDetect():
-			if(setupEnvironment.useAutoDetect()==True and self.endedTests==False):
+			if(self.endedTests==False):
 				if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
 					if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
 						self.point_of_turn=self.TransMat.value.get_translate().x
@@ -116,6 +133,13 @@ class PointerManager(avango.script.Script):
 						self.next()
 
 				self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
+
+		if(self.error < self.AimMat_scale.value.get_scale().x/2):
+			self.inside=True
+		else:
+			if(self.inside):
+				self.overshoots=self.overshoots+1
+				self.inside=False
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -131,8 +155,11 @@ class PointerManager(avango.script.Script):
 
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
+
 		self.setSpeed()
+		self.setAcceleration()
 		self.setError()
+		self.autoDetect()
 
 		if setupEnvironment.logResults():
 			self.logData()
@@ -190,6 +217,19 @@ class PointerManager(avango.script.Script):
 			logmanager.setHit("BUTTON", self.MT, self.last_error, 0)
 			logmanager.setClicks(self.trial, self.hits)
 
+		logmanager.setSuccess(self.goal)
+		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
+
+
+	def autoDetect(self):
+		if(math.fabs(self.current_speed) < THRESHHOLD):
+			if(self.low_speed_counter < FRAMES_FOR_AUTODETECT-1):
+				self.low_speed_counter=self.low_speed_counter+1
+			else:
+				if(self.first):
+					self.first_reversal_point=self.TransMat.value.get_translate().x
+					self.first_reversal_acceleration=self.current_acceleration
+					self.first=False
 
 
 	def next(self):
@@ -201,7 +241,7 @@ class PointerManager(avango.script.Script):
 				print("Tests started.\n")
 			else:
 				self.trial=self.trial+1
-				if(self.counter==N):
+				if(self.counter==N-1):
 					self.counter=0
 					self.current_index=self.current_index+1
 				else:
@@ -224,6 +264,9 @@ class PointerManager(avango.script.Script):
 						self.miss()
 
 			self.lastTime=self.timer.value
+			self.overshoots=0
+			self.peak_acceleration=0
+			self.first=True
 
 	def hit(self):
 		self.hits=self.hits+1
@@ -318,15 +361,14 @@ class PointerManager(avango.script.Script):
 			self.TP=ID[index]/self.MT
 
 	def setSpeed(self):
-		if(self.frame_counter == 0):
+		if(self.frame_counter % 5 == 0):
 			self.TransTranslation1=self.TransMat.value.get_translate()
 			self.start_time=self.timer.value
 			self.frame_counter=self.frame_counter+1
 		else: 
-			if(self.frame_counter == FRAMES_FOR_SPEED):
+			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.TransTranslation2=self.TransMat.value.get_translate()
 				self.end_time=self.timer.value
-				self.frame_counter=0
 				div=self.TransTranslation2-self.TransTranslation1
 				length=math.sqrt(div.x**2 + div.y**2 + div.z**2)
 				time=self.end_time-self.start_time
@@ -337,6 +379,26 @@ class PointerManager(avango.script.Script):
 			else:
 				self.frame_counter=self.frame_counter+1
 
+	def setAcceleration(self):
+		if(self.frame_counter % 5 == 0):
+			self.speed_time1=self.current_speed
+			self.start_time2=self.timer.value
+		else:
+			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
+				self.speed_time2=self.current_speed
+				self.end_time2=self.timer.value
+				div=self.speed_time2-self.speed_time1
+				time=self.end_time2-self.start_time2
+				self.current_acceleration=div/time
+
+				if(self.current_acceleration<10**-3):
+					self.current_acceleration=0
+
+				if(self.current_acceleration>self.peak_acceleration):
+					self.peak_acceleration=self.current_acceleration
+
+				print("current acc: " + str(self.current_acceleration))
+				print("peak acc: " + str(self.peak_acceleration))
 
 
 	def handle_key(self, key, scancode, action, mods):
