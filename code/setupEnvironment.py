@@ -34,7 +34,7 @@ def print_graph(root_node):
 
 
 viewer = avango.gua.nodes.Viewer()
-
+viewer.DesiredFPS.value=60
 resolution = avango.gua.Vec2ui(1920, 1080)
 #screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
 screenSize = avango.gua.Vec2(1.445, 0.81) # in meters
@@ -293,7 +293,7 @@ def getCenterPosition():
 	return avango.gua.make_trans_mat(0.0, 0, 0.38)
 
 def logResults():
-	return False
+	return True
 
 '''if true needs a button press or next step, if false then autodetects'''
 def useAutoDetect():
@@ -301,3 +301,146 @@ def useAutoDetect():
 
 def randomTargets():
 	return False
+
+
+class logManager(avango.script.Script):
+	userID=0
+	group=0
+	condition=None
+	DOF_T=0
+	DOF_R=0
+	movement_direction=None
+	target_distance_t=0
+	target_width_t=0
+	rotation_axis=None
+	target_distance_r=0
+	target_width_r=0
+	ID_t=0
+	ID_r=0
+	ID_combined=0
+	repetition=0
+	trial=0
+	button_clicks=0
+	succesful_clicks=0
+	hit_type=None
+	hit_time=0
+	hit_error_t=0
+	hit_error_r=0
+	throughput=0
+
+	header_printed=False
+
+	def setUserID(self, ID):
+		self.userID=ID
+
+	def setGroup(self, grp):
+		self.group=grp
+
+	def setCondition(self, task):
+		self.condition = task
+
+	def setDOF(self, DOFt, DOFr):
+		self.DOF_T=DOFt
+		self.DOF_R=DOFr
+
+	def setMovementDirection(self, aim_mat, base_mat):
+		if(aim_mat.value.get_translate().x > base_mat.value.get_translate().x):
+			self.movement_direction="r"
+		else:
+			self.movement_direction="l"
+
+	def setTargetDistance_t(self, distance):
+		self.target_distance_t=distance
+
+	def setTargetWidth_t(self, width):
+		self.target_width_t=width
+
+	def setRotationAxis(self, axis):
+		self.rotation_axis=axis
+
+	def setTargetDistance_r(self, distance):
+		self.target_distance_r=distance
+
+	def setTargetWidth_r(self, width):
+		self.target_width_t=width
+
+	def setID_combined(self, idt, idr):
+		self.ID_t=idt
+		self.ID_r=idr
+		self.ID_combined=self.ID_t+self.ID_r
+
+	def setRepetition(self, rep):
+		self.repetition=rep
+
+	def setTrial(self, tria):
+		self.trial=tria
+
+	def setClicks(self, clicks, clicks_s):
+		self.button_clicks=clicks
+		self.succesful_clicks=clicks_s
+
+	def setHit(self, h_type, h_time, error_t, error_r):
+		self.hit_type=h_type
+		self.hit_time=h_time
+		self.hit_error_t=error_t
+		self.hit_error_r=error_r
+		self.setThroughput()
+
+	def setThroughput(self):
+		if(self.hit_time>0):
+			self.throughput=self.ID_combined/self.hit_time
+
+	def log(self, result_file):
+		if(self.header_printed==False):
+			result_file.write(
+				"USERID | "+
+				"GROUP | "+
+				"CONDITION | "+
+				"DOF_T | "+
+				"DOF_R | "+
+				"MOVEMENT_DIRECTION | "+ 
+				"TARGET_DISTANCE_T | "+
+				"TARGET_WIDTH_T | "+
+				"ROTATION_AXIS | "+
+				"TARGET_DISTANCE_R | "+
+				"TARGET_WIDTH_R | "+
+				"ID_T | "+
+				"ID_R | "+
+				"ID_COMBINED | "+
+				"REPETITION | "+
+				"TRIAL | "+
+				"BUTTON CLICKS | "+
+				"SUCCESFULL CLICKS | " +
+				"HIT_TYPE | "+
+				"HIT_TIME | "+
+				"HIT_ERROR_T | "+
+				"HIT_ERROR_R | "+
+				"THROUGHPUT | "+
+				"\n \n")
+			self.header_printed=True
+
+		result_file.write(
+			str(self.userID)+ " | "+
+			str(self.group)+" | "+
+			str(self.condition)+" | "+
+			str(self.DOF_T)+" | "+
+			str(self.DOF_R)+" | "+
+			str(self.movement_direction)+" | "+
+			str(self.target_distance_t)+" | "+
+			str(self.target_width_t)+" | "+
+			str(self.rotation_axis)+" | "+
+			str(self.target_distance_r)+" | "+
+			str(self.target_width_r)+" | "+
+			str(self.ID_t)+" | "+
+			str(self.ID_r)+" | "+
+			str(self.ID_combined)+" | "+
+			str(self.repetition)+" | "+
+			str(self.trial)+" | "+
+			str(self.button_clicks)+" | "+
+			str(self.succesful_clicks)+" | "+
+			str(self.hit_type)+" | "+
+			str(self.hit_time)+" | "+
+			str(self.hit_error_t)+" | "+
+			str(self.hit_error_r)+" | "+
+			str(self.throughput)+" | "+
+			"\n=========================\n\n")
