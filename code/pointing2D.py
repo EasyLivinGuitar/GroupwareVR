@@ -60,6 +60,11 @@ class PointerManager(avango.script.Script):
 	evenTrial=False
 	flagPrinted=False
 
+	# Logging
+	userID=0
+	group=0
+	condition
+
 	error=0
 	last_error=0
 	MT=0
@@ -324,6 +329,9 @@ class PointerManager(avango.script.Script):
 def start ():
     #setup
 	pointerManager = PointerManager()
+
+	pointerManager.userID=input("USER_ID: ")
+	pointerManager.group=input("GROUP: ")
 	
 	#loadMeshes
 	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
