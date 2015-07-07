@@ -20,6 +20,8 @@ W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgefor
 
 FRAMES_FOR_SPEED=4 #How many frames token to calculate speed
 
+logmanager=setupEnvironment.logManager()
+
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -62,7 +64,8 @@ class PointerManager(avango.script.Script):
 	# Logging
 	userID=0
 	group=0
-	condition
+	trial=0
+	hits=0
 
 	error=0
 	last_error=0
@@ -130,6 +133,7 @@ class PointerManager(avango.script.Script):
 
 		self.setSpeed()
 		self.setError()
+
 		if setupEnvironment.logResults():
 			self.logData()
 
@@ -154,16 +158,39 @@ class PointerManager(avango.script.Script):
 				if self.Button.value: #write resulting values
 					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
-						self.result_file.write(
-							"HT: "+str(self.goal)+"\n"+
-							"MT: "+str(self.MT)+"\n"+
-							"ID: "+str(self.ID)+"\n"+
-							"TP: "+str(self.TP)+"\n"+
-							"W : "+str(W[self.current_index])+"\n"
-							"Last Error: "+str(self.last_error)+"\n"+
-							"=========================\n\n")
+						self.logSetter()
+						logmanager.log(self.result_file)
+
 						self.flagPrinted=True
 					self.result_file.close()
+
+	def logSetter(self):
+		logmanager.setUserID(self.userID)
+		logmanager.setGroup(self.group)
+		if(setupEnvironment.space3D()):
+			logmanager.setCondition("pointing3D_virtual")
+			logmanager.setDOF(3, 0)
+		else:
+			logmanager.setCondition("pointing2D_virtual")
+			logmanager.setDOF(2, 0)
+		logmanager.setMovementDirection(self.AimMat, self.BaseMat)
+		logmanager.setTargetDistance_t(D)
+		logmanager.setTargetWidth_t(W[self.current_index])
+		logmanager.setRotationAxis(0)
+		logmanager.setTargetDistance_r(0)
+		logmanager.setTargetWidth_r(0)
+		logmanager.setID_combined(self.ID, 0)
+		logmanager.setRepetition(N)
+		logmanager.setTrial(self.trial)
+
+		if(setupEnvironment.useAutoDetect()):
+			logmanager.setHit("AUTO", self.MT, self.last_error, 0)
+			logmanager.setClicks(0, 0)
+		else:
+			logmanager.setHit("BUTTON", self.MT, self.last_error, 0)
+			logmanager.setClicks(self.trial, self.hits)
+
+
 
 	def next(self):
 		if(self.endedTest==False):	
@@ -174,6 +201,7 @@ class PointerManager(avango.script.Script):
 				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
 				print("Test started.\n")
 			else:
+				self.trial=self.trial+1
 				if(self.counter==N):
 					self.counter=0
 					self.current_index=self.current_index+1
@@ -193,10 +221,12 @@ class PointerManager(avango.script.Script):
 						self.hit() 
 					else:
 						self.miss()
+					self.time_1=self.timer.value
 		else:
 			print("Test ended")
 
 	def hit(self):
+		self.hits=self.hits+1
 		print("HIT")
 		self.goal=True
 		setupEnvironment.playSound("balloon")
@@ -233,6 +263,7 @@ class PointerManager(avango.script.Script):
 		self.AimMat_old = self.AimMat
 		self.BaseMat.value = self.AimMat.value 
 		self.AimMat.value = temp
+
 
 		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
 		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
@@ -272,6 +303,7 @@ class PointerManager(avango.script.Script):
 			self.error=self.getDistance2D(self.TransMat.value, self.AimMat.value)
 		else:
 			self.error=self.getDistance3D(self.TransMat.value, self.AimMat.value)
+
 
 	def setID(self, index):
 		self.ID = ID[index]
