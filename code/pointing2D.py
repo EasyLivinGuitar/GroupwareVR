@@ -364,7 +364,6 @@ class PointerManager(avango.script.Script):
 		if(self.frame_counter % 5 == 0):
 			self.TransTranslation1=self.TransMat.value.get_translate()
 			self.start_time=self.timer.value
-			self.frame_counter=self.frame_counter+1
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.TransTranslation2=self.TransMat.value.get_translate()
@@ -376,8 +375,10 @@ class PointerManager(avango.script.Script):
 
 				if(self.current_speed<10**-3):
 					self.current_speed=0
-			else:
-				self.frame_counter=self.frame_counter+1
+			
+		self.frame_counter=self.frame_counter+1
+
+		print("current_speed: "+str(self.current_speed))
 
 	def setAcceleration(self):
 		if(self.frame_counter % 5 == 0):
@@ -391,14 +392,14 @@ class PointerManager(avango.script.Script):
 				time=self.end_time2-self.start_time2
 				self.current_acceleration=div/time
 
-				if(self.current_acceleration<10**-3):
-					self.current_acceleration=0
+				# if(self.current_acceleration<10**-3):
+				# 	self.current_acceleration=0
 
 				if(self.current_acceleration>self.peak_acceleration):
 					self.peak_acceleration=self.current_acceleration
 
-				print("current acc: " + str(self.current_acceleration))
-				print("peak acc: " + str(self.peak_acceleration))
+		print("current acc: " + str(self.current_acceleration))
+		print("peak acc: " + str(self.peak_acceleration))
 
 
 	def handle_key(self, key, scancode, action, mods):
@@ -422,11 +423,11 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/thin_pointer_abstract.obj", avango.gua.LoaderFlags.DEFAULTS)
+	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
 	pencil.Transform.value = avango.gua.make_scale_mat(1)
-	pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 1.0, 1.0, 1.0))
+	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 1.0, 1.0, 1.0))
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
-	pencil.Material.value.EnableBackfaceCulling.value = False
+	#pencil.Material.value.EnableBackfaceCulling.value = False
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 

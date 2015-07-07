@@ -283,7 +283,7 @@ def ignoreZ():
 	return True
 
 def space3D():
-	return False
+	return True
 
 def getOffsetTracking():
 	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
