@@ -12,11 +12,7 @@ from avango.script import field_has_changed
 
 THREEDIMENSIONTASK=False
 
-r = 0.16 #circle radius
-r1 = 0.15 #circle des stabes
-r2 = 0.05#länge des stabes
-
-r_spitze=0.05
+r=0.10
 
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
@@ -34,13 +30,15 @@ for i in range(0, len(ID)):
 		D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
 		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
 	else:
-		D=45
+		D=90
 		W.append(D/(2**ID[0]-1))
 
+print(W)
+
 targetDiameter = [
-	2*r_spitze*math.tan(W[0]/2*math.pi/180),
-	2*r_spitze*math.tan(W[1]/2*math.pi/180),
-	2*r_spitze*math.tan(W[2]/2*math.pi/180)
+	2*r*math.tan(W[0]/2*math.pi/180),
+	2*r*math.tan(W[1]/2*math.pi/180),
+	2*r*math.tan(W[2]/2*math.pi/180)
 ]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
@@ -297,8 +295,8 @@ def start ():
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
 	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
-	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
+	disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])#position*size
+	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
 
 	disksNode = avango.gua.nodes.TransformNode(
 		Children = [disk1]
@@ -306,28 +304,28 @@ def start ():
 
 	if setupEnvironment.space3D():
 		disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])
+		disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])
 		disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
 		disksNode.Children.value.append(disk2)
 
 		disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])
+		disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])
 		disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		disksNode.Children.value.append(disk3)
 
 		disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])
-		disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
+		disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])
+		disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
 		disksNode.Children.value.append(disk4)
 
 		disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])
+		disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])
 		disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		disksNode.Children.value.append(disk5)
 
 
 		disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r_spitze)*avango.gua.make_scale_mat(targetDiameter[0])
+		disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[0])
 		disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		disksNode.Children.value.append(disk6)
 
