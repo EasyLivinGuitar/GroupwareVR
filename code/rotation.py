@@ -84,8 +84,6 @@ class trackingManager(avango.script.Script):
 		self.backAndForth = False
 		self.backAndForthAgain = False;
 		self.disks = setupEnvironment.DisksContainer()
-		
-
 
 	def __del__(self):
 		if setupEnvironment.logResults:
@@ -104,51 +102,17 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(pencilTransMat)
 	def pointermat_changed(self):
 		if (not self.endedTest):
-			#attach pipes to cursor
-			rot = self.pencilTransMat.value.get_rotate_scale_corrected()
-			if THREEDIMENSIONTASK:
-				rotateAroundX=1
-			else:
-				rotateAroundX=0
-
-			#attack disks to pointer
+			#attach disks to pointer
 			self.disksMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(self.disksMat.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disksMat.value.get_scale()) #keep rotation and scale and move to pointer
 			
 
 	@field_has_changed(timer)
 	def updateTimer(self):
-		self.reducePencilMat()
+		self.pencilTransMat.value = setupEnvironment.reducePencilMat(self.pencilTransMat.value)
 		
 		if setupEnvironment.logResults:	
 			self.logData()
-
-	def reducePencilMat(self):
-		if not setupEnvironment.space3D:# on table?
-			zCorrection=setupEnvironment.offsetTracking.get_translate().y
-		else:
-			zCorrection=0
-
-		if setupEnvironment.reduceDOFRotate:
-			#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
-			#get angle between rotation and y axis
-			q = self.pencilTransMat.value.get_rotate_scale_corrected()
-			q.z = 0 #tried to fix to remove roll
-			q.x = 0 #tried to fix to remove roll
-			q.normalize()
-			yRot = avango.gua.make_rot_mat(setupEnvironment.get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
-
-		else:
-			yRot = avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected())
-
-		self.pencilTransMat.value = (
-			avango.gua.make_trans_mat(
-				self.pencilTransMat.value.get_translate().x-setupEnvironment.offsetTracking.get_translate().x,
-				self.pencilTransMat.value.get_translate().y-zCorrection,
-				self.pencilTransMat.value.get_translate().z-setupEnvironment.offsetTracking.get_translate().z
-			)
-			* yRot #add rotation
-		)
-				
+	
 
 	def nextSettingStep(self):
 		self.startedTest=True
@@ -201,7 +165,7 @@ class trackingManager(avango.script.Script):
 							rotateAroundX=0
 					self.disksMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)
 			
-				self.disks.setDisksTransMats(self.index)
+				self.disks.setDisksTransMats(targetDiameter[self.index])
 
 			self.setMT(self.lastTime, self.timer.value)
 			self.lastTime=self.timer.value
@@ -327,7 +291,6 @@ def start():
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
 	disksNode = trackManager.disks.setupDisks(pencil.Transform.value.get_translate())
-
 	trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 	everyObject = avango.gua.nodes.TransformNode(
@@ -356,7 +319,7 @@ def start():
 
 	trackManager.Button.connect_from(button_sensor.Button0)
 
-	#connect disk1
+	#connect disks
 	trackManager.disksMat.connect_from(disksNode.Transform)
 	disksNode.Transform.connect_from(trackManager.disksMat)
 
