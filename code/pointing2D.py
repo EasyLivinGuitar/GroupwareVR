@@ -185,13 +185,20 @@ class PointerManager(avango.script.Script):
 		self.setTP(self.current_index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
-		if setupEnvironment.space3D:
-			logmanager.setCondition("pointing3D_virtual")
-			logmanager.setDOF(3, 0)
+		if(setupEnvironment.space3D()):
+			if(setupEnvironment.reduceDOFTranslate()):
+				logmanager.setCondition("pointing2D_air_locked_virtual")
+				logmanager.setDOFVirtual(2, 0)
+			else:
+				logmanager.setCondition("pointing2D_air_free_virtual")
+				logmanager.setDOFVirtual(3, 0)
+			logmanager.setDOFReal(3, 0)
 		else:
-			logmanager.setCondition("pointing2D_virtual")
-			logmanager.setDOF(2, 0)
-		if (self.AimMat.value.get_translate().x>self.BaseMat.value.get_translate().x): #aim is right
+			if(setupEnvironment.reduceDOFTranslate()):
+				logmanager.setCondition("pointing2D_table_locked_virtual")
+				logmanager.setDOFVirtual(2, 0)
+				logmanager.setDOFReal(2, 0)
+		if(self.AimMat.value.get_translate().x>self.BaseMat.value.get_translate().x): #aim is right
 			logmanager.setMovementDirection("r")
 		else:
 			logmanager.setMovementDirection("l")
