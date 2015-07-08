@@ -102,7 +102,8 @@ def setup(graph):
 		EyeDistance = 0.064,
 		EnableStereo = True,
 		OutputWindowName="window",
-		Transform = avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+		Transform = avango.gua.make_trans_mat(0.0, 0.0, 3.5),
+		BlackList = ["invisible"]
 	)
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",

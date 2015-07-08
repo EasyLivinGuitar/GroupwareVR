@@ -275,6 +275,17 @@ class PointerManager(avango.script.Script):
 					else:
 						self.miss()
 
+	def nextSettingStep(self):
+		#switches aim and shadow aim
+		temp = self.BaseMat.value
+		self.AimMat_old = self.AimMat
+		self.BaseMat.value = self.AimMat.value 
+		self.AimMat.value = temp
+
+
+		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
+		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])			
+
 
 	def hit(self):
 		self.hits=self.hits+1
@@ -302,16 +313,6 @@ class PointerManager(avango.script.Script):
 		index=random.randint(0, len(settings)-1)
 		
 		return settings[index]
-
-	def nextSettingStep(self):
-		temp = self.BaseMat.value
-		self.AimMat_old = self.AimMat
-		self.BaseMat.value = self.AimMat.value 
-		self.AimMat.value = temp
-
-
-		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
-		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
 		
 	def setError(self):
 		self.error = setupEnvironment.getDistance3D(self.TransMat.value, self.AimMat.value)
