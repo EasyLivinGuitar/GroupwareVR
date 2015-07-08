@@ -23,8 +23,6 @@ Then start the scene with the according start.sh
 
 '''Settings'''
 
-
-
 timer=avango.nodes.TimeSensor()
 
 res_pass = avango.gua.nodes.ResolvePassDescription()
@@ -49,7 +47,26 @@ soundtraverser.Renderers.value = [soundRenderer]
 balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
-cam = avango.gua.nodes.CameraNode()
+'''if one axis should be locked.'''
+reduceDOFTranslate =  True
+
+'''if one rotation axis should be locked.'''
+reduceDOFRotate = False
+
+'''is the task above the table or is it on the table?'''
+space3D = True
+
+offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
+
+'''get the position pf the cetner where the pointer and the aim is located'''
+centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
+
+logResults = True
+
+'''if true needs a button press or next step, if false then autodetects'''
+useAutoDetect =  False
+
+randomTargets = False
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -78,14 +95,14 @@ def setup(graph):
 		EyeDistance = 0.064,
 		EnableStereo = True,
 		OutputWindowName="window",
-		Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
-		)
+		Transform = avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+	)
 	screen = avango.gua.nodes.ScreenNode(
 		Name="screen",
 		Width=screenSize.x,
 		Height=screenSize.y,
 		Children=[cam]
-		)
+	)
 
 	#Sieht netter aus
 	res_pass.EnableSSAO.value = False
@@ -116,7 +133,7 @@ def setup(graph):
 
 	#Setup headtracking
 	head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	head_device_sensor.TransmitterOffset.value = getOffsetTracking()
+	head_device_sensor.TransmitterOffset.value = offsetTracking
 
 	head_device_sensor.Station.value = "glasses"
 
@@ -274,32 +291,3 @@ def getRotationError1D(rotA, rotB):
 
 	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
 	return diffRotMat.get_rotate_scale_corrected().get_angle()
-
-'''if one axis should be locked.'''
-def reduceDOFTranslate():
-	return True
-
-'''if one rotation axis should be locked.'''
-def reduceDOFRotate():
-	return False
-
-'''is the task above the table or is it on the table?'''
-def space3D():
-	return True
-
-def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
-
-'''get the position pf the cetner where the pointer and the aim is located'''
-def getCenterPosition():
-	return avango.gua.make_trans_mat(0.0, 0, 0.38)
-
-def logResults():
-	return True
-
-'''if true needs a button press or next step, if false then autodetects'''
-def useAutoDetect():
-	return False
-
-def randomTargets():
-	return False
