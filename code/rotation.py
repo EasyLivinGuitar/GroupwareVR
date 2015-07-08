@@ -27,7 +27,7 @@ ID=[4, 5, 6] #fitt's law
 W=[]
 
 for i in range(0, len(ID)):
-	if setupEnvironment.randomTargets():
+	if setupEnvironment.randomTargets:
 		D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
 		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
 	else:
@@ -93,7 +93,7 @@ class trackingManager(avango.script.Script):
 
 
 	def __del__(self):
-		if setupEnvironment.logResults():
+		if setupEnvironment.logResults:
 			self.result_file.close()
 
 	@field_has_changed(Button)
@@ -124,16 +124,16 @@ class trackingManager(avango.script.Script):
 	def updateTimer(self):
 		self.reducePencilMat()
 		
-		if setupEnvironment.logResults():	
+		if setupEnvironment.logResults:	
 			self.logData()
 
 	def reducePencilMat(self):
-		if not setupEnvironment.space3D():# on table?
-			zCorrection=setupEnvironment.getOffsetTracking().get_translate().y
+		if not setupEnvironment.space3D:# on table?
+			zCorrection=setupEnvironment.offsetTracking.get_translate().y
 		else:
 			zCorrection=0
 
-		if setupEnvironment.reduceDOFRotate():
+		if setupEnvironment.reduceDOFRotate:
 			#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate_scale_corrected()
@@ -147,9 +147,9 @@ class trackingManager(avango.script.Script):
 
 		self.pencilTransMat.value = (
 			avango.gua.make_trans_mat(
-				self.pencilTransMat.value.get_translate().x-setupEnvironment.getOffsetTracking().get_translate().x,
+				self.pencilTransMat.value.get_translate().x-setupEnvironment.offsetTracking.get_translate().x,
 				self.pencilTransMat.value.get_translate().y-zCorrection,
-				self.pencilTransMat.value.get_translate().z-setupEnvironment.getOffsetTracking().get_translate().z
+				self.pencilTransMat.value.get_translate().z-setupEnvironment.offsetTracking.get_translate().z
 			)
 			* yRot #add rotation
 		)
@@ -183,7 +183,7 @@ class trackingManager(avango.script.Script):
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 			#move target			
-			if setupEnvironment.randomTargets():
+			if setupEnvironment.randomTargets:
 				if THREEDIMENSIONTASK:
 					rotation=self.getRandomRotation3D()
 					self.disksMat.value = rotation
@@ -282,32 +282,33 @@ class trackingManager(avango.script.Script):
 	def setDisksTransMats(self, i):
 		print("scaling to"+str(targetDiameter[i]))
 		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-		if not setupEnvironment.reduceDOFRotate():
+		if not setupEnvironment.reduceDOFRotate:
 			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
 			self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])	
 			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
 			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
 			self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
 
-def handle_key(key, scancode, action, mods):
-	if action == 1:
-		#32 is space 335 is num_enter
-		if key==32 or key==335:
-			if(trackManager.endedTest==False):
-				#trackManager.nextSettingStep()
-				trackManager.Button.value=True
-			else:
-				print("Test ended")
-	else:
-		trackManager.flagPrinted=False
+	def handle_key(self, key, scancode, action, mods):
+		if action == 1:
+			#32 is space 335 is num_enter
+			if key==32 or key==335:
+				if(self.endedTest==False):
+					#trackManager.nextSettingStep()
+					self.Button.value=True
+				else:
+					print("Test ended")
+		else:
+			self.flagPrinted=False
 
-trackManager = trackingManager()
+
 def start():
+
+	trackManager = trackingManager()
 	trackManager.userID=input("USER_ID: ")
 	trackManager.group=input("GROUP: ")
 
-
-	setupEnvironment.getWindow().on_key_press(handle_key)
+	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
@@ -327,7 +328,7 @@ def start():
 	disksNode.Children.value.append(disk1)
 	trackManager.disk1 = disk1;
 
-	if not setupEnvironment.reduceDOFRotate():
+	if not setupEnvironment.reduceDOFRotate:
 		disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 		disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
 		disksNode.Children.value.append(disk2)
@@ -357,7 +358,7 @@ def start():
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [disksNode, pencil], 
-		Transform = setupEnvironment.getCenterPosition()#*avango.gua.make_scale_mat(3)
+		Transform = setupEnvironment.centerPosition#*avango.gua.make_scale_mat(3)
 	)
 
 	#add nodes to root
@@ -365,7 +366,7 @@ def start():
 
 	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
 
 	pointer_device_sensor.Station.value = "pointer"
 

@@ -128,13 +128,13 @@ class PointerManager(avango.script.Script):
 	@field_has_changed(timer)
 	def updateTimer(self):
 		translation = self.TransMat.value.get_translate()
-		if not setupEnvironment.space3D():
+		if not setupEnvironment.space3D:
 			self.TransMat.value = avango.gua.make_rot_mat(90, 1, 0, 0)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 			tmp = translation.y
 			translation.y = -translation.z-setupEnvironment.getOffsetTracking().get_translate().y
 			translation.z = tmp
 
-		if setupEnvironment.reduceDOFTranslate():
+		if setupEnvironment.reduceDOFTranslate:
 			translation.z = 0
 
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
@@ -147,7 +147,7 @@ class PointerManager(avango.script.Script):
 			self.setOvershoots()
 			self.autoDetect()
 
-		if setupEnvironment.logResults():
+		if setupEnvironment.logResults:
 			self.logData()
 
 	def logData(self):
@@ -211,7 +211,7 @@ class PointerManager(avango.script.Script):
 		logmanager.setRepetition(N)
 		logmanager.setTrial(self.trial)
 
-		if(setupEnvironment.useAutoDetect()):
+		if setupEnvironment.useAutoDetect:
 			logmanager.setHit("AUTO", self.MT, self.last_error, 0)
 			logmanager.setClicks(0, 0)
 		else:
@@ -248,7 +248,9 @@ class PointerManager(avango.script.Script):
 	def next(self):
 		if(self.endedTests==False):	
 			if(self.startedTests==False):
-				self.setStartTranslation()
+				#start
+				self.AimMat.value=avango.gua.make_trans_mat(D/2, 0, 0)
+				self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 				self.startedTests=True
 				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
 				self.lastTime=self.timer.value
@@ -300,10 +302,6 @@ class PointerManager(avango.script.Script):
 		index=random.randint(0, len(settings)-1)
 		
 		return settings[index]
-
-	def setStartTranslation(self):
-		self.AimMat.value=avango.gua.make_trans_mat(D/2, 0, 0)
-		self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 
 	def nextSettingStep(self):
 		temp = self.BaseMat.value
@@ -452,14 +450,14 @@ def start ():
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [aim_transform, base_transform, pencil_transform], 
-		Transform = setupEnvironment.getCenterPosition()
+		Transform = setupEnvironment.centerPosition
 	)
 
 	graph.Root.value.Children.value.append(everyObject)
 
 	#connections
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
 
 	pointer_device_sensor.Station.value = "pointer"
 
