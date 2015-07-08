@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 import random
 import setupEnvironment
+import logManager
 import math
 import os.path
 import avango.sound
@@ -24,7 +25,7 @@ THRESHHOLD=0.3
 
 FRAMES_FOR_AUTODETECT=3 #How many frames you have to be under the speed threshold to detect
 
-logmanager=setupEnvironment.logManager()
+logmanager= logManager.logManager()
 
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
