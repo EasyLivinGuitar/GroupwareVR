@@ -185,8 +185,8 @@ class PointerManager(avango.script.Script):
 		self.setTP(self.current_index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
-		if(setupEnvironment.space3D()):
-			if(setupEnvironment.reduceDOFTranslate()):
+		if setupEnvironment.space3D:
+			if setupEnvironment.reduceDOFTranslate:
 				logmanager.setCondition("pointing2D_air_locked_virtual")
 				logmanager.setDOFVirtual(2, 0)
 			else:
@@ -194,7 +194,7 @@ class PointerManager(avango.script.Script):
 				logmanager.setDOFVirtual(3, 0)
 			logmanager.setDOFReal(3, 0)
 		else:
-			if(setupEnvironment.reduceDOFTranslate()):
+			if setupEnvironment.reduceDOFTranslate:
 				logmanager.setCondition("pointing2D_table_locked_virtual")
 				logmanager.setDOFVirtual(2, 0)
 				logmanager.setDOFReal(2, 0)
@@ -435,12 +435,12 @@ def start ():
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
-	aim = loader.create_geometry_from_file("light_sphere", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aim = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aim.Transform.value = avango.gua.make_scale_mat(W[0])
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
 	#aim.Material.value.enableBackfaceCulling.value = False
 
-	base = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	base = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	base.Transform.value = avango.gua.make_scale_mat(W[0])
 	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 
