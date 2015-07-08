@@ -47,6 +47,8 @@ soundtraverser.Renderers.value = [soundRenderer]
 balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
+loader = avango.gua.nodes.TriMeshLoader() #Create Loader
+
 '''if one axis should be locked.'''
 reduceDOFTranslate =  True
 
@@ -67,6 +69,9 @@ logResults = True
 useAutoDetect =  False
 
 randomTargets = False
+
+'''radius of spikes'''
+r=0.10
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -291,3 +296,57 @@ def getRotationError1D(rotA, rotB):
 
 	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
 	return diffRotMat.get_rotate_scale_corrected().get_angle()
+
+class DisksContainer():
+	
+	def __init__(self):
+		self.disk1 = None
+		self.disk2 = None
+		self.disk3 = None
+		self.disk4 = None
+		self.disk5 = None
+		self.disk6 = None
+
+	def setupDisks(self, translate):
+		#attack disks to pointer
+		disksNode = avango.gua.nodes.TransformNode(
+			Transform = avango.gua.make_trans_mat(translate)
+		)
+
+		self.disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
+		disksNode.Children.value.append(self.disk1)
+
+		if not reduceDOFRotate:
+			self.disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
+			disksNode.Children.value.append(self.disk2)
+
+			self.disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk3)
+
+			self.disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
+			disksNode.Children.value.append(self.disk4)
+
+			self.disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk5)
+
+			self.disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk6)
+
+			return disksNode
+
+	def setDisksTransMats(self, diam):
+		print("scaling to"+str(diam))
+		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+		if not reduceDOFRotate:
+			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)	
+			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+

@@ -13,8 +13,8 @@ from avango.script import field_has_changed
 
 THREEDIMENSIONTASK=False
 
-r=0.10
 
+r = setupEnvironment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
 
@@ -43,7 +43,6 @@ targetDiameter = [
 print(targetDiameter)
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
-loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 
 logmanager=logManager.logManager()
@@ -84,12 +83,8 @@ class trackingManager(avango.script.Script):
 		self.endTime = 0
 		self.backAndForth = False
 		self.backAndForthAgain = False;
-		self.disk1 = None
-		self.disk2 = None
-		self.disk3 = None
-		self.disk4 = None
-		self.disk5 = None
-		self.disk6 = None
+		self.disks = setupEnvironment.DisksContainer()
+		
 
 
 	def __del__(self):
@@ -206,7 +201,7 @@ class trackingManager(avango.script.Script):
 							rotateAroundX=0
 					self.disksMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)
 			
-				self.setDisksTransMats(self.index)
+				self.disks.setDisksTransMats(self.index)
 
 			self.setMT(self.lastTime, self.timer.value)
 			self.lastTime=self.timer.value
@@ -279,16 +274,6 @@ class trackingManager(avango.script.Script):
 		if(self.MT>0 and self.index<len(ID)):
 			self.TP=ID[index]/self.MT
 
-	def setDisksTransMats(self, i):
-		print("scaling to"+str(targetDiameter[i]))
-		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-		if not setupEnvironment.reduceDOFRotate:
-			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-			self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])	
-			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-			self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
-
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:
 			#32 is space 335 is num_enter
@@ -303,7 +288,6 @@ class trackingManager(avango.script.Script):
 
 
 def start():
-
 	trackManager = trackingManager()
 	trackManager.userID=input("USER_ID: ")
 	trackManager.group=input("GROUP: ")
@@ -312,49 +296,14 @@ def start():
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
-	pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
+	pencil = setupEnvironment.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
-		#attack disks to pointer
-	disksNode = avango.gua.nodes.TransformNode(
-		Transform = avango.gua.make_trans_mat(pencil.Transform.value.get_translate())
+	disksNode = trackManager.disks.setupDisks(pencil.Transform.value.get_translate())
 
-	)
-
-	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
-	disksNode.Children.value.append(disk1)
-	trackManager.disk1 = disk1;
-
-	if not setupEnvironment.reduceDOFRotate:
-		disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
-		disksNode.Children.value.append(disk2)
-		trackManager.disk2 = disk2;
-
-		disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
-		disksNode.Children.value.append(disk3)
-		trackManager.disk3 = disk3;
-
-		disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
-		disksNode.Children.value.append(disk4)
-		trackManager.disk4 = disk4;
-
-		disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
-		disksNode.Children.value.append(disk5)
-		trackManager.disk5 = disk5;
-
-		disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
-		disksNode.Children.value.append(disk6)
-		trackManager.disk6 = disk6;
-
-	trackManager.setDisksTransMats(0)
+	trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [disksNode, pencil], 
