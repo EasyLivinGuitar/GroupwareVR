@@ -78,7 +78,7 @@ class logManager(avango.script.Script):
 		self.target_distance_r=distance
 
 	def setTargetWidth_r(self, width):
-		self.target_width_t=width
+		self.target_width_r=width
 
 	def setID_combined(self, idt, idr):
 		self.ID_t=idt

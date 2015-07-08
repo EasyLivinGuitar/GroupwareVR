@@ -66,11 +66,13 @@ class trackingManager(avango.script.Script):
 	index=0
 	counter=0
 
-	error=[]
+	error=0
 
 	#Logging
 	userID=0
 	group=0
+	trial=0
+	succesful_clicks=0
 	MT=0
 	ID=0
 	TP=0
@@ -158,9 +160,8 @@ class trackingManager(avango.script.Script):
 	def nextSettingStep(self):
 		self.startedTest=True
 		print(self.index)
-		if(self.counter==N):
+		if(self.counter%N == N-1):
 			self.index=self.index+1
-			self.counter=0
 
 		if(self.index==len(W)):
 			self.endedTest=True
@@ -177,6 +178,8 @@ class trackingManager(avango.script.Script):
 				print("HIT:" + str(self.error)+"°")
 				self.goal=True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+				if(setupEnvironment.useAutoDetect==False):
+					self.succesful_clicks=self.succesful_clicks+1
 			else:
 				print("MISS:" + str(self.error)+"°")
 				self.goal=False
@@ -208,12 +211,10 @@ class trackingManager(avango.script.Script):
 			
 				self.setDisksTransMats(self.index)
 
-			self.setMT(self.lastTime, self.timer.value)
-			self.lastTime=self.timer.value
+			
 			self.counter=self.counter+1
 
 			self.setID(self.index)
-			self.setTP(self.index)
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 
@@ -264,12 +265,14 @@ class trackingManager(avango.script.Script):
 
 	def logSetter(self):
 		self.setID(self.index)
+		self.setMT(self.lastTime, self.timer.value)
+		self.setTP(self.index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
 			if setupEnvironment.reduceDOFTranslate:
 				logmanager.setCondition("rotation2D_air_locked_virtual")
-				logmanager.setDOFVirtual(0, 2)
+				logmanager.setDOFVirtual(0, 1)
 			else:
 				logmanager.setCondition("rotation2D_air_free_virtual")
 				logmanager.setDOFVirtual(0, 3)
@@ -277,8 +280,8 @@ class trackingManager(avango.script.Script):
 		else:
 			if setupEnvironment.reduceDOFTranslate:
 				logmanager.setCondition("rotation2D_table_locked_virtual")
-				logmanager.setDOFVirtual(0, 2)
-				logmanager.setDOFReal(0, 2)
+				logmanager.setDOFVirtual(0, 1)
+				logmanager.setDOFReal(0, 1)
 
 		if self.backAndForth:
 			logmanager.setMovementDirection("r")
@@ -289,7 +292,19 @@ class trackingManager(avango.script.Script):
 		logmanager.setTargetDistance_r(D)
 		logmanager.setTargetWidth_r(W[self.index])
 		logmanager.setID_combined(0, self.ID)
+		logmanager.setRepetition(N)
+		logmanager.setTrial(self.trial)
+		if(setupEnvironment.useAutoDetect==False):
+			logmanager.setClicks(self.trial, self.succesful_clicks)
+			hittype="BUTTON"
+		else:
+			hittype="AUTO"
+		logmanager.setSuccess(self.goal)
+		logmanager.setHit(hittype, self.MT, 0, self.error)
 
+		logmanager.setThroughput()
+
+		self.trial=self.trial+1
 
 	def setID(self, index):
 		if(index<len(ID)):
@@ -298,6 +313,7 @@ class trackingManager(avango.script.Script):
 
 	def setMT(self, start, end):
 		self.MT=end-start
+		self.lastTime=self.timer.value
 		print("Time: " + str(self.MT))
 
 	def setTP(self, index):
