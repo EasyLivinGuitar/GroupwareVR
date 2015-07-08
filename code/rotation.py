@@ -125,7 +125,7 @@ class trackingManager(avango.script.Script):
 			q.normalize()
 			yRot = avango.gua.make_rot_mat(setupEnvironment.get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
 
-			zCorrection=setupEnvironment.getOffsetTracking().get_translate().y
+			zCorrection = setupEnvironment.getOffsetTracking().get_translate().y
 
 		else:
 			yRot = avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected())

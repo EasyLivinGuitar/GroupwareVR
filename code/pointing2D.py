@@ -79,6 +79,7 @@ class PointerManager(avango.script.Script):
 	peak_acceleration=0
 	first_reversal_acceleration=0
 	first_reversal_point=0
+	reversal_points=[]
 	frame_counter = 0
 	frame_counter2 = 0
 
@@ -114,7 +115,6 @@ class PointerManager(avango.script.Script):
 	def button_pressed(self):
 		if(self.endedTests==False):
 			if(self.Button.value):
-				self.last_error=self.error
 				self.next()
 			else:
 				self.flagPrinted=False
@@ -139,7 +139,7 @@ class PointerManager(avango.script.Script):
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
 
-		if(self.startedTests):
+		if(self.startedTests and self.endedTests==False):
 			self.setSpeed()
 			self.setAcceleration()
 			self.setError()
@@ -172,11 +172,16 @@ class PointerManager(avango.script.Script):
 					if(self.flagPrinted==False):
 						self.logSetter()
 						logmanager.log(self.result_file)
-
+						self.resetValues()
 						self.flagPrinted=True
 					self.result_file.close()
 
 	def logSetter(self):
+		self.setError()
+		self.last_error=self.error
+		self.setID(self.current_index)
+		self.setMT(self.lastTime, self.timer.value)
+		self.setTP(self.current_index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if(setupEnvironment.space3D()):
@@ -185,7 +190,10 @@ class PointerManager(avango.script.Script):
 		else:
 			logmanager.setCondition("pointing2D_virtual")
 			logmanager.setDOF(2, 0)
-		logmanager.setMovementDirection(self.AimMat, self.BaseMat)
+		if(self.AimMat.value.get_translate().x>self.BaseMat.value.get_translate().x): #aim is right
+			logmanager.setMovementDirection("r")
+		else:
+			logmanager.setMovementDirection("l")
 		logmanager.setTargetDistance_t(D)
 		logmanager.setTargetWidth_t(W[self.current_index])
 		logmanager.setRotationAxis(0)
@@ -203,8 +211,17 @@ class PointerManager(avango.script.Script):
 			logmanager.setClicks(self.trial, self.hits)
 
 		logmanager.setSuccess(self.goal)
+		logmanager.setPeakSpeed(self.peak_speed)
 		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
+		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
 
+	def resetValues(self):
+		self.overshoots=0
+		self.peak_acceleration=0
+		self.first_reversal_acceleration=0
+		self.peak_speed=0
+		self.first=True
+		self.inside=False
 
 	def autoDetect(self):
 		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
@@ -214,8 +231,10 @@ class PointerManager(avango.script.Script):
 				self.low_speed_counter=0
 				if(self.first):
 					self.first_reversal_point=self.TransMat.value.get_translate().x
+					print(self.first_reversal_point)
 					self.first_reversal_acceleration=self.current_acceleration
 					self.first=False
+				self.reversal_points.append(self.TransMat.value.get_translate().x)
 
 
 	def next(self):
@@ -224,6 +243,7 @@ class PointerManager(avango.script.Script):
 				self.setStartTranslation()
 				self.startedTests=True
 				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
+				self.lastTime=self.timer.value
 				print("Tests started.\n")
 			else:
 				self.trial=self.trial+1
@@ -239,33 +259,20 @@ class PointerManager(avango.script.Script):
 					setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 1), 1)
 					print("Tests finished")
 				else:
-					self.setID(self.current_index)
 					self.nextSettingStep()
-					self.setMT(self.lastTime, self.timer.value)
-					self.setID(self.current_index)
-					self.setTP(self.current_index)
 					if(self.error <= self.AimMat_scale.value.get_scale().x/2):
 						self.hit() 
 					else:
 						self.miss()
 
-			self.lastTime=self.timer.value
-			self.overshoots=0
-			self.peak_acceleration=0
-			self.first_reversal_acceleration=0
-			self.peak_speed=0
-			self.first=True
-			self.inside=False
 
 	def hit(self):
 		self.hits=self.hits+1
-		print("HIT")
 		self.goal=True
 		setupEnvironment.playSound("balloon")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 
 	def miss(self):
-		print("MISS")
 		self.goal=False
 		setupEnvironment.playSound("miss")
 		setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
@@ -339,11 +346,10 @@ class PointerManager(avango.script.Script):
 
 	def setID(self, index):
 		self.ID = ID[index]
-		print("ID: "+ str(self.ID))
 
 	def setMT(self, start, end):
 		self.MT=end-start
-		print("Time: " + str(self.MT))
+		self.lastTime=self.timer.value
 
 	def setTP(self, index):
 		if(self.MT>0):

@@ -302,8 +302,11 @@ class logManager(avango.script.Script):
 	hit_error_r=0
 	overshoots=0
 	throughput=0
+	peak_speed=0
 	peak_acceleration=0
 	movement_continuity_t=0
+	first_reversal_point=0
+	num_reversal_points=0
 
 	header_printed=False
 
@@ -320,11 +323,8 @@ class logManager(avango.script.Script):
 		self.DOF_T=DOFt
 		self.DOF_R=DOFr
 
-	def setMovementDirection(self, aim_mat, base_mat):
-		if(aim_mat.value.get_translate().x > base_mat.value.get_translate().x):
-			self.movement_direction="r"
-		else:
-			self.movement_direction="l"
+	def setMovementDirection(self, direction):
+		self.movement_direction=direction
 
 	def setTargetDistance_t(self, distance):
 		self.target_distance_t=distance
@@ -373,11 +373,17 @@ class logManager(avango.script.Script):
 		if(self.hit_time>0):
 			self.throughput=self.ID_combined/self.hit_time
 
+	def setPeakSpeed(self, peak):
+		self.peak_speed=peak
+
 	def setMovementContinuity(self, peak_acc, first_point_acc):
 		self.peak_acceleration=peak_acc
 		if(peak_acc>0):
 			self.movement_continuity_t=first_point_acc/peak_acc
 
+	def setReversalPoints(self, first, num):
+		self.first_reversal_point=first
+		self.num_reversal_points=num
 
 	def log(self, result_file):
 		if(self.header_printed==False):
@@ -407,8 +413,11 @@ class logManager(avango.script.Script):
 				"HIT_ERROR_R | "+
 				"OVERSHOOTS | "+
 				"THROUGHPUT | "+
+				"PEAK_SPEED | "+
 				"PEAK_ACCELERATION | "+
 				"MOVEMENT_CONTINUITY_T | "+
+				"FIRST_REVERSAL_POINT | "+
+				"NUM_REVERSAL_POINTS | "+
 				"\n \n")
 			self.header_printed=True
 
@@ -438,8 +447,11 @@ class logManager(avango.script.Script):
 			str(self.hit_error_r)+" | "+
 			str(self.overshoots)+" | "+
 			str(self.throughput)+" | "+
+			str(self.peak_speed)+" | "+
 			str(self.peak_acceleration)+" | "+
 			str(self.movement_continuity_t)+" | "+
+			str(self.first_reversal_point)+" | "+
+			str(self.num_reversal_points)+" | "+
 			"\n")
 
 
@@ -465,7 +477,7 @@ def getCenterPosition():
 	return avango.gua.make_trans_mat(0.0, 0, 0.38)
 
 def logResults():
-	return False
+	return True
 
 '''if true needs a button press or next step, if false then autodetects'''
 def useAutoDetect():
