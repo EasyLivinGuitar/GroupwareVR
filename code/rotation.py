@@ -45,6 +45,8 @@ graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 
+logmanager=setupEnvironment.logManager()
+
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
@@ -65,6 +67,9 @@ class trackingManager(avango.script.Script):
 
 	error=[]
 
+	#Logging
+	userID=0
+	group=0
 	MT=0
 	ID=0
 	TP=0
@@ -251,16 +256,14 @@ class trackingManager(avango.script.Script):
 				if self.Button.value: #write resulting values
 					self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
-						self.result_file.write(
-							"HT: "+str(self.goal)+"\n"+
-							"MT: "+str(self.MT)+"\n"+
-							"ID: "+str(self.ID)+"\n"+
-							"TP: "+str(self.TP)+"\n"+
-							"W : "+str(W[self.index])+"\n"
-							"Total Error: "+str(self.error)+"\n"+
-							"=========================\n\n")
+						self.logSetter()
+						logmanager.log()
 						self.flagPrinted=True
 					self.result_file.close()
+
+	def logSetter(self):
+		logmanager.setUserID(self.userID)
+		logmanager.setGroup(self.group)
 
 	def setID(self, index):
 		if(index<len(ID)):
@@ -298,6 +301,9 @@ def handle_key(key, scancode, action, mods):
 
 trackManager = trackingManager()
 def start():
+	trackManager.userID=input("USER_ID: ")
+	trackManager.group=input("GROUP: ")
+
 
 	setupEnvironment.getWindow().on_key_press(handle_key)
 	setupEnvironment.setup(graph)
