@@ -200,7 +200,7 @@ class trackingManager(avango.script.Script):
 							rotateAroundX=0
 					self.disksMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)
 			
-				setDiskScale(disksNode, self.index)
+				self.setDiskScale(self.index)
 
 			self.setMT(self.lastTime, self.timer.value)
 			self.lastTime=self.timer.value
