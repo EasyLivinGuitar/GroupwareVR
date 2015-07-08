@@ -22,38 +22,6 @@ Then start the scene with the according start.sh
 '''
 
 
-'''Settings'''
-
-
-'''if one axis should be locked.'''
-def reduceDOFTranslate():
-	return True
-
-'''if one rotation axis should be locked.'''
-def reduceDOFRotate():
-	return True
-
-def space3D():
-	return True
-
-def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
-
-'''get the position pf the cetner where the pointer and the aim is located'''
-def getCenterPosition():
-	return avango.gua.make_trans_mat(0.0, 0, 0.38)
-
-def logResults():
-	return True
-
-'''if true needs a button press or next step, if false then autodetects'''
-def useAutoDetect():
-	return False
-
-def randomTargets():
-	return False
-
-
 
 timer=avango.nodes.TimeSensor()
 
@@ -473,3 +441,35 @@ class logManager(avango.script.Script):
 			str(self.peak_acceleration)+" | "+
 			str(self.movement_continuity_t)+" | "+
 			"\n")
+
+
+'''Settings'''
+
+
+'''if one axis should be locked.'''
+def reduceDOFTranslate():
+	return True
+
+'''if one rotation axis should be locked.'''
+def reduceDOFRotate():
+	return True
+
+def space3D():
+	return True
+
+def getOffsetTracking():
+	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
+
+'''get the position pf the cetner where the pointer and the aim is located'''
+def getCenterPosition():
+	return avango.gua.make_trans_mat(0.0, 0, 0.38)
+
+def logResults():
+	return False
+
+'''if true needs a button press or next step, if false then autodetects'''
+def useAutoDetect():
+	return False
+
+def randomTargets():
+	return False
