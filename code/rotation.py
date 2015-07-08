@@ -187,7 +187,7 @@ class trackingManager(avango.script.Script):
 					self.disksMat.value = rotation
 
 			else:
-				if self.backAndForth:
+				if self.backAndForth: #aim get right
 					self.disksMat.value = avango.gua.make_rot_mat(0, 0, 1, 0)
 					self.backAndForth=False
 				else:
@@ -253,13 +253,38 @@ class trackingManager(avango.script.Script):
 					self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
 						self.logSetter()
-						logmanager.log()
+						logmanager.log(self.result_file)
 						self.flagPrinted=True
 					self.result_file.close()
 
 	def logSetter(self):
+		self.setID(self.index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
+		if setupEnvironment.space3D:
+			if setupEnvironment.reduceDOFTranslate:
+				logmanager.setCondition("rotation2D_air_locked_virtual")
+				logmanager.setDOFVirtual(0, 2)
+			else:
+				logmanager.setCondition("rotation2D_air_free_virtual")
+				logmanager.setDOFVirtual(0, 3)
+			logmanager.setDOFReal(0, 3)
+		else:
+			if setupEnvironment.reduceDOFTranslate:
+				logmanager.setCondition("rotation2D_table_locked_virtual")
+				logmanager.setDOFVirtual(0, 2)
+				logmanager.setDOFReal(0, 2)
+
+		if self.backAndForth:
+			logmanager.setMovementDirection("r")
+		else:
+			logmanager.setMovementDirection("l")
+
+		logmanager.setRotationAxis("y")
+		logmanager.setTargetDistance_r(D)
+		logmanager.setTargetWidth_r(W[self.index])
+		logmanager.setID_combined(0, self.ID)
+
 
 	def setID(self, index):
 		if(index<len(ID)):
