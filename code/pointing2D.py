@@ -20,9 +20,9 @@ W=[D/(2**ID[0]-1), D/(2**ID[1]-1), D/(2**ID[2]-1)] #in meter, Fitt's Law umgefor
 
 FRAMES_FOR_SPEED=4 #How many frames token to calculate speed and acceleration
 
-THRESHHOLD=0.1
+THRESHHOLD=0.3
 
-FRAMES_FOR_AUTODETECT=5 #How many frames you have to be under the speed threshold to detect
+FRAMES_FOR_AUTODETECT=3 #How many frames you have to be under the speed threshold to detect
 
 logmanager=setupEnvironment.logManager()
 
@@ -74,10 +74,13 @@ class PointerManager(avango.script.Script):
 	speed_time2=0
 
 	current_speed = 0
+	peak_speed=0
 	current_acceleration = 0
 	peak_acceleration=0
 	first_reversal_acceleration=0
+	first_reversal_point=0
 	frame_counter = 0
+	frame_counter2 = 0
 
 	low_speed_counter=0
 
@@ -119,27 +122,7 @@ class PointerManager(avango.script.Script):
 
 	@field_has_changed(TransMat)
 	def TransMatHasChanged(self):
-		if setupEnvironment.useAutoDetect():
-			if(self.endedTests==False):
-				if(self.AimMat.value.get_translate().x > self.BaseMat.value.get_translate().x): #Aim is right
-					if(self.TransMat.value.get_translate().x < self.TransMat_old_x_translate):
-						self.point_of_turn=self.TransMat.value.get_translate().x
-						
-						self.next()
-				else: #Aim is left
-					if(self.TransMat.value.get_translate().x > self.TransMat_old_x_translate): 
-						self.point_of_turn=self.TransMat.value.get_translate().x
-
-						self.next()
-
-				self.TransMat_old_x_translate=self.TransMat.value.get_translate().x
-
-		if(self.error < self.AimMat_scale.value.get_scale().x/2):
-			self.inside=True
-		else:
-			if(self.inside):
-				self.overshoots=self.overshoots+1
-				self.inside=False
+		pass
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -156,10 +139,12 @@ class PointerManager(avango.script.Script):
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 
 
-		self.setSpeed()
-		self.setAcceleration()
-		self.setError()
-		self.autoDetect()
+		if(self.startedTests):
+			self.setSpeed()
+			self.setAcceleration()
+			self.setError()
+			self.setOvershoots()
+			self.autoDetect()
 
 		if setupEnvironment.logResults():
 			self.logData()
@@ -222,10 +207,11 @@ class PointerManager(avango.script.Script):
 
 
 	def autoDetect(self):
-		if(math.fabs(self.current_speed) < THRESHHOLD):
+		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
 			if(self.low_speed_counter < FRAMES_FOR_AUTODETECT-1):
 				self.low_speed_counter=self.low_speed_counter+1
 			else:
+				self.low_speed_counter=0
 				if(self.first):
 					self.first_reversal_point=self.TransMat.value.get_translate().x
 					self.first_reversal_acceleration=self.current_acceleration
@@ -266,7 +252,10 @@ class PointerManager(avango.script.Script):
 			self.lastTime=self.timer.value
 			self.overshoots=0
 			self.peak_acceleration=0
+			self.first_reversal_acceleration=0
+			self.peak_speed=0
 			self.first=True
+			self.inside=False
 
 	def hit(self):
 		self.hits=self.hits+1
@@ -375,31 +364,37 @@ class PointerManager(avango.script.Script):
 
 				if(self.current_speed<10**-3):
 					self.current_speed=0
+
+				if(self.current_speed>self.peak_speed):
+					self.peak_speed=self.current_speed
 			
 		self.frame_counter=self.frame_counter+1
 
-		print("current_speed: "+str(self.current_speed))
-
 	def setAcceleration(self):
-		if(self.frame_counter % 5 == 0):
+		if(self.frame_counter2 % 5 == 0):
 			self.speed_time1=self.current_speed
 			self.start_time2=self.timer.value
 		else:
-			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
+			if(self.frame_counter2 % 5 == FRAMES_FOR_SPEED-1):
 				self.speed_time2=self.current_speed
 				self.end_time2=self.timer.value
 				div=self.speed_time2-self.speed_time1
 				time=self.end_time2-self.start_time2
 				self.current_acceleration=div/time
 
-				# if(self.current_acceleration<10**-3):
-				# 	self.current_acceleration=0
-
 				if(self.current_acceleration>self.peak_acceleration):
 					self.peak_acceleration=self.current_acceleration
 
-		print("current acc: " + str(self.current_acceleration))
-		print("peak acc: " + str(self.peak_acceleration))
+		self.frame_counter2=self.frame_counter2+1
+
+	def setOvershoots(self):
+		if(self.error < self.AimMat_scale.value.get_scale().x/2):
+			self.inside=True
+		else:
+			if(self.inside):
+				self.overshoots=self.overshoots+1
+				print("Overshoots: "+str(self.overshoots))
+				self.inside=False
 
 
 	def handle_key(self, key, scancode, action, mods):
