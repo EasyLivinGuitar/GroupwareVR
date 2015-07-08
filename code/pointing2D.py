@@ -137,7 +137,7 @@ class PointerManager(avango.script.Script):
 		if setupEnvironment.reduceDOFTranslate:
 			translation.z = 0
 
-		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
+		self.TransMat.value = setupEnvironment.reducePencilMat(self.TransMat.value)
 
 
 		if(self.startedTests and self.endedTests==False):
@@ -313,39 +313,8 @@ class PointerManager(avango.script.Script):
 		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
 		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
 		
-
-	def getDistance2D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
-
-		aim_x=target2.get_translate()[0]
-		aim_y=target2.get_translate()[1]
-
-		trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-		trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-		
-		distance=math.sqrt(trans_aim_x_square+trans_aim_y_square)
-		return distance
-
-	def getDistance3D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
-		trans_z=target1.get_translate()[2]
-
-		aim_x=target2.get_translate()[0]
-		aim_y=target2.get_translate()[1]
-		aim_z=target2.get_translate()[2]
-
-		trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-		trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-		trans_aim_z_square=(trans_z - aim_z)*(trans_z - aim_z)
-		
-		distance=math.sqrt(trans_aim_x_square+trans_aim_y_square+trans_aim_z_square)
-		return distance
-
 	def setError(self):
-		self.error=self.getDistance3D(self.TransMat.value, self.AimMat.value)
-
+		self.error = setupEnvironment.getDistance3D(self.TransMat.value, self.AimMat.value)
 
 	def setID(self, index):
 		self.ID = ID[index]

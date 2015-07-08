@@ -23,6 +23,32 @@ Then start the scene with the according start.sh
 
 '''Settings'''
 
+'''if one axis should be locked.  TODO: make it an interger'''
+reduceDOFTranslate = False
+
+'''if one rotation axis should be locked. TODO: make it an interger'''
+reduceDOFRotate = False
+
+'''is the task above the table or is it on the table?'''
+space3D = True
+
+offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
+
+'''get the position pf the cetner where the pointer and the aim is located'''
+centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
+
+logResults = True
+
+'''if true needs a button press or next step, if false then autodetects'''
+useAutoDetect =  False
+
+randomTargets = False
+
+'''radius of spikes'''
+r=0.10
+
+
+
 timer=avango.nodes.TimeSensor()
 
 res_pass = avango.gua.nodes.ResolvePassDescription()
@@ -47,26 +73,7 @@ soundtraverser.Renderers.value = [soundRenderer]
 balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
-'''if one axis should be locked.'''
-reduceDOFTranslate =  True
-
-'''if one rotation axis should be locked.'''
-reduceDOFRotate = False
-
-'''is the task above the table or is it on the table?'''
-space3D = True
-
-offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
-
-'''get the position pf the cetner where the pointer and the aim is located'''
-centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
-
-logResults = True
-
-'''if true needs a button press or next step, if false then autodetects'''
-useAutoDetect =  False
-
-randomTargets = False
+loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -291,3 +298,117 @@ def getRotationError1D(rotA, rotB):
 
 	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
 	return diffRotMat.get_rotate_scale_corrected().get_angle()
+
+
+def getDistance2D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
+
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
+
+	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
+	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
+	
+	distance=math.sqrt(trans_aim_x_square+trans_aim_y_square)
+	return distance
+
+def getDistance3D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
+	trans_z=target1.get_translate()[2]
+
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
+	aim_z=target2.get_translate()[2]
+
+	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
+	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
+	trans_aim_z_square=(trans_z - aim_z)*(trans_z - aim_z)
+	
+	distance=math.sqrt(trans_aim_x_square+trans_aim_y_square+trans_aim_z_square)
+	return distance
+
+
+'''reduce a transform matrix according to the constrainst '''
+def reducePencilMat(mat):
+	if not space3D:# on table?
+			zCorrection=offsetTracking.get_translate().y
+	else:
+		zCorrection=0
+
+	if reduceDOFRotate:
+		#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
+		#get angle between rotation and y axis
+		q = mat.get_rotate_scale_corrected()
+		q.z = 0 #tried to fix to remove roll
+		q.x = 0 #tried to fix to remove roll
+		q.normalize()
+		yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+	else:
+		yRot = avango.gua.make_rot_mat(mat.get_rotate_scale_corrected())
+
+	translation = avango.gua.make_trans_mat(
+		mat.get_translate().x-offsetTracking.get_translate().x,
+		mat.get_translate().y-zCorrection,
+		mat.get_translate().z-offsetTracking.get_translate().z
+	)
+
+	if reduceDOFTranslate:
+		translation.z = 0
+
+	return translation* yRot		
+
+class DisksContainer():
+	
+	def __init__(self):
+		self.disk1 = None
+		self.disk2 = None
+		self.disk3 = None
+		self.disk4 = None
+		self.disk5 = None
+		self.disk6 = None
+
+	def setupDisks(self, translate):
+		#attack disks to pointer
+		disksNode = avango.gua.nodes.TransformNode(
+			Transform = avango.gua.make_trans_mat(translate)
+		)
+
+		self.disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
+		disksNode.Children.value.append(self.disk1)
+
+		if not reduceDOFRotate:
+			self.disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
+			disksNode.Children.value.append(self.disk2)
+
+			self.disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk3)
+
+			self.disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
+			disksNode.Children.value.append(self.disk4)
+
+			self.disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk5)
+
+			self.disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+			self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+			disksNode.Children.value.append(self.disk6)
+
+			return disksNode
+
+	def setDisksTransMats(self, diam):
+		print("scaling to"+str(diam))
+		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+		if not reduceDOFRotate:
+			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)	
+			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+
