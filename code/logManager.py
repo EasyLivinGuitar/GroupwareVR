@@ -13,8 +13,10 @@ class logManager(avango.script.Script):
 	userID=0
 	group=0
 	condition=None
-	DOF_T=0
-	DOF_R=0
+	DOF_T_virtual=0
+	DOF_R_virtual=0
+	DOF_T_real=0
+	DOF_R_real=0
 	movement_direction=None
 	target_distance_t=0
 	target_width_t=0
@@ -52,9 +54,13 @@ class logManager(avango.script.Script):
 	def setCondition(self, task):
 		self.condition = task
 
-	def setDOF(self, DOFt, DOFr):
-		self.DOF_T=DOFt
-		self.DOF_R=DOFr
+	def setDOFVirtual(self, DOFt, DOFr):
+		self.DOF_T_virtual=DOFt
+		self.DOF_R_virtual=DOFr
+
+	def setDOFReal(self, DOFt, DOFr):
+		self.DOF_T_real=DOFt
+		self.DOF_R_real=DOFr
 
 	def setMovementDirection(self, direction):
 		self.movement_direction=direction
@@ -124,8 +130,10 @@ class logManager(avango.script.Script):
 				"USERID | "+
 				"GROUP | "+
 				"CONDITION | "+
-				"DOF_T | "+
-				"DOF_R | "+
+				"DOF_T_VIRTUAL | "+
+				"DOF_R_VIRTUAL | "+
+				"DOF_T_REAL | "+
+				"DOF_R_REAL | "+
 				"MOVEMENT_DIRECTION | "+ 
 				"TARGET_DISTANCE_T | "+
 				"TARGET_WIDTH_T | "+
@@ -158,8 +166,10 @@ class logManager(avango.script.Script):
 			str(self.userID)+ " | "+
 			str(self.group)+" | "+
 			str(self.condition)+" | "+
-			str(self.DOF_T)+" | "+
-			str(self.DOF_R)+" | "+
+			str(self.DOF_T_virtual)+" | "+
+			str(self.DOF_R_virtual)+" | "+
+			str(self.DOF_T_real)+" | "+
+			str(self.DOF_R_real)+" | "+
 			str(self.movement_direction)+" | "+
 			str(self.target_distance_t)+" | "+
 			str(self.target_width_t)+" | "+
@@ -185,5 +195,4 @@ class logManager(avango.script.Script):
 			str(self.movement_continuity_t)+" | "+
 			str(self.first_reversal_point)+" | "+
 			str(self.num_reversal_points)+" | "+
-			"\n"
-		)
+			"\n")

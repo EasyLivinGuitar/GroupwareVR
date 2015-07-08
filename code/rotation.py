@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 import random
 import setupEnvironment
+import logManager
 import math
 import os.path
 
@@ -45,7 +46,7 @@ graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 
-logmanager=setupEnvironment.logManager()
+logmanager=logManager.logManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
