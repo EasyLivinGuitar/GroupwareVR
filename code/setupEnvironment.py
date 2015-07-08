@@ -452,8 +452,9 @@ def reduceDOFTranslate():
 
 '''if one rotation axis should be locked.'''
 def reduceDOFRotate():
-	return True
+	return False
 
+'''is the task above the table or is it on the table?'''
 def space3D():
 	return True
 
