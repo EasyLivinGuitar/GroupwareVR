@@ -20,18 +20,44 @@ How to setup a new test case:
 
 Then start the scene with the according start.sh
 '''
+
+
+'''Settings'''
+
+
+'''if one axis should be locked.'''
+def reduceDOFTranslate():
+	return True
+
+'''if one rotation axis should be locked.'''
+def reduceDOFRotate():
+	return True
+
+def space3D():
+	return True
+
+def getOffsetTracking():
+	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
+
+'''get the position pf the cetner where the pointer and the aim is located'''
+def getCenterPosition():
+	return avango.gua.make_trans_mat(0.0, 0, 0.38)
+
+def logResults():
+	return True
+
+'''if true needs a button press or next step, if false then autodetects'''
+def useAutoDetect():
+	return False
+
+def randomTargets():
+	return False
+
+
+
 timer=avango.nodes.TimeSensor()
 
-
 res_pass = avango.gua.nodes.ResolvePassDescription()
-
-def print_graph(root_node):
-	stack = [ ( root_node, 0) ]
-	while stack:
-		node, level = stack.pop()
-		print("│   " * level + "├── {0} <{1}>".format(node.Name.value, node.__class__.__name__))
-		stack.extend( [ (child, level + 1) for child in reversed(node.Children.value) ] )
-
 
 viewer = avango.gua.nodes.Viewer()
 viewer.DesiredFPS.value=60
@@ -54,6 +80,13 @@ balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
 cam = avango.gua.nodes.CameraNode()
+
+def print_graph(root_node):
+	stack = [ ( root_node, 0) ]
+	while stack:
+		node, level = stack.pop()
+		print("│   " * level + "├── {0} <{1}>".format(node.Name.value, node.__class__.__name__))
+		stack.extend( [ (child, level + 1) for child in reversed(node.Children.value) ] )
 
 def setup(graph):
 	light = avango.gua.nodes.LightNode(
@@ -273,34 +306,6 @@ def getRotationError1D(rotA, rotB):
 
 	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
 	return diffRotMat.get_rotate_scale_corrected().get_angle()
-
-
-'''Settings'''
-
-
-'''if the z value should be locked'''
-def ignoreZ():
-	return True
-
-def space3D():
-	return True
-
-def getOffsetTracking():
-	return avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
-
-'''get the position pf the cetner where the pointer and the aim is located'''
-def getCenterPosition():
-	return avango.gua.make_trans_mat(0.0, 0, 0.38)
-
-def logResults():
-	return True
-
-'''if true needs a button press or next step, if false then autodetects'''
-def useAutoDetect():
-	return False
-
-def randomTargets():
-	return False
 
 
 class logManager(avango.script.Script):

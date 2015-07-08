@@ -133,7 +133,7 @@ class PointerManager(avango.script.Script):
 			translation.y = -translation.z-setupEnvironment.getOffsetTracking().get_translate().y
 			translation.z = tmp
 
-		if setupEnvironment.ignoreZ():
+		if setupEnvironment.reduceDOFTranslate():
 			translation.z = 0
 
 		self.TransMat.value = avango.gua.make_trans_mat(translation)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
