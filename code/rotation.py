@@ -135,6 +135,7 @@ class trackingManager(avango.script.Script):
 			q.x = 0 #tried to fix to remove roll
 			q.normalize()
 			yRot = avango.gua.make_rot_mat(setupEnvironment.get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+
 		else:
 			yRot = avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected())
 
