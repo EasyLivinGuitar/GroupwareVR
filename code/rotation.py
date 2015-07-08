@@ -31,15 +31,15 @@ for i in range(0, len(ID)):
 		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
 	else:
 		D=90
-		W.append(D/(2**ID[0]-1))
-
-print(W)
+		W.append(D/(2**ID[i]-1))
 
 targetDiameter = [
 	2*r*math.tan(W[0]/2*math.pi/180),
 	2*r*math.tan(W[1]/2*math.pi/180),
 	2*r*math.tan(W[2]/2*math.pi/180)
 ]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+
+print(targetDiameter)
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -200,7 +200,7 @@ class trackingManager(avango.script.Script):
 							rotateAroundX=0
 					self.disksMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)
 			
-				self.setDiskScale(self.index)
+				self.setDisksTransMats(self.index)
 
 			self.setMT(self.lastTime, self.timer.value)
 			self.lastTime=self.timer.value
@@ -275,7 +275,8 @@ class trackingManager(avango.script.Script):
 		if(self.MT>0 and self.index<len(ID)):
 			self.TP=ID[index]/self.MT
 
-	def setDiskScale(self, i):
+	def setDisksTransMats(self, i):
+		print("scaling to"+str(targetDiameter[i]))
 		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
 		if not setupEnvironment.reduceDOFRotate():
 			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(targetDiameter[i])
@@ -306,12 +307,12 @@ def start():
 	pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
-	#pencil.Material.value.EnableBackfaceCulling.value = False
 	#pencil.Material.value.set_uniform("Emissivity", 1.0)
 
-
+		#attack disks to pointer
 	disksNode = avango.gua.nodes.TransformNode(
-		Transform = avango.gua.make_scale_mat(targetDiameter[0])
+		Transform = avango.gua.make_trans_mat(pencil.Transform.value.get_translate())
+
 	)
 
 	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
@@ -345,7 +346,7 @@ def start():
 		disksNode.Children.value.append(disk6)
 		trackManager.disk6 = disk6;
 
-		trackManager.setDiskScale(0)
+	trackManager.setDisksTransMats(0)
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [disksNode, pencil], 
