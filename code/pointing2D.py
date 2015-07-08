@@ -428,7 +428,7 @@ def start ():
 
 	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
-	aim = loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aim = loader.create_geometry_from_file("light_sphere", "data/objects/monkey.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aim.Transform.value = avango.gua.make_scale_mat(W[0])
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
 	#aim.Material.value.enableBackfaceCulling.value = False

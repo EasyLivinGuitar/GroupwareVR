@@ -77,7 +77,7 @@ class trackingManager(avango.script.Script):
 		#self.aimPencilRef=None
 
 	def __del__(self):
-		if setupEnvironment.logResults():
+		if setupEnvironment.logResults:
 			self.result_file.close()
 
 	@field_has_changed(Button)
@@ -116,7 +116,7 @@ class trackingManager(avango.script.Script):
 	def updateTimer(self):
 		self.tidyMats()
 		
-		if setupEnvironment.logResults():	
+		if setupEnvironment.logResults:	
 			self.logData()
 			#self.aimPencilMat.value *= avango.gua.make_trans_mat(500,0,0) 
 			#getattr(self, "aimPencilRef").Material.value.set_uniform("Color", avango.gua.Vec4(1, 1,0, 0.5)) #Transparenz funktioniert nicht
@@ -124,7 +124,7 @@ class trackingManager(avango.script.Script):
 
 	def tidyMats(self):
 		#erase 2dof, unstable operation, calling this twice destroys the rotation information
-		if not setupEnvironment.space3D():
+		if not setupEnvironment.space3D:
 			#disable rotation in invalid directions
 			#get angle between rotation and y axis
 			q = self.pencilTransMat.value.get_rotate_scale_corrected()
@@ -138,7 +138,7 @@ class trackingManager(avango.script.Script):
 			)
 
 		self.pencilTransMat.value = (
-			avango.gua.make_trans_mat(0, 0.0,-setupEnvironment.getOffsetTracking().get_translate().z)
+			avango.gua.make_trans_mat(0, 0.0,-setupEnvironment.offsetTracking.get_translate().z)
 			* avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())
 			* avango.gua.make_rot_mat(self.pencilTransMat.value.get_rotate_scale_corrected()) #add rotation
 		)
@@ -294,10 +294,10 @@ def start ():
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [aimPencil, aimBalloon, disk1, pencil_transform], 
-		Transform = setupEnvironment.getCenterPosition()*avango.gua.make_scale_mat(4)
+		Transform = setupEnvironment.centerPosition*avango.gua.make_scale_mat(4)
 	)
 
-	if setupEnvironment.space3D():
+	if setupEnvironment.space3D:
 		cylinder1 = loader.create_geometry_from_file("cylinder", "data/objects/cylinder.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 		cylinder1.Transform.value = avango.gua.make_trans_mat(r2, targetDiameter[0]*0.5, 5)*avango.gua.make_scale_mat(0.0001,0.0001,80)#position*size
 		cylinder1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
@@ -320,7 +320,7 @@ def start ():
 	
 	#listen to tracked position of pointer
 	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.getOffsetTracking()
+	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
 
 	pointer_device_sensor.Station.value = "pointer"
 
