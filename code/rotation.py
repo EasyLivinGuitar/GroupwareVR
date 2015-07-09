@@ -12,6 +12,7 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 THREEDIMENSIONTASK=False
+FRAMES_FOR_SPEED=4
 
 
 r = setupEnvironment.r
@@ -53,8 +54,10 @@ class trackingManager(avango.script.Script):
 	disksMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
+	PencilRotation1=None
+	PencilRotation2=None
+
 	lastTime=0
-	time2=0
 
 	startedTest = False
 	endedTest = False
@@ -67,6 +70,20 @@ class trackingManager(avango.script.Script):
 
 	error=0
 
+	frame_counter=0
+	frame_counter2=0
+	start_time1=0
+	start_time2=0
+	end_time2=0
+	end_time1=0
+
+	current_speed=0
+	current_acceleration=0
+	peak_acceleration=0
+	peak_speed=0
+	speed_time1=0
+	speed_time2=0
+
 	#Logging
 	userID=0
 	group=0
@@ -75,7 +92,9 @@ class trackingManager(avango.script.Script):
 	MT=0
 	ID=0
 	TP=0
+	overshoots=0
 
+	inside=False
 	goal=False
 
 	def __init__(self):
@@ -112,6 +131,12 @@ class trackingManager(avango.script.Script):
 	def updateTimer(self):
 		self.pencilTransMat.value = setupEnvironment.reducePencilMat(self.pencilTransMat.value)
 		
+		if(self.startedTest and self.endedTest==False):
+			self.setSpeed()
+			self.setAcceleration()
+			self.setOvershoots()
+
+
 		if setupEnvironment.logResults:	
 			self.logData()
 	
@@ -124,11 +149,6 @@ class trackingManager(avango.script.Script):
 
 		if(self.index==len(W)):
 			self.endedTest=True
-
-		self.error = setupEnvironment.getRotationError1D(
-			self.pencilTransMat.value.get_rotate_scale_corrected(),
-			self.disksMat.value.get_rotate_scale_corrected()
-		)
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
@@ -177,6 +197,64 @@ class trackingManager(avango.script.Script):
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 
+	def setSpeed(self):
+		if(self.frame_counter % 5 == 0):
+			# self.PencilRotation1=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
+			self.PencilRotation1=self.pencilTransMat.value.get_rotate()
+			self.start_time=self.timer.value
+		else: 
+			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
+				# self.PencilRotation2=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
+				self.PencilRotation2=self.pencilTransMat.value.get_rotate()
+				self.end_time=self.timer.value
+				# div=math.fabs(self.PencilRotation2[0]-self.PencilRotation1[0])+math.fabs(self.PencilRotation2[1]-self.PencilRotation1[1])+ math.fabs(self.PencilRotation2[2]-self.PencilRotation1[2])
+				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				time=self.end_time-self.start_time
+				self.current_speed=div/time
+
+				if(self.current_speed<10**-3):
+					self.current_speed=0
+
+				if(self.current_speed>self.peak_speed):
+					self.peak_speed=self.current_speed
+			
+				# print(self.current_speed)
+				# print(self.peak_speed)
+		self.frame_counter=self.frame_counter+1
+
+	def setAcceleration(self):
+		if(self.frame_counter2 % 5 == 0):
+			self.speed_time1=self.current_speed
+			self.start_time2=self.timer.value
+		else:
+			if(self.frame_counter2 % 5 == FRAMES_FOR_SPEED-1):
+				self.speed_time2=self.current_speed
+				self.end_time2=self.timer.value
+				div=self.speed_time2-self.speed_time1
+				time=self.end_time2-self.start_time2
+				self.current_acceleration=div/time
+
+				if(self.current_acceleration>self.peak_acceleration):
+					self.peak_acceleration=self.current_acceleration
+
+				print(self.current_acceleration)
+		self.frame_counter2=self.frame_counter2+1
+
+	def setOvershoots(self):
+		if(self.error < W[self.index]/2):
+			self.inside=True
+		else:
+			if(self.inside):
+				self.overshoots=self.overshoots+1
+				print("Overshoots: "+str(self.overshoots))
+				self.inside=False
+
+
+	def resetValues(self):
+		self.overshoots=0
+		self.peak_speed=0
+		self.inside=False
+
 	def getRandomRotation3D(self):
 		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
@@ -219,6 +297,7 @@ class trackingManager(avango.script.Script):
 					if(self.flagPrinted==False):
 						self.logSetter()
 						logmanager.log(self.result_file)
+						self.resetValues()
 						self.flagPrinted=True
 					self.result_file.close()
 
@@ -226,6 +305,10 @@ class trackingManager(avango.script.Script):
 		self.setID(self.index)
 		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
+		self.error = setupEnvironment.getRotationError1D(
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.disksMat.value.get_rotate_scale_corrected()
+			)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
@@ -260,8 +343,9 @@ class trackingManager(avango.script.Script):
 			hittype="AUTO"
 		logmanager.setSuccess(self.goal)
 		logmanager.setHit(hittype, self.MT, 0, self.error)
-
+		logmanager.setOvershoots(self.overshoots)
 		logmanager.setThroughput()
+		logmanager.setPeakSpeed(self.peak_speed)
 
 		self.trial=self.trial+1
 
