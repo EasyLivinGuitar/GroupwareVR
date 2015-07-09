@@ -50,7 +50,6 @@ logmanager=logManager.logManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
-	pencilTransMat = avango.gua.SFMatrix4()
 	disksMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
@@ -60,7 +59,7 @@ class trackingManager(avango.script.Script):
 	lastTime=0
 
 	startedTest = False
-	endedTest = False
+	endedTests = False
 
 	created_file =  False
 	flagPrinted = False
@@ -103,6 +102,7 @@ class trackingManager(avango.script.Script):
 		self.backAndForth = False
 		self.backAndForthAgain = False;
 		self.disks = setupEnvironment.DisksContainer()
+		self.pcNode = None
 
 	def __del__(self):
 		if setupEnvironment.logResults:
@@ -111,33 +111,30 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value==True:
-			if(self.endedTest==False):
+			if(self.endedTests==False):
+				if setupEnvironment.logResults:	
+					self.logData()
+
+				self.select()
 				self.nextSettingStep()
 			else:
-				print("Test ended")
+				print("Tests ended")
 		else:
 			self.flagPrinted = False
 
-	@field_has_changed(pencilTransMat)
-	def pointermat_changed(self):
-		if (not self.endedTest):
-			#attach disks to pointer
-			self.disksMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(self.disksMat.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disksMat.value.get_scale()) #keep rotation and scale and move to pointer
-			
 
 	@field_has_changed(timer)
 	def updateTimer(self):
-		self.pencilTransMat.value = setupEnvironment.reducePencilMat(self.pencilTransMat.value)
+		#attach disks to pointer
+		self.disks.getNode().Transform.value = avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate())*avango.gua.make_rot_mat(self.disks.getNode().Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disks.getNode().Transform.value.get_scale()) #keep rotation and scale and move to pointer
 		
-		if(self.startedTest and self.endedTest==False):
+		if(self.startedTest and self.endedTests==False):
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
 
-
 		if setupEnvironment.logResults:	
-			self.logData()
-	
+			pass #save replay, todo
 
 	def nextSettingStep(self):
 		self.startedTest=True
@@ -146,21 +143,11 @@ class trackingManager(avango.script.Script):
 			self.index=self.index+1
 
 		if(self.index==len(W)):
-			self.endedTest=True
+			self.endedTests=True
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
 		if(self.index < len(W)):
-			if self.getError() < W[self.index]/2:
-				print("HIT:" + str(self.getError())+"°")
-				self.goal=True
-				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-				if(setupEnvironment.useAutoDetect==False):
-					self.succesful_clicks=self.succesful_clicks+1
-			else:
-				print("MISS:" + str(self.getError())+"°")
-				self.goal=False
-				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 			#move target			
 			if setupEnvironment.randomTargets:
@@ -195,21 +182,34 @@ class trackingManager(avango.script.Script):
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 
-	def getError(self):
+	def select(self):
+		if self.getErrorRotate() < W[self.index]/2:
+			print("HIT:" + str(self.getErrorRotate())+"°")
+			self.goal=True
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+			if(setupEnvironment.useAutoDetect==False):
+				self.succesful_clicks=self.succesful_clicks+1
+		else:
+			print("MISS:" + str(self.getErrorRotate())+"°")
+			self.goal=False
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+
+
+	def getErrorRotate(self):
 		return setupEnvironment.getRotationError1D(
-			self.pencilTransMat.value.get_rotate_scale_corrected(),
-			self.disksMat.value.get_rotate_scale_corrected()
+			self.pcNode.Transform.value.get_rotate_scale_corrected(),
+			self.disks.getNode().Transform.value.get_rotate_scale_corrected()
 		)
 
 	def setSpeed(self):
 		if(self.frame_counter % 5 == 0):
 			# self.PencilRotation1=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
-			self.PencilRotation1=self.pencilTransMat.value.get_rotate()
+			self.PencilRotation1=self.pcNode.Transform.value.get_rotate()
 			self.start_time=self.timer.value
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				# self.PencilRotation2=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
-				self.PencilRotation2=self.pencilTransMat.value.get_rotate()
+				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
 				self.end_time=self.timer.value
 				# div=math.fabs(self.PencilRotation2[0]-self.PencilRotation1[0])+math.fabs(self.PencilRotation2[1]-self.PencilRotation1[1])+ math.fabs(self.PencilRotation2[2]-self.PencilRotation1[2])
 				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
@@ -244,7 +244,7 @@ class trackingManager(avango.script.Script):
 		self.frame_counter2=self.frame_counter2+1
 
 	def setOvershoots(self):
-		if(self.getError() < W[self.index]/2):
+		if(self.getErrorRotate() < W[self.index]/2):
 			self.inside=True
 		else:
 			if(self.inside):
@@ -280,7 +280,7 @@ class trackingManager(avango.script.Script):
 			path="results/results_rotation_3D/"
 		else:
 			path="results/results_rotation_2D/"
-		if(self.startedTest and self.endedTest==False):
+		if(self.startedTest and self.endedTests==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
@@ -290,8 +290,8 @@ class trackingManager(avango.script.Script):
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
-					"Error: "+str(self.getError())+"\n"+
-					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"+
+					"Error: "+str(self.getErrorRotate())+"\n"+
+					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
 					"Aimpos: \n"+str(self.disksMat.value)+"\n\n")
 				self.result_file.close()
 			
@@ -341,7 +341,7 @@ class trackingManager(avango.script.Script):
 		else:
 			hittype="AUTO"
 		logmanager.setSuccess(self.goal)
-		logmanager.setHit(hittype, self.MT, 0, self.getError())
+		logmanager.setHit(hittype, self.MT, 0, self.getErrorRorate())
 		logmanager.setOvershoots(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
 
@@ -365,7 +365,7 @@ class trackingManager(avango.script.Script):
 		if action == 1:
 			#32 is space 335 is num_enter
 			if key==32 or key==335:
-				if(self.endedTest==False):
+				if(self.endedTests==False):
 					#trackManager.nextSettingStep()
 					self.Button.value=True
 				else:
@@ -383,43 +383,16 @@ def start():
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
-	pencil = setupEnvironment.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
-	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
-	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
-	#pencil.Material.value.set_uniform("Emissivity", 1.0)
+	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
 
-	disksNode = trackManager.disks.setupDisks(pencil.Transform.value.get_translate())
+	trackManager.disks.setupDisks(trackManager.pcNode)
 	trackManager.disks.setDisksTransMats(targetDiameter[0])
-
-	everyObject = avango.gua.nodes.TransformNode(
-		Children = [disksNode, pencil], 
-		Transform = setupEnvironment.centerPosition#*avango.gua.make_scale_mat(3)
-	)
-
-	#add nodes to root
-	graph.Root.value.Children.value.append(everyObject)
-
-	#listen to tracked position of pointer
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
-
-	pointer_device_sensor.Station.value = "pointer"
-
-	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
-	pencil.Transform.connect_from(trackManager.pencilTransMat)
-
-	#connect pencil
-	#pencil.Transform.connect_from(trackManager.pencilTransMat)
 
 	#listen to button
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
 
 	trackManager.Button.connect_from(button_sensor.Button0)
-
-	#connect disks
-	trackManager.disksMat.connect_from(disksNode.Transform)
-	disksNode.Transform.connect_from(trackManager.disksMat)
 
 	#timer
 	timer = avango.nodes.TimeSensor()

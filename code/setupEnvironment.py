@@ -27,7 +27,7 @@ Then start the scene with the according start.sh
 reduceDOFTranslate = True
 
 '''if one rotation axis should be locked. TODO: make it an interger'''
-reduceDOFRotate = True
+reduceDOFRotate = True       
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -37,7 +37,7 @@ offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
 '''get the position pf the cetner where the pointer and the aim is located'''
 centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
 
-logResults = True
+logResults = False
 
 '''if true needs a button press or next step, if false then autodetects'''
 useAutoDetect =  False
@@ -176,10 +176,12 @@ def setup(graph):
 
 	graph.Root.value.Children.value.append(everyObject)
 
-class PencilContainer():
+class PencilContainer(avango.script.Script):
 	pencil = None
+	inputMat = avango.gua.SFMatrix4()
 
 	def __init__(self):
+		self.super(PencilContainer).__init__()
 		self.pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 		#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 		#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
@@ -191,12 +193,56 @@ class PencilContainer():
 
 		pointer_device_sensor.Station.value = "pointer"
 
+		self.inputMat.connect_from(pointer_device_sensor.Matrix)
 		#connect pencil
-		self.pencil.Transform.connect_from(pointer_device_sensor.Matrix)
+		pointer_device_sensor.Matrix
 		everyObject.Children.value.append(self.pencil)
+
+	@field_has_changed(inputMat)
+	def pointermat_changed(self):
+		#get input
+		self.pencil.Transform.value = self.inputMat.value
+		#then reduce
+		self.reducePencilMat()
 
 	def getNode(self):
 		return self.pencil
+
+	def getTransfromValue(self):
+		return self.pencil.Transform.value
+
+	'''reduce a transform matrix according to the constrainst '''
+	def reducePencilMat(self):
+		if not space3D:# on table?
+			zCorrection=offsetTracking.get_translate().y
+		else:
+			zCorrection=0
+
+		if reduceDOFRotate:
+			#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
+			#get angle between rotation and y axis
+			q = self.pencil.Transform.value.get_rotate_scale_corrected()
+			q.z = 0 #tried to fix to remove roll
+			q.x = 0 #tried to fix to remove roll
+			q.normalize()
+			yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+		else:
+			yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
+
+
+		if reduceDOFTranslate:
+			z = 0
+		else:
+			z = self.getTransfromValue().get_translate().z-offsetTracking.get_translate().z
+
+		translation = avango.gua.make_trans_mat(
+			self.getTransfromValue().get_translate().x-offsetTracking.get_translate().x,
+			self.getTransfromValue().get_translate().y-zCorrection,
+			z
+		)
+
+
+		self.pencil.Transform.value = translation* yRot		
 
 
 class FieldManager(avango.script.Script):
@@ -361,34 +407,6 @@ def getDistance3D(target1, target2):
 	return distance
 
 
-'''reduce a transform matrix according to the constrainst '''
-def reducePencilMat(mat):
-	if not space3D:# on table?
-			zCorrection=offsetTracking.get_translate().y
-	else:
-		zCorrection=0
-
-	if reduceDOFRotate:
-		#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
-		#get angle between rotation and y axis
-		q = mat.get_rotate_scale_corrected()
-		q.z = 0 #tried to fix to remove roll
-		q.x = 0 #tried to fix to remove roll
-		q.normalize()
-		yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
-	else:
-		yRot = avango.gua.make_rot_mat(mat.get_rotate_scale_corrected())
-
-	translation = avango.gua.make_trans_mat(
-		mat.get_translate().x-offsetTracking.get_translate().x,
-		mat.get_translate().y-zCorrection,
-		mat.get_translate().z-offsetTracking.get_translate().z
-	)
-
-	if reduceDOFTranslate:
-		translation.z = 0
-
-	return translation* yRot		
 
 class DisksContainer():
 	

@@ -127,72 +127,72 @@ class logManager(avango.script.Script):
 	def log(self, result_file):
 		if(self.header_printed==False):
 			result_file.write(
-				"USERID | "+
-				"GROUP | "+
-				"CONDITION | "+
-				"DOF_T_VIRTUAL | "+
-				"DOF_R_VIRTUAL | "+
-				"DOF_T_REAL | "+
-				"DOF_R_REAL | "+
-				"MOVEMENT_DIRECTION | "+ 
-				"TARGET_DISTANCE_T | "+
-				"TARGET_WIDTH_T | "+
-				"ROTATION_AXIS | "+
-				"TARGET_DISTANCE_R | "+
-				"TARGET_WIDTH_R | "+
-				"ID_T | "+
-				"ID_R | "+
-				"ID_COMBINED | "+
-				"REPETITION | "+
-				"TRIAL | "+
-				"BUTTON CLICKS | "+
-				"SUCCESFULL CLICKS | " +
-				"SUCCESS | "+
-				"HIT_TYPE | "+
-				"HIT_TIME | "+
-				"HIT_ERROR_T | "+
-				"HIT_ERROR_R | "+
-				"OVERSHOOTS | "+
-				"THROUGHPUT | "+
-				"PEAK_SPEED | "+
-				"PEAK_ACCELERATION | "+
-				"MOVEMENT_CONTINUITY_T | "+
-				"FIRST_REVERSAL_POINT | "+
-				"NUM_REVERSAL_POINTS | "+
+				"USERID , "+
+				"GROUP , "+
+				"CONDITION , "+
+				"DOF_T_VIRTUAL , "+
+				"DOF_R_VIRTUAL , "+
+				"DOF_T_REAL , "+
+				"DOF_R_REAL , "+
+				"MOVEMENT_DIRECTION , "+ 
+				"TARGET_DISTANCE_T , "+
+				"TARGET_WIDTH_T , "+
+				"ROTATION_AXIS , "+
+				"TARGET_DISTANCE_R , "+
+				"TARGET_WIDTH_R , "+
+				"ID_T , "+
+				"ID_R , "+
+				"ID_COMBINED , "+
+				"REPETITION , "+
+				"TRIAL , "+
+				"BUTTON CLICKS , "+
+				"SUCCESFULL CLICKS , " +
+				"SUCCESS , "+
+				"HIT_TYPE , "+
+				"HIT_TIME , "+
+				"HIT_ERROR_T , "+
+				"HIT_ERROR_R , "+
+				"OVERSHOOTS , "+
+				"THROUGHPUT , "+
+				"PEAK_SPEED , "+
+				"PEAK_ACCELERATION , "+
+				"MOVEMENT_CONTINUITY_T , "+
+				"FIRST_REVERSAL_POINT , "+
+				"NUM_REVERSAL_POINTS , "+
 				"\n \n")
 			self.header_printed=True
 
 		result_file.write(
-			str(self.userID)+ " | "+
-			str(self.group)+" | "+
-			str(self.condition)+" | "+
-			str(self.DOF_T_virtual)+" | "+
-			str(self.DOF_R_virtual)+" | "+
-			str(self.DOF_T_real)+" | "+
-			str(self.DOF_R_real)+" | "+
-			str(self.movement_direction)+" | "+
-			str(self.target_distance_t)+" | "+
-			str(self.target_width_t)+" | "+
-			str(self.rotation_axis)+" | "+
-			str(self.target_distance_r)+" | "+
-			str(self.target_width_r)+" | "+
-			str(self.ID_t)+" | "+
-			str(self.ID_r)+" | "+
-			str(self.ID_combined)+" | "+
-			str(self.repetition)+" | "+
-			str(self.trial)+" | "+
-			str(self.button_clicks)+" | "+
-			str(self.succesful_clicks)+" | "+
-			str(self.success)+" | "+
-			str(self.hit_type)+" | "+
-			str(self.hit_time)+" | "+
-			str(self.hit_error_t)+" | "+
-			str(self.hit_error_r)+" | "+
-			str(self.overshoots)+" | "+
-			str(self.throughput)+" | "+
-			str(self.peak_speed)+" | "+
-			str(self.peak_acceleration)+" | "+
-			str(self.movement_continuity_t)+" | "+
-			str(self.first_reversal_point)+" | "+
-			str(self.num_reversal_points)+" | "+
+			str(self.userID)+ " , "+
+			str(self.group)+" , "+
+			str(self.condition)+" , "+
+			str(self.DOF_T_virtual)+" , "+
+			str(self.DOF_R_virtual)+" , "+
+			str(self.DOF_T_real)+" , "+
+			str(self.DOF_R_real)+" , "+
+			str(self.movement_direction)+" , "+
+			str(self.target_distance_t)+" , "+
+			str(self.target_width_t)+" , "+
+			str(self.rotation_axis)+" , "+
+			str(self.target_distance_r)+" , "+
+			str(self.target_width_r)+" , "+
+			str(self.ID_t)+" , "+
+			str(self.ID_r)+" , "+
+			str(self.ID_combined)+" , "+
+			str(self.repetition)+" , "+
+			str(self.trial)+" , "+
+			str(self.button_clicks)+" , "+
+			str(self.succesful_clicks)+" , "+
+			str(self.success)+" , "+
+			str(self.hit_type)+" , "+
+			str(self.hit_time)+" , "+
+			str(self.hit_error_t)+" , "+
+			str(self.hit_error_r)+" , "+
+			str(self.overshoots)+" , "+
+			str(self.throughput)+" , "+
+			str(self.peak_speed)+" , "+
+			str(self.peak_acceleration)+" , "+
+			str(self.movement_continuity_t)+" , "+
+			str(self.first_reversal_point)+" , "+
+			str(self.num_reversal_points)+" , "+
 			"\n")

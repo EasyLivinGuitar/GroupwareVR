@@ -36,7 +36,7 @@ aim_transform = avango.gua.nodes.TransformNode()
 base = avango.gua.nodes.TransformNode()
 base_transform = avango.gua.nodes.TransformNode()
 
-class PointerManager(avango.script.Script):
+class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	
@@ -105,7 +105,7 @@ class PointerManager(avango.script.Script):
 
 
 	def __init__(self):
-		self.super(PointerManager).__init__()
+		self.super(trackingManager).__init__()
 		AimMat = avango.gua.make_trans_mat(0.0, 0.0, 0)
 
 	def __del__(self):
@@ -119,11 +119,6 @@ class PointerManager(avango.script.Script):
 				self.next()
 			else:
 				self.flagPrinted=False
-
-
-	@field_has_changed(TransMat)
-	def TransMatHasChanged(self):
-		pass
 		
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -388,76 +383,38 @@ class PointerManager(avango.script.Script):
 
 			
 def start ():
-    #setup
-	pointerManager = PointerManager()
+	trackManager = trackingManager()
+	trackManager.userID=input("USER_ID: ")
+	trackManager.group=input("GROUP: ")
 
-	pointerManager.userID=input("USER_ID: ")
-	pointerManager.group=input("GROUP: ")
-	
-	#loadMeshes
-	setupEnvironment.getWindow().on_key_press(pointerManager.handle_key)
+	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
-
-	pencil = loader.create_geometry_from_file("tracked_object_pointing", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-	pencil.Transform.value = avango.gua.make_scale_mat(1)
-	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 1.0, 1.0, 1.0))
-	#pencil.Material.value.set_uniform("Emissivity", 1.0)
-	#pencil.Material.value.EnableBackfaceCulling.value = False
-
-	pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
 	aim = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aim.Transform.value = avango.gua.make_scale_mat(W[0])
 	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
-	#aim.Material.value.enableBackfaceCulling.value = False
+	setupEnvironment.everyObject.Children.value.append(aim)
 
 	base = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	base.Transform.value = avango.gua.make_scale_mat(W[0])
 	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+	setupEnvironment.everyObject.Children.value.append(base)
 
 	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
 	base_transform=avango.gua.nodes.TransformNode(Children=[base])
 
+	#loadMeshes
+	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
 
-	everyObject = avango.gua.nodes.TransformNode(
-		Children = [aim_transform, base_transform, pencil_transform], 
-		Transform = setupEnvironment.centerPosition
-	)
-
-	graph.Root.value.Children.value.append(everyObject)
-
-	#connections
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
-
-	pointer_device_sensor.Station.value = "pointer"
-
-
+	#listen to button
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
 	button_sensor.Station.value="device-pointer"
 
-	pointerManager.Button.connect_from(button_sensor.Button0)
-	
-	#connect transmat with matrix from deamon
-	pointerManager.TransMat.connect_from(pointer_device_sensor.Matrix)
-	
-	#connect object at the place of transmat
-	pencil_transform.Transform.connect_from(pointerManager.TransMat)
-	
-	#connect aim with aim
-	pointerManager.AimMat_scale.connect_from(aim.Transform)
-	aim.Transform.connect_from(pointerManager.AimMat_scale)
-	aim_transform.Transform.connect_from(pointerManager.AimMat)
+	trackManager.Button.connect_from(button_sensor.Button0)
 
-	pointerManager.BaseMat.connect_from(base_transform.Transform)
-	base_transform.Transform.connect_from(pointerManager.BaseMat)
-
-	pointerManager.BaseMat_scale.connect_from(base.Transform)
-	base.Transform.connect_from(pointerManager.BaseMat_scale)
-
-	#setup timer
+	#timer
 	timer = avango.nodes.TimeSensor()
-	pointerManager.timer.connect_from(timer.Time)
+	trackManager.timer.connect_from(timer.Time)
 
 	setupEnvironment.launch(globals())
 
