@@ -184,9 +184,9 @@ class trackingManager(avango.script.Script):
 
 	def logData(self):
 		if THREEDIMENSIONTASK==False:
-			path="results/docking_3D/"
-		else:
 			path="results/docking_2D/"
+		else:
+			path="results/docking_3D/"
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
