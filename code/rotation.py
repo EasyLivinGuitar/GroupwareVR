@@ -68,8 +68,6 @@ class trackingManager(avango.script.Script):
 	index=0
 	counter=0
 
-	error=0
-
 	frame_counter=0
 	frame_counter2=0
 	start_time1=0
@@ -153,14 +151,14 @@ class trackingManager(avango.script.Script):
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
 		if(self.index < len(W)):
-			if self.error < W[self.index]/2:
-				print("HIT:" + str(self.error)+"°")
+			if self.getError() < W[self.index]/2:
+				print("HIT:" + str(self.getError())+"°")
 				self.goal=True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 				if(setupEnvironment.useAutoDetect==False):
 					self.succesful_clicks=self.succesful_clicks+1
 			else:
-				print("MISS:" + str(self.error)+"°")
+				print("MISS:" + str(self.getError())+"°")
 				self.goal=False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
@@ -196,6 +194,12 @@ class trackingManager(avango.script.Script):
 			self.setID(self.index)
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
+
+	def getError(self):
+		return setupEnvironment.getRotationError1D(
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.disksMat.value.get_rotate_scale_corrected()
+		)
 
 	def setSpeed(self):
 		if(self.frame_counter % 5 == 0):
@@ -237,16 +241,14 @@ class trackingManager(avango.script.Script):
 				if(self.current_acceleration>self.peak_acceleration):
 					self.peak_acceleration=self.current_acceleration
 
-				print(self.current_acceleration)
 		self.frame_counter2=self.frame_counter2+1
 
 	def setOvershoots(self):
-		if(self.error < W[self.index]/2):
+		if(self.getError() < W[self.index]/2):
 			self.inside=True
 		else:
 			if(self.inside):
 				self.overshoots=self.overshoots+1
-				print("Overshoots: "+str(self.overshoots))
 				self.inside=False
 
 
@@ -287,7 +289,7 @@ class trackingManager(avango.script.Script):
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
-					"Error: "+str(self.error)+"\n"+
+					"Error: "+str(self.getError())+"\n"+
 					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"+
 					"Aimpos: \n"+str(self.disksMat.value)+"\n\n")
 				self.result_file.close()
@@ -305,10 +307,6 @@ class trackingManager(avango.script.Script):
 		self.setID(self.index)
 		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
-		self.error = setupEnvironment.getRotationError1D(
-			self.pencilTransMat.value.get_rotate_scale_corrected(),
-			self.disksMat.value.get_rotate_scale_corrected()
-			)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
@@ -342,7 +340,7 @@ class trackingManager(avango.script.Script):
 		else:
 			hittype="AUTO"
 		logmanager.setSuccess(self.goal)
-		logmanager.setHit(hittype, self.MT, 0, self.error)
+		logmanager.setHit(hittype, self.MT, 0, self.getError())
 		logmanager.setOvershoots(self.overshoots)
 		logmanager.setThroughput()
 		logmanager.setPeakSpeed(self.peak_speed)
