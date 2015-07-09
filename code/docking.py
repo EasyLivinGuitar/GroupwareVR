@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 import random
 import setupEnvironment
+import logManager
 import math
 import os.path
 
@@ -35,6 +36,7 @@ loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 disk1 = avango.gua.nodes.TransformNode()
 
+logmanager=logManager.logManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
@@ -55,6 +57,9 @@ class trackingManager(avango.script.Script):
 
 	error=[]
 
+	#Logging
+	userID=0
+	group=0
 	MT=0
 	ID=0
 	TP=0
@@ -77,7 +82,7 @@ class trackingManager(avango.script.Script):
 
 	def __del__(self):
 		if setupEnvironment.logResults:
-			self.result_file.close()
+			pass # self.result_file.close()
 
 	@field_has_changed(Button)
 	def button_pressed(self):
@@ -184,9 +189,13 @@ class trackingManager(avango.script.Script):
 
 	def logData(self):
 		if THREEDIMENSIONTASK==False:
-			path="results/docking_3D/"
+			path="results/results_docking_3D/"
 		else:
-			path="results/docking_2D/"
+			path="results/results_docking_2D/"
+
+		if not os.path.exists(path):
+			os.makedirs(path)
+
 		if(self.startedTest and self.endedTest==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
@@ -199,22 +208,21 @@ class trackingManager(avango.script.Script):
 					"TimeStamp: "+str(self.timer.value)+"\n"+
 					"Error: "+str(self.error)+"\n"+
 					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"+
-					"Aimpos: \n"+str(self.aimPencilMat.value)+"\n\n")
+					"Aimpos: \n"+str(self.pencilTransMat.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
 					self.result_file=open(path+"docking_trial"+str(self.num_files)+".log", "a+")
 					if(self.flagPrinted==False):
-						self.result_file.write(
-							"HT: "+str(self.goal)+"\n"+
-							"MT: "+str(self.MT)+"\n"+
-							"ID: "+str(self.ID)+"\n"+
-							"TP: "+str(self.TP)+"\n"+
-							"W : "+str(W_rot[self.current_index])+"\n"
-							"Total Error: "+str(self.error)+"\n"+
-							"=========================\n\n")
+						self.logSetter()
+						logmanager.log(self.result_file)
 						self.flagPrinted=True
 					self.result_file.close()
+
+	def logSetter(self):
+		logmanager.setUserID(self.userID)
+		logmanager.setGroup(self.group)
+
 
 	def setID(self, index):
 		if(index<len(ID)):
@@ -229,22 +237,25 @@ class trackingManager(avango.script.Script):
 		if(self.MT>0 and self.current_index<len(ID)):
 			self.TP=ID[index]/self.MT
 
-def handle_key(key, scancode, action, mods):
-	if action == 1:
-		#32 is space 335 is num_enter
-		if key==32 or key==335:
-			if(trackManager.endedTest==False):
-				#trackManager.nextSettingStep()
-				trackManager.Button.value=True
-			else:
-				print("Test ended")
-	else:
-		trackManager.flagPrinted=False
+	def handle_key(self, key, scancode, action, mods):
+		if action == 1:
+			#32 is space 335 is num_enter
+			if key==32 or key==335:
+				if(self.endedTest==False):
+					#trackManager.nextSettingStep()
+					self.Button.value=True
+				else:
+					print("Test ended")
+		else:
+			self.flagPrinted=False
 
-trackManager = trackingManager()
+
 def start ():
+	trackManager = trackingManager()
+	trackManager.userID=input("USER_ID: ")
+	trackManager.group=input("GROUP: ")
 
-	setupEnvironment.getWindow().on_key_press(handle_key)
+	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
 
 	#loadMeshes
