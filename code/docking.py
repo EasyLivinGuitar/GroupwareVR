@@ -12,10 +12,7 @@ from avango.script import field_has_changed
 
 THREEDIMENSIONTASK=False
 
-r=0.16 #circle radius
-r1 =0.15 #circle des stabes
-r2 = 0.05#länge des stabes
-
+r=setupEnvironment.r #circle radius
 
 #fitt's law parameter
 D_rot=45 #in degrees
@@ -33,13 +30,11 @@ for i in range(0, len(ID)):
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
-disk1 = avango.gua.nodes.TransformNode()
-
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
-	disksMat = avango.gua.SFMatrix4()
+	disksNode = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
 	time2=0
@@ -93,14 +88,15 @@ class trackingManager(avango.script.Script):
 	def pointermat_changed(self):
 		if (not self.endedTest and setupEnvironment.getDistance3D(self.pencilTransMat.value, self.aim.Transform.value) <= W_trans[self.index]) :
 			#attach disks to pointer
-			self.disksMat.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(self.disksMat.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disksMat.value.get_scale()) #keep rotation and scale and move to pointer
+			self.disks.getNode().Transform.value = avango.gua.make_trans_mat(self.pencilTransMat.value.get_translate())*avango.gua.make_rot_mat(self.disks.getNode().Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disks.getNode().Transform.value.get_scale()) #keep rotation and scale and move to pointer
 			#self.aim.Tags.value = []
 			# print("then")
-			#self.aim.Tags.value = ["invisible"]
+			#self.disks.getNode().Tags.value = []
 		else:
+			#attach disks to aim
+			self.disks.getNode().Transform.value = avango.gua.make_trans_mat(self.aim.Transform.value.get_translate())*avango.gua.make_rot_mat(self.disks.getNode().Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disks.getNode().Transform.value.get_scale()) #keep rotation and scale and move to pointe
 			# print("else")
-			# self.aim.Tags.value = ["invisible"]
-			pass
+			#self.disks.getNode().Tags.value = ["invisible"]
 
 	@field_has_changed(timer)
 	def updateTimer(self):
@@ -122,7 +118,7 @@ class trackingManager(avango.script.Script):
 
 		self.error = setupEnvironment.getRotationError1D(
 			self.pencilTransMat.value.get_rotate_scale_corrected(),
-			self.disksMat.value.get_rotate_scale_corrected()
+			self.disks.getNode().Transform.value.get_rotate_scale_corrected()
 		)
 
 		#print("P:"+str( pencilRot )+"")
@@ -159,7 +155,7 @@ class trackingManager(avango.script.Script):
 				self.aimShadow.Transform.value = avango.gua.make_trans_mat(self.aimShadow.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])	
 
 				if self.backAndForth: #aim get right
-					self.disksMat.value = avango.gua.make_rot_mat(0, 0, 1, 0)
+					self.disks.getNode().Transform.value = avango.gua.make_rot_mat(0, 0, 1, 0)
 					self.backAndForth=False
 				else:
 					self.backAndForth=True
@@ -170,7 +166,7 @@ class trackingManager(avango.script.Script):
 							rotateAroundX=1
 						else:
 							rotateAroundX=0
-					self.disksMat.value = avango.gua.make_rot_mat(D_rot, rotateAroundX, 1, 0)
+					self.disks.getNode().Transform.value = avango.gua.make_rot_mat(D_rot, rotateAroundX, 1, 0)
 			
 				self.disks.setDisksTransMats(targetDiameter[self.index])
 
@@ -268,10 +264,6 @@ def start ():
 	aimShadow  = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
-	disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	disk1.Transform.value = avango.gua.make_scale_mat(W_trans[0])
-	disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.6, 0.3, 0.6))
-
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [aimBalloon, aimShadow, disksNode, pencil_transform], 
@@ -301,10 +293,6 @@ def start ():
 	button_sensor.Station.value="device-pointer"
 
 	trackManager.Button.connect_from(button_sensor.Button0)
-
-	#connect disks
-	trackManager.disksMat.connect_from(disksNode.Transform)
-	disksNode.Transform.connect_from(trackManager.disksMat)
 
 	#timer
 	timer = avango.nodes.TimeSensor()
