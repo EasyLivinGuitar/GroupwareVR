@@ -114,6 +114,8 @@ class trackingManager(avango.script.Script):
 		
 
 	def nextSettingStep(self):
+		if(self.startedTest==False):
+			self.lastTime=self.timer.value
 		self.startedTest=True
 		print(self.index)
 		if(self.counter%N == N-1):
@@ -219,11 +221,20 @@ class trackingManager(avango.script.Script):
 					self.result_file.close()
 
 	def logSetter(self):
+		if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
+			self.goal=True
+		else:
+			self.goal=False
+
 		if(not setupEnvironment.useAutoDetect):
+			hit_type="BUTTON"
 			self.clicks=self.clicks+1
 			if(self.goal):
 				self.succesful_clicks=self.succesful_clicks+1
+		else:
+			hit_type="AUTO"
 
+		self.setMT(self.lastTime, self.timer.value)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 
@@ -245,12 +256,20 @@ class trackingManager(avango.script.Script):
 		else:
 			logmanager.setMovementDirection("l")
 
-		# logmanager.setID_combined()
+		logmanager.setTargetDistance_t(D_trans)
+		logmanager.setTargetWidth_t(W_trans[self.index])
+		logmanager.setTargetDistance_r(D_rot)
+		logmanager.setTargetWidth_r(W_rot[self.index])
+		logmanager.setID_combined(self.ID/2, self.ID/2)
 		logmanager.setRepetition(N)
 		logmanager.setTrial(self.trial)
 		logmanager.setClicks(self.clicks, self.succesful_clicks)
 		logmanager.setSuccess(self.goal)
+		logmanager.setHit(hit_type, self.MT ,self.getErrorTranslate(), self.getErrorRotate())
+
+
 		self.trial=self.trial+1
+
 		
 
 	def resetValues(self):
@@ -263,6 +282,7 @@ class trackingManager(avango.script.Script):
 
 	def setMT(self, start, end):
 		self.MT=end-start
+		self.lastTime=self.timer.value
 		print("Time: " + str(self.MT))
 
 	def setTP(self, index):
