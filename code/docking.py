@@ -60,6 +60,7 @@ class trackingManager(avango.script.Script):
 	#Logging
 	userID=0
 	group=0
+	trial=0
 	MT=0
 	ID=0
 	TP=0
@@ -223,6 +224,28 @@ class trackingManager(avango.script.Script):
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 
+		if(setupEnvironment.space3D):
+			if(setupEnvironment.reduceDOFTranslate and setupEnvironment.reduceDOFRotate):
+				logmanager.setCondition("docking2D_air_locked_virtual")
+				logmanager.setDOFVirtual(2, 1)
+			else:
+				logmanager.setCondition("docking2D_air_free_virtual")
+				logmanager.setDOFVirtual(3, 3)
+			logmanager.setDOFReal(3, 3)
+		else:
+			logmanager.setCondition("docking2D_table_locked_virtual")
+			logmanager.setDOFVirtual(2, 1)
+			logmanager.setDOFReal(2, 2)
+
+		if self.backAndForth:
+			logmanager.setMovementDirection("r")
+		else:
+			logmanager.setMovementDirection("l")
+
+		# logmanager.setID_combined()
+		logmanager.setRepetition(N)
+		logmanager.setTrial(self.trial)
+		self.trial=self.trial+1
 
 	def setID(self, index):
 		if(index<len(ID)):
