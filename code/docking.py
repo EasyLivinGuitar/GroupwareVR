@@ -278,50 +278,28 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	#loadMeshes
-	pencil = setupEnvironment.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
-	#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
-	#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
-	#pencil.Material.value.set_uniform("Emissivity", 1.0)
-
-	pencil_transform = avango.gua.nodes.TransformNode(
-		Children=[pencil]#, 
-		#Transform=avango.gua.make_trans_mat(0, screenOffsetBottom, setupEnvironment.getTargetDepth())
-	)
-
-	disksNode = trackManager.disks.setupDisks(pencil.Transform.value.get_translate())
-	trackManager.disks.setDisksTransMats(targetDiameter[0])
-
 	aimBalloon = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aimBalloon.Transform.value = avango.gua.make_trans_mat(-D_trans/2, 0, 0)*avango.gua.make_trans_mat(0, 0, r)*avango.gua.make_scale_mat(0.2)
+	aimBalloon.Transform.value = avango.gua.make_trans_mat(-D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	aimBalloon.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
+	setupEnvironment.everyObject.Children.value.append(aimBalloon)
 
 	aimShadow  = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+	setupEnvironment.everyObject.Children.value.append(aimShadow)
 
-	everyObject = avango.gua.nodes.TransformNode(
-		Children = [aimBalloon, aimShadow, disksNode, pencil_transform], 
-		Transform = setupEnvironment.centerPosition
-	)
-
-	#add nodes to root
-	graph.Root.value.Children.value.append(everyObject)
-
-
-	#connect aimPencil
 	trackManager.aim = aimBalloon;
 	trackManager.aimShadow = aimShadow
-	
-	#listen to tracked position of pointer
-	pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-	pointer_device_sensor.TransmitterOffset.value = setupEnvironment.offsetTracking
 
-	pointer_device_sensor.Station.value = "pointer"
+	#loadMeshes
+	pc = setupEnvironment.PencilContainer()
 
-	#connect pencil
-	trackManager.pencilTransMat.connect_from(pointer_device_sensor.Matrix)
-	pencil.Transform.connect_from(trackManager.pencilTransMat)
+	trackManager.disks.setupDisks(pc.getNode())
+	trackManager.disks.setDisksTransMats(targetDiameter[0])
+
+	#connect
+	trackManager.pencilTransMat.connect_from( pc.getNode().Transform)
+	pc.getNode().Transform.connect_from(trackManager.pencilTransMat)
 
 	#listen to button
 	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())

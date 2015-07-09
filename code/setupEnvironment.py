@@ -24,10 +24,10 @@ Then start the scene with the according start.sh
 '''Settings'''
 
 '''if one axis should be locked.  TODO: make it an interger'''
-reduceDOFTranslate = False
+reduceDOFTranslate = True
 
 '''if one rotation axis should be locked. TODO: make it an interger'''
-reduceDOFRotate = False
+reduceDOFRotate = True
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -74,6 +74,11 @@ balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
+
+everyObject = avango.gua.nodes.TransformNode(
+	Children = [], 
+	Transform = centerPosition
+)
 
 def print_graph(root_node):
 	stack = [ ( root_node, 0) ]
@@ -168,6 +173,31 @@ def setup(graph):
 	#setup viewer
 	viewer.SceneGraphs.value = [graph]
 	viewer.Windows.value = [window]
+
+	graph.Root.value.Children.value.append(everyObject)
+
+class PencilContainer():
+	pencil = None
+
+	def __init__(self):
+		self.pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
+		#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
+		#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
+		#pencil.Material.value.set_uniform("Emissivity", 1.0)
+		
+		#listen to tracked position of pointer
+		pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+		pointer_device_sensor.TransmitterOffset.value = offsetTracking
+
+		pointer_device_sensor.Station.value = "pointer"
+
+		#connect pencil
+		self.pencil.Transform.connect_from(pointer_device_sensor.Matrix)
+		everyObject.Children.value.append(self.pencil)
+
+	def getNode(self):
+		return self.pencil
+
 
 class FieldManager(avango.script.Script):
 	TransMat = avango.gua.SFMatrix4()
@@ -371,10 +401,10 @@ class DisksContainer():
 		self.disk6 = None
 		self.node = None
 
-	def setupDisks(self, translate):
+	def setupDisks(self, pencilNode):
 		#attack disks to pointer
 		self.node = avango.gua.nodes.TransformNode(
-			Transform = avango.gua.make_trans_mat(translate)
+			Transform = avango.gua.make_trans_mat(pencilNode.Transform.value.get_translate())
 		)
 
 		self.disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
@@ -402,7 +432,8 @@ class DisksContainer():
 			self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 			self.node.Children.value.append(self.disk6)
 
-			return self.node
+		everyObject.Children.value.append(self.node)
+		return self.node
 
 	def setDisksTransMats(self, diam):
 		print("scaling to"+str(diam))
