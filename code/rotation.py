@@ -256,6 +256,7 @@ class trackingManager(avango.script.Script):
 		self.overshoots=0
 		self.peak_speed=0
 		self.inside=False
+		self.goal=False
 
 	def getRandomRotation3D(self):
 		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
@@ -342,7 +343,6 @@ class trackingManager(avango.script.Script):
 		logmanager.setSuccess(self.goal)
 		logmanager.setHit(hittype, self.MT, 0, self.getError())
 		logmanager.setOvershoots(self.overshoots)
-		logmanager.setThroughput()
 		logmanager.setPeakSpeed(self.peak_speed)
 
 		self.trial=self.trial+1

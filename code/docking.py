@@ -57,6 +57,8 @@ class trackingManager(avango.script.Script):
 	userID=0
 	group=0
 	trial=0
+	clicks=0
+
 	MT=0
 	ID=0
 	TP=0
@@ -135,8 +137,6 @@ class trackingManager(avango.script.Script):
 				print("HIT:" + str(self.error)+"°")
 				self.goal=True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-				if(setupEnvironment.useAutoDetect==False):
-					self.succesful_clicks=self.succesful_clicks+1
 			else:
 				print("MISS:" + str(self.error)+"°")
 				self.goal=False
@@ -214,10 +214,16 @@ class trackingManager(avango.script.Script):
 					if(self.flagPrinted==False):
 						self.logSetter()
 						logmanager.log(self.result_file)
+						self.resetValues()
 						self.flagPrinted=True
 					self.result_file.close()
 
 	def logSetter(self):
+		if(not setupEnvironment.useAutoDetect):
+			self.clicks=self.clicks+1
+			if(self.goal):
+				self.succesful_clicks=self.succesful_clicks+1
+
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 
@@ -242,7 +248,13 @@ class trackingManager(avango.script.Script):
 		# logmanager.setID_combined()
 		logmanager.setRepetition(N)
 		logmanager.setTrial(self.trial)
+		logmanager.setClicks(self.clicks, self.succesful_clicks)
+		logmanager.setSuccess(self.goal)
 		self.trial=self.trial+1
+		
+
+	def resetValues(self):
+		pass
 
 	def setID(self, index):
 		if(index<len(ID)):

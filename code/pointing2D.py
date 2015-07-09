@@ -230,6 +230,7 @@ class PointerManager(avango.script.Script):
 		self.peak_speed=0
 		self.first=True
 		self.inside=False
+		self.goal=False
 
 	def autoDetect(self):
 		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
