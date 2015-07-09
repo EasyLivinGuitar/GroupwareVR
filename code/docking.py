@@ -37,7 +37,6 @@ logmanager=logManager.logManager()
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	pencilTransMat = avango.gua.SFMatrix4()
-	disksNode = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
 	time2=0
@@ -50,8 +49,6 @@ class trackingManager(avango.script.Script):
 
 	current_index=0
 	counter=0
-
-	error=[]
 
 	#Logging
 	userID=0
@@ -125,20 +122,15 @@ class trackingManager(avango.script.Script):
 		if(self.index==len(W_rot)):
 			self.endedTest=True
 
-		self.error = setupEnvironment.getRotationError1D(
-			self.pencilTransMat.value.get_rotate_scale_corrected(),
-			self.disks.getNode().Transform.value.get_rotate_scale_corrected()
-		)
-
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
 		if(self.index < len(W_rot)):
-			if self.error < W_rot[self.index]/2:
-				print("HIT:" + str(self.error)+"°")
+			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
+				print("HIT: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal=True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 			else:
-				print("MISS:" + str(self.error)+"°")
+				print("MISS: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal=False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
@@ -146,10 +138,10 @@ class trackingManager(avango.script.Script):
 			if setupEnvironment.randomTargets:
 				if THREEDIMENSIONTASK:
 					rotation=self.getRandomRotation3D()
-					self.disksMat.value = rotation
+					self.disks.getNode().value = rotation
 				else:
 					rotation=self.getRandomRotation2D()
-					self.disksMat.value = rotation
+					self.disksMat.getNode().value = rotation
 
 			else:
 
@@ -184,6 +176,14 @@ class trackingManager(avango.script.Script):
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 		
+	def getErrorRotate(self):
+		return setupEnvironment.getRotationError1D(
+			self.pencilTransMat.value.get_rotate_scale_corrected(),
+			self.disks.getNode().Transform.value.get_rotate_scale_corrected()
+		)
+
+	def getErrorTranslate(self):
+		return setupEnvironment.getDistance3D(self.pencilTransMat.value, self.aim.Transform.value)
 
 	def logData(self):
 		if THREEDIMENSIONTASK==False:
@@ -204,7 +204,7 @@ class trackingManager(avango.script.Script):
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
-					"Error: "+str(self.error)+"\n"+
+					"Error: "+str(self.getErrorRotate())+"\n"+
 					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"+
 					"Aimpos: \n"+str(self.pencilTransMat.value)+"\n\n")
 				self.result_file.close()
