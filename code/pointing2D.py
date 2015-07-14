@@ -126,14 +126,8 @@ class trackingManager(avango.script.Script):
 		if not setupEnvironment.space3D:
 			self.TransMat.value = avango.gua.make_rot_mat(90, 1, 0, 0)*avango.gua.make_rot_mat(self.TransMat.value.get_rotate())
 			tmp = translation.y
-			translation.y = -translation.z-setupEnvironment.getOffsetTracking().get_translate().y
+			translation.y = -translation.z-setupEnvironment.offsetTracking.get_translate().y
 			translation.z = tmp
-
-		if setupEnvironment.reduceDOFTranslate:
-			translation.z = 0
-
-		self.TransMat.value = setupEnvironment.reducePencilMat(self.TransMat.value)
-
 
 		if(self.startedTests and self.endedTests==False):
 			self.setSpeed()
@@ -142,8 +136,8 @@ class trackingManager(avango.script.Script):
 			self.setOvershoots()
 			self.autoDetect()
 
-		if setupEnvironment.logResults:
-			self.logData()
+		if setupEnvironment.logResults:	
+			pass #save replay, todo
 
 	def logData(self):
 		path="results/results_pointing_2D/"

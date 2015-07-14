@@ -30,7 +30,7 @@ reduceDOFTranslate = True
 reduceDOFRotate = True       
 
 '''is the task above the table or is it on the table?'''
-space3D = True
+space3D = False
 
 offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
 
@@ -213,11 +213,6 @@ class PencilContainer(avango.script.Script):
 
 	'''reduce a transform matrix according to the constrainst '''
 	def reducePencilMat(self):
-		if not space3D:# on table?
-			zCorrection=offsetTracking.get_translate().y
-		else:
-			zCorrection=0
-
 		if reduceDOFRotate:
 			#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
 			#get angle between rotation and y axis
@@ -233,14 +228,21 @@ class PencilContainer(avango.script.Script):
 		if reduceDOFTranslate:
 			z = 0
 		else:
-			z = self.getTransfromValue().get_translate().z-offsetTracking.get_translate().z
+			if space3D:# on table?
+				z = self.getTransfromValue().get_translate().z-offsetTracking.get_translate().z
+			else:
+				z = self.getTransfromValue().get_translate().y-offsetTracking.get_translate().z
+		
+		if space3D:# on table?
+			y = self.getTransfromValue().get_translate().y
+		else:
+			y = -self.getTransfromValue().get_translate().z+offsetTracking.get_translate().z
 
 		translation = avango.gua.make_trans_mat(
 			self.getTransfromValue().get_translate().x-offsetTracking.get_translate().x,
-			self.getTransfromValue().get_translate().y-zCorrection,
+			y,
 			z
 		)
-
 
 		self.pencil.Transform.value = translation* yRot		
 
@@ -428,27 +430,28 @@ class DisksContainer():
 		self.disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
 		self.node.Children.value.append(self.disk1)
+		
+		self.disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
+		self.node.Children.value.append(self.disk2)
+
+		self.disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+		self.node.Children.value.append(self.disk3)
+
+		self.disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+		self.node.Children.value.append(self.disk6)
 
 		if not reduceDOFRotate:
-			self.disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-			self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
-			self.node.Children.value.append(self.disk2)
-
-			self.disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-			self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
-			self.node.Children.value.append(self.disk3)
-
 			self.disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
 			self.node.Children.value.append(self.disk4)
-
+	
 			self.disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 			self.node.Children.value.append(self.disk5)
 
-			self.disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-			self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
-			self.node.Children.value.append(self.disk6)
 
 		everyObject.Children.value.append(self.node)
 		return self.node
@@ -456,12 +459,14 @@ class DisksContainer():
 	def setDisksTransMats(self, diam):
 		print("scaling to"+str(diam))
 		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+		self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)	
+		self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+		self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+
 		if not reduceDOFRotate:
-			self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
-			self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)	
-			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
-			self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
+
 
 	def getNode(self):
 		return self.node
