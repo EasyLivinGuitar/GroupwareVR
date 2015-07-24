@@ -12,7 +12,8 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 FRAMES_FOR_SPEED=4
-THRESHHOLD=0.3
+FRAMES_FOR_AUTODETECT=3
+THRESHHOLD=40
 
 r = setupEnvironment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
@@ -40,7 +41,7 @@ targetDiameter = [
 	2*r*math.tan(W[2]/2*math.pi/180)
 ]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
-print(targetDiameter)
+# print(targetDiameter)
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 pencil_transform = avango.gua.nodes.TransformNode()
@@ -82,6 +83,9 @@ class trackingManager(avango.script.Script):
 	reversal_points=[]
 	first_reversal_acceleration=0
 	first_reversal_point=0
+	low_speed_counter=0
+	speededup=True
+	local_peak_speed=0
 
 	#Logging
 	userID=0
@@ -142,7 +146,7 @@ class trackingManager(avango.script.Script):
 			self.logReplay()#save replay, todo
 
 	def nextSettingStep(self):
-		print(self.index)
+		# print(self.index)
 		if(self.counter%N == N-1):
 			self.index=self.index+1
 
@@ -191,13 +195,13 @@ class trackingManager(avango.script.Script):
 
 	def select(self):
 		if self.getErrorRotate() < W[self.index]/2:
-			print("HIT:" + str(self.getErrorRotate())+"°")
+			# print("HIT:" + str(self.getErrorRotate())+"°")
 			self.goal=True
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 			if(setupEnvironment.useAutoDetect==False):
 				self.succesful_clicks=self.succesful_clicks+1
 		else:
-			print("MISS:" + str(self.getErrorRotate())+"°")
+			# print("MISS:" + str(self.getErrorRotate())+"°")
 			self.goal=False
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
@@ -215,23 +219,30 @@ class trackingManager(avango.script.Script):
 			else:
 				self.low_speed_counter=0
 				if(self.first):
-					self.first_reversal_point=self.TransMat.value.get_translate().x
-					print(self.first_reversal_point)
+					self.first_reversal_point=self.pcNode.Transform.value.get_rotate().get_angle()
+					# print(self.first_reversal_point)
 					self.first_reversal_acceleration=self.current_acceleration
 					self.first=False
-				self.reversal_points.append(self.TransMat.value.get_translate().x)
+
+				# print(self.local_peak_speed)
+				if(self.local_peak_speed>THRESHHOLD):
+					self.speededup=True
+					self.local_peak_speed=0
+				
+				if(self.speededup):
+					print("reversal")
+					self.reversal_points.append(self.pcNode.Transform.value.get_rotate().get_angle())
+					self.speededup=False
+
 
 	def setSpeed(self):
 		if(self.frame_counter % 5 == 0):
-			# self.PencilRotation1=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
 			self.PencilRotation1=self.pcNode.Transform.value.get_rotate()
 			self.start_time=self.timer.value
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
-				# self.PencilRotation2=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
 				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
 				self.end_time=self.timer.value
-				# div=math.fabs(self.PencilRotation2[0]-self.PencilRotation1[0])+math.fabs(self.PencilRotation2[1]-self.PencilRotation1[1])+ math.fabs(self.PencilRotation2[2]-self.PencilRotation1[2])
 				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 				time=self.end_time-self.start_time
 				self.current_speed=div/time
@@ -241,6 +252,9 @@ class trackingManager(avango.script.Script):
 
 				if(self.current_speed>self.peak_speed):
 					self.peak_speed=self.current_speed
+				
+				if(self.current_speed>self.local_peak_speed):
+					self.local_peak_speed=self.current_speed
 			
 				# print(self.current_speed)
 				# print(self.peak_speed)
@@ -375,19 +389,19 @@ class trackingManager(avango.script.Script):
 		logmanager.setOvershoots(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
 		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
-		logmanager.setReversalPoints(len(self.reversal_points), self.first_reversal_point)
+		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
 
 		self.trial=self.trial+1
 
 	def setID(self, index):
 		if(index<len(ID)):
 			self.ID = ID[index]
-		print("ID: "+ str(self.ID))
+		# print("ID: "+ str(self.ID))
 
 	def setMT(self, start, end):
 		self.MT=end-start
 		self.lastTime=self.timer.value
-		print("Time: " + str(self.MT))
+		# print("Time: " + str(self.MT))
 
 	def setTP(self, index):
 		if(self.MT>0 and self.index<len(ID)):
