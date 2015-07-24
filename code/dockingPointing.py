@@ -93,6 +93,35 @@ class trackingManager(avango.script.Script):
 
 	succesful_clicks=0
 
+	current_speed = 0
+	peak_speed=0
+	current_acceleration = 0
+	peak_acceleration=0
+	first_reversal_acceleration=0
+	first_reversal_point=0
+	reversal_points=[]
+	frame_counter = 0
+	frame_counter2 = 0
+
+	low_speed_counter=0
+
+	inside=False
+	first=True
+
+
+	# Logging
+	userID=0
+	group=0
+	trial=0
+	hits=0
+	goal = False
+	error=0
+	last_error=0
+	MT=0
+	ID=0
+	TP=0
+	overshoots=0
+
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
@@ -403,7 +432,6 @@ class trackingManager(avango.script.Script):
 
 				if(self.current_acceleration_translate > self.peak_acceleration_translate):
 					self.peak_acceleration_translate = self.current_acceleration_translate
-
 
 	def setAccelerationRotate(self):
 		if(self.frame_counter_acceleration % 5 == 0):
