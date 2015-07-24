@@ -261,8 +261,7 @@ class trackingManager(avango.script.Script):
 		logmanager.setTrial(self.trial)
 		logmanager.setClicks(self.clicks, self.succesful_clicks)
 		logmanager.setSuccess(self.goal)
-		logmanager.setHit(hit_type, self.MT ,self.getErrorTranslate(), self.getErrorRotate())
-
+		logmanager.setHit(hit_type, self.MT, self.getErrorTranslate(), self.getErrorRotate())
 
 		self.trial=self.trial+1
 

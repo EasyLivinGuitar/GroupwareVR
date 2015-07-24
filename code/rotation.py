@@ -11,7 +11,6 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-THREEDIMENSIONTASK=False
 FRAMES_FOR_SPEED=4
 
 
@@ -32,7 +31,7 @@ for i in range(0, len(ID)):
 		D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
 		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
 	else:
-		D=90
+		D=100
 		W.append(D/(2**ID[i]-1))
 
 targetDiameter = [
@@ -50,7 +49,6 @@ logmanager=logManager.logManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
-	disksMat = avango.gua.SFMatrix4()
 	timer = avango.SFFloat()
 	
 	PencilRotation1=None
@@ -126,9 +124,10 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(timer)
 	def updateTimer(self):
 		#attach disks to pointer
-		self.disks.getNode().Transform.value = avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate())*avango.gua.make_rot_mat(self.disks.getNode().Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.disks.getNode().Transform.value.get_scale()) #keep rotation and scale and move to pointer
-		
-		if(self.startedTest and self.endedTests==False):
+		self.disks.setTranslate(
+			avango.gua.make_trans_mat( self.pcNode.Transform.value.get_translate() )
+		)
+		if self.startedTest and self.endedTests==False:
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
@@ -150,28 +149,31 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(W)):
 
 			#move target			
-			if setupEnvironment.randomTargets:
-				if THREEDIMENSIONTASK:
-					rotation=self.getRandomRotation3D()
-					self.disksMat.value = rotation
+			if setupEnvironment.randomTargets:#select from random targets?
+				if setupEnvironment.taskDOFRotate==3:
+					self.disks.setRotation(self.getRandomRotation3D())
 				else:
-					rotation=self.getRandomRotation2D()
-					self.disksMat.value = rotation
+					self.disks.setRotation(self.getRandomRotation2D())
 
 			else:
 				if self.backAndForth: #aim get right
-					self.disksMat.value = avango.gua.make_rot_mat(0, 0, 1, 0)
+					distance=0
+					rotateAroundX=0;
 					self.backAndForth=False
 				else:
-					self.backAndForth=True
+					distance=D
 					rotateAroundX=0
-					if not self.backAndForthAgain:
-						self.backAndForthAgain=True
-						if THREEDIMENSIONTASK:
-							rotateAroundX=1
+					if self.backAndForthAgain:
+						self.backAndForthAgain = False
+						if setupEnvironment.taskDOFRotate==3:
+							rotateAroundX = 1
 						else:
-							rotateAroundX=0
-					self.disksMat.value = avango.gua.make_rot_mat(D, rotateAroundX, 1, 0)
+							rotateAroundX = 0
+					else:
+						self.backAndForthAgain = True 
+					self.backAndForth=True
+
+				self.disks.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
 			
 				self.disks.setDisksTransMats(targetDiameter[self.index])
 
@@ -198,7 +200,7 @@ class trackingManager(avango.script.Script):
 	def getErrorRotate(self):
 		return setupEnvironment.getRotationError1D(
 			self.pcNode.Transform.value.get_rotate_scale_corrected(),
-			self.disks.getNode().Transform.value.get_rotate_scale_corrected()
+			self.disks.getRotate()
 		)
 
 	def setSpeed(self):
