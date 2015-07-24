@@ -93,7 +93,7 @@ class trackingManager(avango.script.Script):
 	TP=0
 	overshoots=0
 
-	inside=False
+	overshootInside=False
 	goal=False
 
 	def __init__(self):
@@ -265,11 +265,11 @@ class trackingManager(avango.script.Script):
 
 	def setOvershoots(self):
 		if(self.getErrorRotate() < W[self.index]/2):
-			self.inside=True
+			self.overshootInside = True
 		else:
-			if(self.inside):
+			if(self.overshootInside):
 				self.overshoots=self.overshoots+1
-				self.inside=False
+				self.overshootInside=False
 
 
 	def resetValues(self):
@@ -278,7 +278,7 @@ class trackingManager(avango.script.Script):
 		self.first_reversal_acceleration=0
 		self.peak_speed=0
 		self.first=True
-		self.inside=False
+		self.overshootInside=False
 		self.goal=False
 		self.reversal_points=[]
 
@@ -372,7 +372,7 @@ class trackingManager(avango.script.Script):
 			hittype="AUTO"
 		logmanager.setSuccess(self.goal)
 		logmanager.setHit(hittype, self.MT, 0, self.getErrorRotate())
-		logmanager.setOvershoots(self.overshoots)
+		logmanager.setOvershootsRotate(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
 		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
 		logmanager.setReversalPoints(len(self.reversal_points), self.first_reversal_point)

@@ -31,6 +31,9 @@ for i in range(0, len(ID)):
 	W_trans.append(D_trans/(2**(ID[i]/2)-1)) #in degrees, Fitt's Law umgeformt nach W
 	targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
+FRAMES_FOR_SPEED=4 #How many frames token to calculate speed and acceleration
+
+
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
@@ -43,7 +46,7 @@ class trackingManager(avango.script.Script):
 	
 	time2=0
 
-	startedTest = False
+	startedTests = False
 	endedTests = False
 
 	created_file =  False
@@ -61,8 +64,32 @@ class trackingManager(avango.script.Script):
 	MT=0
 	ID=0
 	TP=0
+	overshootsRotate=0
+	overshootsTranslate=0
+	overshootInside_translate = False;
+	overshootInside_rotate = False;
+
+	frame_counter_speed = 0
+	frame_counter_acceleration = 0
+
+	low_speed_counter = 0
 
 	goal=False
+
+	peak_speed_translate = 0
+	peak_speed_rotate = 0
+
+	current_speed_translate = 0
+	current_speed_rotate = 0
+	current_acceleration_translate = 0
+	current_acceleration_rotate = 0
+	peak_acceleration_translate=0
+	peak_acceleration_rotate=0
+	first_reversal_acceleration_translate=0
+	first_reversal_acceleration_rotate=0
+	first_reversal_point_translate=0
+	first_reversal_point_rotate=0
+	reversal_points=[]
 
 	succesful_clicks=0
 
@@ -108,6 +135,18 @@ class trackingManager(avango.script.Script):
 				#attach disks to aim
 				self.disks.setTranslate( avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()) )
 
+		if(self.startedTests and self.endedTests==False):
+			self.setSpeedTranslate()
+			self.setSpeedRotate()
+			self.frame_counter_speed=self.frame_counter_speed+1
+			self.setAccelerationTranslate()
+			self.setAccelerationRotate()
+			self.frame_counter_acceleration = self.frame_counter_acceleration+1
+			#self.setError()
+			self.checkTranslateOvershoots()
+			self.checkRotateovershoots()
+			#self.autoDetect()
+
 		if setupEnvironment.logResults:	
 			self.logReplay()
 
@@ -125,9 +164,9 @@ class trackingManager(avango.script.Script):
 
 
 	def nextSettingStep(self):
-		if(self.startedTest==False):
+		if(self.startedTests==False):
 			self.lastTime=self.timer.value
-		self.startedTest=True
+		self.startedTests=True
 		print(self.index)
 		if(self.counter%N == N-1):
 			self.index=self.index+1
@@ -204,7 +243,7 @@ class trackingManager(avango.script.Script):
 		if not os.path.exists(path):
 			os.makedirs(path)
 
-		if(self.startedTest and self.endedTests==False):
+		if(self.startedTests and self.endedTests==False):
 			self.result_file=open(path+"docking_trial"+str(self.num_files)+".log", "a+")
 			if(self.flagPrinted==False):
 				self.logSetter()
@@ -232,10 +271,27 @@ class trackingManager(avango.script.Script):
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
-					"Error: "+str(self.getErrorRotate())+"\n"+
+					"ErrorRotate: "+str(self.getErrorRotate())+"\n"+
 					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
 					"Aimpos: \n"+str(self.aim.Transform.value)+"\n\n")
 				self.result_file.close()
+
+	def checkTranslateOvershoots(self):
+		if(self.getErrorTranslate() < self.aim.Transform.value.get_scale().x/2):
+			self.overshootInside_translate = True
+		else:
+			if(self.overshootInside_translate):
+				self.overshoots = self.overshootsTranslate+1
+				self.overshootInside_translate = False
+
+	def checkRotateovershoots(self):
+		if(self.getErrorRotate() < W_rot[self.index]/2):
+			self.overshootInside_rotate = True
+		else:
+			if(self.overshootInside_rotate):
+				self.overshootsTranslate = self.overshootsRotate+1
+				self.overshootInside_rotate = False
+
 
 	def logSetter(self):
 		if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
@@ -280,13 +336,92 @@ class trackingManager(avango.script.Script):
 		logmanager.setTrial(self.trial)
 		logmanager.setClicks(self.clicks, self.succesful_clicks)
 		logmanager.setSuccess(self.goal)
+		logmanager.setOvershootCountRotate( self.overshootsRotate )
+		logmanager.setOvershootCoutTranslate( self.overshootsTranslate )
 		logmanager.setHit(hit_type, self.MT, self.getErrorTranslate(), self.getErrorRotate())
+		logmanager.setPeakSpeedTranslate(self.peak_speed_translate)
+		logmanager.setPeakSpeedRotate(self.peak_speed_rotate)
+		logmanager.setTranslateContinuity(self.peak_acceleration_translate, self.first_reversal_acceleration_translate)
+		logmanager.setRotateContinuity(self.peak_acceleration_rotate, self.first_reversal_acceleration_rotate)
 
-		self.trial=self.trial+1
+		self.trial = self.trial+1
 
+	def setSpeedRotate(self):
+		if(self.frame_counter_speed % 5 == 0):
+			# self.PencilRotation1=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
+			self.PencilRotation1=self.pcNode.Transform.value.get_rotate()
+			self.start_time=self.timer.value
+		else: 
+			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
+				# self.PencilRotation2=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
+				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
+				self.end_time=self.timer.value
+				# div=math.fabs(self.PencilRotation2[0]-self.PencilRotation1[0])+math.fabs(self.PencilRotation2[1]-self.PencilRotation1[1])+ math.fabs(self.PencilRotation2[2]-self.PencilRotation1[2])
+				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				time=self.end_time-self.start_time
+				self.current_speed_rotate = div / time
+
+				if(self.current_speed_rotate < 10**-3):
+					self.current_speed=0
+
+				if(self.current_speed_rotate > self.peak_speed_rotate):
+					self.peak_speed_rotate =self.current_speed
+			
+				# print(self.current_speed)
+				# print(self.peak_speed)
+
+	def setSpeedTranslate(self):
+		if(self.frame_counter_speed % 5 == 0):
+			self.TransTranslation1 = self.pcNode.Transform.value.get_translate()
+			self.start_time = self.timer.value
+		else: 
+			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
+				self.TransTranslation2 = self.pcNode.Transform.value.get_translate()
+				self.end_time=self.timer.value
+				div = self.TransTranslation2-self.TransTranslation1
+				length = math.sqrt(div.x**2 + div.y**2 + div.z**2)
+				time = self.end_time-self.start_time
+				self.current_speed_translate = length/time
+
+				if(self.current_speed_translate < 10**-3):#noise filter
+					self.current_speed_translate =0
+
+				if(self.current_speed_translate > self.peak_speed_translate):
+					self.peak_speed_translate = self.current_speed_translate
 		
+	def setAccelerationTranslate(self):
+		if(self.frame_counter_acceleration % 5 == 0):
+			self.speed_time1=self.current_speed_translate
+			self.start_time2=self.timer.value
+		else:
+			if(self.frame_counter_acceleration % 5 == FRAMES_FOR_SPEED-1):
+				self.speed_time2 = self.current_speed_translate
+				self.end_time2 = self.timer.value
+				div = self.speed_time2-self.speed_time1
+				time = self.end_time2-self.start_time2
+				self.current_acceleration_translate = div/time
+
+				if(self.current_acceleration_translate > self.peak_acceleration_translate):
+					self.peak_acceleration_translate = self.current_acceleration_translate
+
+
+	def setAccelerationRotate(self):
+		if(self.frame_counter_acceleration % 5 == 0):
+			self.speed_time1=self.current_speed_rotate
+			self.start_time2=self.timer.value
+		else:
+			if(self.frame_counter_acceleration % 5 == FRAMES_FOR_SPEED-1):
+				self.speed_time2=self.current_speed_rotate
+				self.end_time2 = self.timer.value
+				div = self.speed_time2 - self.speed_time1
+				time = self.end_time2-self.start_time2
+				self.current_acceleration_rotate = div/time
+
+				if(self.current_acceleration_rotate > self.peak_acceleration_rotate):
+					self.peak_acceleration_rotate = self.current_acceleration_rotate
 
 	def resetValues(self):
+		self.overshootsTranslate=0
 		pass
 
 	def setID(self, index):

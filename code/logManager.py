@@ -37,8 +37,9 @@ class logManager(avango.script.Script):
 	hit_error_r=0
 	overshoots=0
 	throughput=0
-	peak_speed=0
-	peak_acceleration=0
+	peak_speed_tranlsate = 0
+	peak_speed_rotate = 0
+	peak_acceleration = 0
 	movement_continuity_t=0
 	first_reversal_point=0
 	num_reversal_points=0
@@ -107,20 +108,31 @@ class logManager(avango.script.Script):
 		self.hit_error_r=error_r
 		self.setThroughput()
 
-	def setOvershoots(self, shoots):
-		self.overshoots=shoots
+	def setOvershootCoutTranslate(self, shoots):
+		self.overshootsTranslate =shoots
+
+	def setOvershootCountRotate(self, shoots):
+		self.overshootsRotate = shoots
 
 	def setThroughput(self):
 		if(self.hit_time>0):
 			self.throughput=self.ID_combined/self.hit_time
 
-	def setPeakSpeed(self, peak):
-		self.peak_speed=peak
+	def setPeakSpeedTranslate(self, peak):
+		self.peak_speed_translate=peak
 
-	def setMovementContinuity(self, peak_acc, first_point_acc):
-		self.peak_acceleration=peak_acc
+	def setPeakSpeedRotate(self, peak):
+		self.peak_speed_rotate = peak
+
+	def setTranslateContinuity(self, peak_acc, first_point_acc):
+		self.peak_acceleration_translate = peak_acc
 		if(peak_acc>0):
-			self.movement_continuity_t=first_point_acc/peak_acc
+			self.movement_continuity_translate = first_point_acc/peak_acc
+
+	def setRotateContinuity(self, peak_acc, first_point_acc):
+		self.peak_acceleration_rotate = peak_acc
+		if (peak_acc > 0):
+			self.movement_continuity_rotate = first_point_acc / peak_acc
 
 	def setReversalPoints(self, first, num):
 		self.first_reversal_point=first
@@ -156,8 +168,10 @@ class logManager(avango.script.Script):
 				"HIT_ERROR_R , "+
 				"OVERSHOOTS , "+
 				"THROUGHPUT , "+
-				"PEAK_SPEED , "+
-				"PEAK_ACCELERATION , "+
+				"PEAK_SPEED_TRANSLATE , "+
+				"PEAK_SPEED_ROTATE , "+
+				"PEAK_ACCELERATION_TRANSLATE , "+
+				"PEAK_ACCELERATION_ROTATE , "+
 				"MOVEMENT_CONTINUITY_T , "+
 				"FIRST_REVERSAL_POINT , "+
 				"NUM_REVERSAL_POINTS , "+
@@ -192,8 +206,10 @@ class logManager(avango.script.Script):
 			str(self.hit_error_r)+" , "+
 			str(self.overshoots)+" , "+
 			str(self.throughput)+" , "+
-			str(self.peak_speed)+" , "+
-			str(self.peak_acceleration)+" , "+
+			str(self.peak_speed_translate)+" , "+
+			str(self.peak_speed_rotate)+" , "+
+			str(self.peak_acceleration_translate)+" , "+
+			str(self.peak_acceleration_rotate)+" , "+
 			str(self.movement_continuity_t)+" , "+
 			str(self.first_reversal_point)+" , "+
 			str(self.num_reversal_points)+" , "+
