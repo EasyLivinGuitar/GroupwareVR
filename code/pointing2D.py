@@ -116,6 +116,8 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if(self.endedTests==False):
 			if(self.Button.value):
+				if(setupEnvironment.logResults):
+					self.logData()
 				self.next()
 			else:
 				self.flagPrinted=False
@@ -137,11 +139,23 @@ class trackingManager(avango.script.Script):
 			self.autoDetect()
 
 		if setupEnvironment.logResults:	
-			pass #save replay, todo
+			self.logReplay()
 
 	def logData(self):
 		path="results/results_pointing_2D/"
 		if(self.startedTests and self.endedTests==False):
+			print("Logged!")
+			self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".log", "a+")
+			if(self.flagPrinted==False):
+				self.logSetter()
+				logmanager.log(self.result_file)
+				self.resetValues()
+				self.flagPrinted=True
+			self.result_file.close()
+
+	def logReplay(self):
+		path="results/results_pointing_2D/"
+		if(self.endedTests==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
@@ -156,15 +170,6 @@ class trackingManager(avango.script.Script):
 					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
 					"Aimpos: \n"+str(self.AimMat.value)+"\n\n")
 				self.result_file.close()
-			
-				if self.Button.value: #write resulting values
-					self.result_file=open(path+"pointing2D_trial"+str(self.num_files)+".log", "a+")
-					if(self.flagPrinted==False):
-						self.logSetter()
-						logmanager.log(self.result_file)
-						self.resetValues()
-						self.flagPrinted=True
-					self.result_file.close()
 
 	def logSetter(self):
 		self.setError()
