@@ -13,6 +13,9 @@ from avango.script import field_has_changed
 
 THREEDIMENSIONTASK=False
 
+DISABLEROTATION=True
+
+
 r=setupEnvironment.r #circle radius
 
 #fitt's law parameter
@@ -97,12 +100,13 @@ class trackingManager(avango.script.Script):
 
 	@field_has_changed(timer)
 	def updateTimer(self):
-		if (not self.endedTests and setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]) :
-			#attach disks to pointer
-			self.disks.setTranslate( avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate()) )
-		else:
-			#attach disks to aim
-			self.disks.setTranslate( avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()) )
+		if (not DISABLEROTATION):
+			if (not self.endedTests and setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]) :
+				#attach disks to pointer
+				self.disks.setTranslate( avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate()) )
+			else:
+				#attach disks to aim
+				self.disks.setTranslate( avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()) )
 
 		if setupEnvironment.logResults:	
 			self.logReplay()
@@ -136,12 +140,13 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(W_rot)):
 			#move target			
 			if setupEnvironment.randomTargets:
-				if THREEDIMENSIONTASK:
-					rotation=self.getRandomRotation3D()
-					self.disks.setRotation(rotation)
-				else:
-					rotation=self.getRandomRotation2D()
-					self.disks.setRotation(rotation)
+				if (not DISABLEROTATION):
+					if THREEDIMENSIONTASK:
+						rotation=self.getRandomRotation3D()
+						self.disks.setRotation(rotation)
+					else:
+						rotation=self.getRandomRotation2D()
+						self.disks.setRotation(rotation)
 			else:
 
 				#switches aim and shadow aim
@@ -151,25 +156,26 @@ class trackingManager(avango.script.Script):
 
 				self.aim.Transform.value = avango.gua.make_trans_mat(self.aim.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])
 				self.aimShadow.Transform.value = avango.gua.make_trans_mat(self.aimShadow.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])	
+				
+				if (not DISABLEROTATION):
+					if self.backAndForth: #aim get right
+						distance = 0
+						rotateAroundX = 0
+						self.backAndForth=False
+					else:
+						distance = D_rot
+						self.backAndForth=True
+						rotateAroundX=0
+						if not self.backAndForthAgain:
+							self.backAndForthAgain=True
+							if THREEDIMENSIONTASK:
+								rotateAroundX=1
+							else:
+								rotateAroundX=0
 
-				if self.backAndForth: #aim get right
-					distance = 0
-					rotateAroundX = 0
-					self.backAndForth=False
-				else:
-					distance = D_rot
-					self.backAndForth=True
-					rotateAroundX=0
-					if not self.backAndForthAgain:
-						self.backAndForthAgain=True
-						if THREEDIMENSIONTASK:
-							rotateAroundX=1
-						else:
-							rotateAroundX=0
-
-				self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
-			
-				self.disks.setDisksTransMats(targetDiameter[self.index])
+					self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
+				
+					self.disks.setDisksTransMats(targetDiameter[self.index])
 
 			
 			self.counter=self.counter+1
@@ -179,10 +185,12 @@ class trackingManager(avango.script.Script):
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 		
 	def getErrorRotate(self):
-		return setupEnvironment.getRotationError1D(
-			self.pcNode.Transform.value.get_rotate_scale_corrected(),
-			self.disks.getRotate()
-		)
+		if (not DISABLEROTATION):
+			return setupEnvironment.getRotationError1D(
+				self.pcNode.Transform.value.get_rotate_scale_corrected(),
+				self.disks.getRotate()
+			)
+		return 0
 
 	def getErrorTranslate(self):
 		return setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
@@ -331,8 +339,9 @@ def start ():
 	#loadMeshes
 	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
 
-	trackManager.disks.setupDisks(trackManager.pcNode)
-	trackManager.disks.setDisksTransMats(targetDiameter[0])
+	if (not DISABLEROTATION):
+		trackManager.disks.setupDisks(trackManager.pcNode)
+		trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 
 	#listen to button

@@ -31,7 +31,7 @@ disableY = False
 virtualDOFRotate = 3
 
 '''should the task swich between aims using 3 or 1 dof?'''
-taskDOFRotate=3
+taskDOFRotate=1
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -455,7 +455,7 @@ class DisksContainer():
 		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		self.node.Children.value.append(self.disk6)
 
-		if taskDOFRotate==3:
+		if virtualDOFRotate==3:
 			self.disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
 			self.node.Children.value.append(self.disk4)
@@ -468,6 +468,7 @@ class DisksContainer():
 		everyObject.Children.value.append(self.node)
 		return self.node
 
+	'''setup the position of the disk inside the container'''
 	def setDisksTransMats(self, diam):
 		print("scaling to"+str(diam))
 		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
@@ -475,10 +476,15 @@ class DisksContainer():
 		self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 		self.disk6.Transform.value = avango.gua.make_rot_mat(180,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 
-		if taskDOFRotate==3:
+		if virtualDOFRotate==3:
 			self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 			self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 
-
-	def getNode(self):
-		return self.node
+	def setRotation(self, rotMat):
+		self.node.Transform.value = avango.gua.make_trans_mat( self.node.Transform.value.get_translate() ) * rotMat *avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
+		
+	def setTranslate(self, transl):
+		self.node.Transform.value = transl * avango.gua.make_rot_mat(self.node.Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
+	
+	def getRotate(self):
+		return self.node.Transform.value.get_rotate_scale_corrected()

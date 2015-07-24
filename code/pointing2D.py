@@ -30,22 +30,14 @@ logmanager= logManager.logManager()
 balloonSound = avango.sound.nodes.SoundSource()
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
+
 pencil_transform = avango.gua.nodes.TransformNode()
-aim = avango.gua.nodes.TransformNode()
-aim_transform = avango.gua.nodes.TransformNode()
-base = avango.gua.nodes.TransformNode()
-base_transform = avango.gua.nodes.TransformNode()
+
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	TransMat = avango.gua.SFMatrix4()
 	
-	AimMat_scale = avango.gua.SFMatrix4()
-	AimMat = avango.gua.SFMatrix4()
-
-	BaseMat = avango.gua.SFMatrix4()
-	BaseMat_scale = avango.gua.SFMatrix4()
-
 	TransMat_old_x_translate = 0
 	point_of_turn = 0
 
@@ -68,7 +60,7 @@ class trackingManager(avango.script.Script):
 	endedTests=False
 	flagPrinted=False
 
-	current_index = 0
+	index = 0
 	counter = 0
 
 	speed_time1=0
@@ -106,7 +98,8 @@ class trackingManager(avango.script.Script):
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
-		AimMat = avango.gua.make_trans_mat(0.0, 0.0, 0)
+		self.aim = avango.gua.make_trans_mat(0.0, 0.0, 0)
+		self.aimShadow = None
 
 	def __del__(self):
 		if setupEnvironment.logResults():
@@ -168,15 +161,15 @@ class trackingManager(avango.script.Script):
 					"Error: "+str(self.error)+"\n"+
 					"Speed: "+str(self.current_speed)+"\n"
 					"Pointerpos: \n"+str(self.TransMat.value)+"\n"
-					"Aimpos: \n"+str(self.AimMat.value)+"\n\n")
+					"Aimpos: \n"+str(self.aim.Transform.value)+"\n\n")
 				self.result_file.close()
 
 	def logSetter(self):
 		self.setError()
 		self.last_error=self.error
-		self.setID(self.current_index)
+		self.setID(self.index)
 		self.setMT(self.lastTime, self.timer.value)
-		self.setTP(self.current_index)
+		self.setTP(self.index)
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
@@ -194,12 +187,12 @@ class trackingManager(avango.script.Script):
 			logmanager.setCondition("pointing2D_table_locked_virtual")
 			logmanager.setDOFVirtual(2, 0)
 			logmanager.setDOFReal(2, 0)
-		if(self.AimMat.value.get_translate().x>self.BaseMat.value.get_translate().x): #aim is right
+		if(self.aim.Transform.value.get_translate().x>self.aimShadow.Transform.value.get_translate().x): #aimBalloon is right
 			logmanager.setMovementDirection("r")
 		else:
 			logmanager.setMovementDirection("l")
 		logmanager.setTargetDistance_t(D)
-		logmanager.setTargetWidth_t(W[self.current_index])
+		logmanager.setTargetWidth_t(W[self.index])
 		logmanager.setRotationAxis(0)
 		logmanager.setTargetDistance_r(0)
 		logmanager.setTargetWidth_r(0)
@@ -249,8 +242,8 @@ class trackingManager(avango.script.Script):
 		if(self.endedTests==False):	
 			if(self.startedTests==False):
 				#start
-				self.AimMat.value=avango.gua.make_trans_mat(D/2, 0, 0)
-				self.BaseMat.value=avango.gua.make_trans_mat(-D/2, 0, 0)
+				self.aim.Transform.value=avango.gua.make_trans_mat(D/2, 0, 0)
+				self.aimShadow.Transform.value=avango.gua.make_trans_mat(-D/2, 0, 0)
 				self.startedTests=True
 				self.TransMat_old_x_translate = self.TransMat.value.get_translate().x
 				self.lastTime=self.timer.value
@@ -258,33 +251,30 @@ class trackingManager(avango.script.Script):
 			else:
 				if(self.counter==N-1):
 					self.counter=0
-					self.current_index=self.current_index+1
+					self.index=self.index+1
 				else:
 					self.counter=self.counter+1
 
-				if(self.current_index==len(W)):
-					self.current_index=0
+				if(self.index==len(W)):
+					self.index=0
 					self.endedTests = True
 					setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 1), 1)
 					print("Tests finished")
 				else:
 					self.nextSettingStep()
-					if(self.error <= self.AimMat_scale.value.get_scale().x/2):
+					if(self.error <= self.aim.Transform.value.get_scale().x/2):
 						self.hit() 
 					else:
 						self.miss()
 
 	def nextSettingStep(self):
-		#switches aim and shadow aim
-		temp = self.BaseMat.value
-		self.AimMat_old = self.AimMat
-		self.BaseMat.value = self.AimMat.value 
-		self.AimMat.value = temp
+		#switches aimBalloon and shadow aimBalloon
+		temp = self.aimShadow.Transform.value
+		self.aimShadow.Transform.value = self.aim.Transform.value 
+		self.aim.Transform.value = temp
 
-
-		self.AimMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])
-		self.BaseMat_scale.value = avango.gua.make_scale_mat(W[self.current_index])			
-
+		self.aim.Transform.value = avango.gua.make_trans_mat(self.aim.Transform.value.get_translate())* avango.gua.make_scale_mat(W[self.index])
+		self.aimShadow.Transform.value = avango.gua.make_trans_mat(self.aimShadow.Transform.value.get_translate())* avango.gua.make_scale_mat(W[self.index])	
 
 	def hit(self):
 		self.hits=self.hits+1
@@ -314,7 +304,7 @@ class trackingManager(avango.script.Script):
 		return settings[index]
 		
 	def setError(self):
-		self.error = setupEnvironment.getDistance3D(self.TransMat.value, self.AimMat.value)
+		self.error = setupEnvironment.getDistance3D(self.TransMat.value, self.aim.Transform.value)
 
 	def setID(self, index):
 		self.ID = ID[index]
@@ -366,7 +356,7 @@ class trackingManager(avango.script.Script):
 		self.frame_counter2=self.frame_counter2+1
 
 	def setOvershoots(self):
-		if(self.error < self.AimMat_scale.value.get_scale().x/2):
+		if(self.error < self.aim.Transform.value.get_scale().x/2):
 			self.inside=True
 		else:
 			if(self.inside):
@@ -393,18 +383,19 @@ def start ():
 	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	aim = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	aim.Transform.value = avango.gua.make_scale_mat(W[0])
-	aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
-	setupEnvironment.everyObject.Children.value.append(aim)
+	#load aimBalloon and aimBalloonShadow
+	aimBalloon = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aimBalloon.Transform.value = avango.gua.make_trans_mat(-D/2, 0, 0)*avango.gua.make_scale_mat(W[0])
+	aimBalloon.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 1))
+	setupEnvironment.everyObject.Children.value.append(aimBalloon)
 
-	base = loader.create_geometry_from_file("light_sphere", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	base.Transform.value = avango.gua.make_scale_mat(W[0])
-	base.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
-	setupEnvironment.everyObject.Children.value.append(base)
+	aimShadow  = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aimShadow.Transform.value = avango.gua.make_trans_mat(D/2, 0, 0)*avango.gua.make_scale_mat(W[0])
+	aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+	setupEnvironment.everyObject.Children.value.append(aimShadow)
 
-	aim_transform=avango.gua.nodes.TransformNode(Children=[aim])
-	base_transform=avango.gua.nodes.TransformNode(Children=[base])
+	trackManager.aim = aimBalloon;
+	trackManager.aimShadow = aimShadow
 
 	#loadMeshes
 	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
