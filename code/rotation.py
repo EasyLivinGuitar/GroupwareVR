@@ -81,6 +81,9 @@ class trackingManager(avango.script.Script):
 	speed_time1=0
 	speed_time2=0
 	first=False
+	reversal_points=[]
+	first_reversal_acceleration=0
+	first_reversal_point=0
 
 	#Logging
 	userID=0
@@ -275,6 +278,7 @@ class trackingManager(avango.script.Script):
 		self.first=True
 		self.inside=False
 		self.goal=False
+		self.reversal_points=[]
 
 	def getRandomRotation3D(self):
 		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
@@ -368,9 +372,10 @@ class trackingManager(avango.script.Script):
 		logmanager.setHit(hittype, self.MT, 0, self.getErrorRotate())
 		logmanager.setOvershoots(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
+		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
+		logmanager.setReversalPoints(len(self.reversal_points), self.first_reversal_point)
 
 		self.trial=self.trial+1
-		self.resetValues()
 
 	def setID(self, index):
 		if(index<len(ID)):

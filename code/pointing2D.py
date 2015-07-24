@@ -219,6 +219,7 @@ class trackingManager(avango.script.Script):
 		logmanager.setPeakSpeed(self.peak_speed)
 		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
 		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
+		self.trial=self.trial+1
 
 	def resetValues(self):
 		self.overshoots=0
@@ -228,6 +229,7 @@ class trackingManager(avango.script.Script):
 		self.first=True
 		self.inside=False
 		self.goal=False
+		self.reversal_points=[]
 
 	def autoDetect(self):
 		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
@@ -254,7 +256,6 @@ class trackingManager(avango.script.Script):
 				self.lastTime=self.timer.value
 				print("Tests started.\n")
 			else:
-				self.trial=self.trial+1
 				if(self.counter==N-1):
 					self.counter=0
 					self.current_index=self.current_index+1
