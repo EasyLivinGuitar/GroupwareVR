@@ -180,18 +180,20 @@ class trackingManager(avango.script.Script):
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
-			if setupEnvironment.reduceDOFTranslate:
-				logmanager.setCondition("pointing2D_air_locked_virtual")
-				logmanager.setDOFVirtual(2, 0)
-			else:
-				logmanager.setCondition("pointing2D_air_free_virtual")
-				logmanager.setDOFVirtual(3, 0)
+			# if setupEnvironment.reduceDOFTranslate:
+			# 	logmanager.setCondition("pointing2D_air_locked_virtual")
+			# 	logmanager.setDOFVirtual(2, 0)
+			# else:
+			# 	logmanager.setCondition("pointing2D_air_free_virtual")
+			# 	logmanager.setDOFVirtual(3, 0)
+
+			logmanager.setDOFVirtual(setupEnvironment.getDOFTranslate(), setupEnvironment.virtualDOFRotate)
 			logmanager.setDOFReal(3, 0)
 		else:
-			if setupEnvironment.reduceDOFTranslate:
-				logmanager.setCondition("pointing2D_table_locked_virtual")
-				logmanager.setDOFVirtual(2, 0)
-				logmanager.setDOFReal(2, 0)
+			# if setupEnvironment.reduceDOFTranslate:
+			logmanager.setCondition("pointing2D_table_locked_virtual")
+			logmanager.setDOFVirtual(2, 0)
+			logmanager.setDOFReal(2, 0)
 		if(self.AimMat.value.get_translate().x>self.BaseMat.value.get_translate().x): #aim is right
 			logmanager.setMovementDirection("r")
 		else:
@@ -213,6 +215,7 @@ class trackingManager(avango.script.Script):
 			logmanager.setClicks(self.trial, self.hits)
 
 		logmanager.setSuccess(self.goal)
+		logmanager.setOvershoots(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
 		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
 		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
