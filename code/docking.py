@@ -84,10 +84,10 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			if(self.endedTests==False):
+				self.select()
 				if setupEnvironment.logResults:	
 					self.logData()
 
-				self.select()
 				self.nextSettingStep()
 			else:
 				print("Tests ended")
@@ -105,7 +105,7 @@ class trackingManager(avango.script.Script):
 			self.disks.setTranslate( avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()) )
 
 		if setupEnvironment.logResults:	
-			pass #save replay, todo
+			self.logReplay()
 
 	def select(self):
 		if(self.index < len(W_rot)):
@@ -197,6 +197,24 @@ class trackingManager(avango.script.Script):
 			os.makedirs(path)
 
 		if(self.startedTest and self.endedTests==False):
+			self.result_file=open(path+"docking_trial"+str(self.num_files)+".log", "a+")
+			if(self.flagPrinted==False):
+				self.logSetter()
+				logmanager.log(self.result_file)
+				self.resetValues()
+				self.flagPrinted=True
+			self.result_file.close()
+
+	def logReplay(self):
+		if THREEDIMENSIONTASK==False:
+			path="results/results_docking_2D/"
+		else:
+			path="results/results_docking_3D/"
+
+		if not os.path.exists(path):
+			os.makedirs(path)
+
+		if(self.endedTests==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
@@ -210,15 +228,6 @@ class trackingManager(avango.script.Script):
 					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
 					"Aimpos: \n"+str(self.aim.Transform.value)+"\n\n")
 				self.result_file.close()
-			
-				if self.Button.value: #write resulting values
-					self.result_file=open(path+"docking_trial"+str(self.num_files)+".log", "a+")
-					if(self.flagPrinted==False):
-						self.logSetter()
-						logmanager.log(self.result_file)
-						self.resetValues()
-						self.flagPrinted=True
-					self.result_file.close()
 
 	def logSetter(self):
 		if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
@@ -239,10 +248,10 @@ class trackingManager(avango.script.Script):
 		logmanager.setGroup(self.group)
 
 		if(setupEnvironment.space3D):
-			if(setupEnvironment.reduceDOFTranslate and setupEnvironment.reduceDOFRotate):
-				logmanager.setCondition("docking2D_air_locked_virtual")
-			else:
-				logmanager.setCondition("docking2D_air_free_virtual")
+			# if(setupEnvironment.reduceDOFTranslate and setupEnvironment.reduceDOFRotate):
+			# 	logmanager.setCondition("docking2D_air_locked_virtual")
+			# else:
+			# 	logmanager.setCondition("docking2D_air_free_virtual")
 			logmanager.setDOFReal(3, 3)
 		else:
 			logmanager.setCondition("docking2D_table_locked_virtual")

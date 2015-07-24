@@ -12,7 +12,7 @@ from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
 FRAMES_FOR_SPEED=4
-
+THRESHHOLD=0.3
 
 r = setupEnvironment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
@@ -78,6 +78,7 @@ class trackingManager(avango.script.Script):
 	peak_speed=0
 	speed_time1=0
 	speed_time2=0
+	first=False
 
 	#Logging
 	userID=0
@@ -132,6 +133,7 @@ class trackingManager(avango.script.Script):
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
+			self.autoDetect()
 
 		if setupEnvironment.logResults:	
 			self.logReplay()#save replay, todo
@@ -203,6 +205,19 @@ class trackingManager(avango.script.Script):
 			self.disks.getRotate()
 		)
 
+	def autoDetect(self):
+		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
+			if(self.low_speed_counter < FRAMES_FOR_AUTODETECT-1):
+				self.low_speed_counter=self.low_speed_counter+1
+			else:
+				self.low_speed_counter=0
+				if(self.first):
+					self.first_reversal_point=self.TransMat.value.get_translate().x
+					print(self.first_reversal_point)
+					self.first_reversal_acceleration=self.current_acceleration
+					self.first=False
+				self.reversal_points.append(self.TransMat.value.get_translate().x)
+
 	def setSpeed(self):
 		if(self.frame_counter % 5 == 0):
 			# self.PencilRotation1=setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
@@ -256,7 +271,10 @@ class trackingManager(avango.script.Script):
 
 	def resetValues(self):
 		self.overshoots=0
+		self.peak_acceleration=0
+		self.first_reversal_acceleration=0
 		self.peak_speed=0
+		self.first=True
 		self.inside=False
 		self.goal=False
 
@@ -318,18 +336,19 @@ class trackingManager(avango.script.Script):
 		logmanager.setUserID(self.userID)
 		logmanager.setGroup(self.group)
 		if setupEnvironment.space3D:
-			if setupEnvironment.reduceDOFTranslate:
-				logmanager.setCondition("rotation2D_air_locked_virtual")
-				logmanager.setDOFVirtual(0, 1)
-			else:
-				logmanager.setCondition("rotation2D_air_free_virtual")
-				logmanager.setDOFVirtual(0, 3)
+			# if setupEnvironment.reduceDOFTranslate:
+			# 	logmanager.setCondition("rotation2D_air_locked_virtual")
+			# 	logmanager.setDOFVirtual(0, 1)
+			# else:
+			# 	logmanager.setCondition("rotation2D_air_free_virtual")
+			# 	logmanager.setDOFVirtual(0, 3)
+			logmanager.setDOFVirtual(setupEnvironment.getDOFTranslate(), setupEnvironment.virtualDOFRotate)
 			logmanager.setDOFReal(0, 3)
 		else:
-			if setupEnvironment.reduceDOFTranslate:
-				logmanager.setCondition("rotation2D_table_locked_virtual")
-				logmanager.setDOFVirtual(0, 1)
-				logmanager.setDOFReal(0, 1)
+			# if setupEnvironment.reduceDOFTranslate:
+			logmanager.setCondition("rotation2D_table_locked_virtual")
+			logmanager.setDOFVirtual(0, 1)
+			logmanager.setDOFReal(0, 1)
 
 		if self.backAndForth:
 			logmanager.setMovementDirection("r")
@@ -353,6 +372,7 @@ class trackingManager(avango.script.Script):
 		logmanager.setPeakSpeed(self.peak_speed)
 
 		self.trial=self.trial+1
+		self.resetValues()
 
 	def setID(self, index):
 		if(index<len(ID)):
