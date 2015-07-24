@@ -300,7 +300,7 @@ class trackingManager(avango.script.Script):
 		
 
 	def logData(self):
-		if THREEDIMENSIONTASK:
+		if setupEnvironment.taskDOFRotate==3:
 			path="results/results_rotation_3D/"
 		else:
 			path="results/results_rotation_2D/"
@@ -314,7 +314,7 @@ class trackingManager(avango.script.Script):
 			self.result_file.close()
 
 	def logReplay(self):
-		if THREEDIMENSIONTASK:
+		if setupEnvironment.taskDOFRotate==3:
 			path="results/results_rotation_3D/"
 		else:
 			path="results/results_rotation_2D/"
@@ -326,11 +326,11 @@ class trackingManager(avango.script.Script):
 			else: #write permanent values
 				self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".replay", "a+")
 				
-				self.result_file.write(
-					"TimeStamp: "+str(self.timer.value)+"\n"+
-					"Error: "+str(self.getErrorRotate())+"\n"+
-					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
-					"Aimpos: \n"+str(self.disksMat.value)+"\n\n")
+				# self.result_file.write(
+				# 	"TimeStamp: "+str(self.timer.value)+"\n"+
+				# 	"Error: "+str(self.getErrorRotate())+"\n"+
+				# 	"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
+				# 	"Aimpos: \n"+str(self.disks.Transform.value)+"\n\n")
 				self.result_file.close()	 
 
 	def logSetter(self):
