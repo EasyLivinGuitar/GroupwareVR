@@ -207,8 +207,8 @@ class trackingManager(avango.script.Script):
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
 					"Error: "+str(self.getErrorRotate())+"\n"+
-					"Pointerpos: \n"+str(self.pencilTransMat.value)+"\n"+
-					"Aimpos: \n"+str(self.pencilTransMat.value)+"\n\n")
+					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
+					"Aimpos: \n"+str(self.aim.Transform.value)+"\n\n")
 				self.result_file.close()
 			
 				if self.Button.value: #write resulting values
