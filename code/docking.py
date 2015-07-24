@@ -239,15 +239,13 @@ class trackingManager(avango.script.Script):
 		if(setupEnvironment.space3D):
 			if(setupEnvironment.reduceDOFTranslate and setupEnvironment.reduceDOFRotate):
 				logmanager.setCondition("docking2D_air_locked_virtual")
-				logmanager.setDOFVirtual(2, 1)
 			else:
 				logmanager.setCondition("docking2D_air_free_virtual")
-				logmanager.setDOFVirtual(3, 3)
 			logmanager.setDOFReal(3, 3)
 		else:
 			logmanager.setCondition("docking2D_table_locked_virtual")
-			logmanager.setDOFVirtual(2, 1)
-			logmanager.setDOFReal(2, 2)
+			logmanager.setDOFReal(2, 1)
+		logmanager.setDOFVirtual(setupEnvironment.getDOFTranslate(), setupEnvironment.virtualDOFRotate)	
 
 		if self.backAndForth:
 			logmanager.setMovementDirection("r")

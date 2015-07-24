@@ -54,10 +54,12 @@ class logManager(avango.script.Script):
 	def setCondition(self, task):
 		self.condition = task
 
+	'''DOF translate, DOF rotate'''
 	def setDOFVirtual(self, DOFt, DOFr):
 		self.DOF_T_virtual=DOFt
 		self.DOF_R_virtual=DOFr
 
+	'''DOF translate, DOF rotate'''
 	def setDOFReal(self, DOFt, DOFr):
 		self.DOF_T_real=DOFt
 		self.DOF_R_real=DOFr
