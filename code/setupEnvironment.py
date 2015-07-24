@@ -37,7 +37,7 @@ offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
 '''get the position pf the cetner where the pointer and the aim is located'''
 centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
 
-logResults = False
+logResults = True
 
 '''if true needs a button press or next step, if false then autodetects'''
 useAutoDetect =  False

@@ -112,10 +112,11 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			if(self.endedTests==False):
-				if setupEnvironment.logResults:	
-					self.logData()
-
+				self.startedTest=True
 				self.select()
+				if setupEnvironment.logResults:	
+					self.logData()				
+
 				self.nextSettingStep()
 			else:
 				print("Tests ended")
@@ -134,10 +135,9 @@ class trackingManager(avango.script.Script):
 			self.setOvershoots()
 
 		if setupEnvironment.logResults:	
-			pass #save replay, todo
+			self.logReplay()#save replay, todo
 
 	def nextSettingStep(self):
-		self.startedTest=True
 		print(self.index)
 		if(self.counter%N == N-1):
 			self.index=self.index+1
@@ -281,6 +281,20 @@ class trackingManager(avango.script.Script):
 		else:
 			path="results/results_rotation_2D/"
 		if(self.startedTest and self.endedTests==False):
+			self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
+			if(self.flagPrinted==False):
+				self.logSetter()
+				logmanager.log(self.result_file)
+				self.resetValues()
+				self.flagPrinted=True
+			self.result_file.close()
+
+	def logReplay(self):
+		if THREEDIMENSIONTASK:
+			path="results/results_rotation_3D/"
+		else:
+			path="results/results_rotation_2D/"
+		if(self.endedTests==False):
 			if self.created_file==False: #create File 
 				self.num_files=len([f for f in os.listdir(path)
 					if os.path.isfile(os.path.join(path, f))])
@@ -293,16 +307,7 @@ class trackingManager(avango.script.Script):
 					"Error: "+str(self.getErrorRotate())+"\n"+
 					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
 					"Aimpos: \n"+str(self.disksMat.value)+"\n\n")
-				self.result_file.close()
-			
-				if self.Button.value: #write resulting values
-					self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
-					if(self.flagPrinted==False):
-						self.logSetter()
-						logmanager.log(self.result_file)
-						self.resetValues()
-						self.flagPrinted=True
-					self.result_file.close()
+				self.result_file.close()	 
 
 	def logSetter(self):
 		self.setID(self.index)
@@ -341,7 +346,7 @@ class trackingManager(avango.script.Script):
 		else:
 			hittype="AUTO"
 		logmanager.setSuccess(self.goal)
-		logmanager.setHit(hittype, self.MT, 0, self.getErrorRorate())
+		logmanager.setHit(hittype, self.MT, 0, self.getErrorRotate())
 		logmanager.setOvershoots(self.overshoots)
 		logmanager.setPeakSpeed(self.peak_speed)
 
