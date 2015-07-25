@@ -27,11 +27,11 @@ Then start the scene with the according start.sh
 disableZ = False
 disableY = False
 
-'''if one rotation axis should be locked. Switches beetween 3DOf and 1DOF'''
+'''if one rotation axis should be locked/disabled. Switches beetween 3DOf and 1DOF'''
 virtualDOFRotate = 3
 
-'''should the task swich between aims using 3 or 1 dof?'''
-taskDOFRotate=1
+'''should the task swich between rotation aims using 3 or 1 dof?'''
+taskDOFRotate=3
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -42,6 +42,7 @@ offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
 centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
 
 logResults = True
+saveReplay = False
 
 '''if true needs a button press or next step, if false then autodetects'''
 useAutoDetect =  False
@@ -401,8 +402,7 @@ def getDistance2D(target1, target2):
 	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
 	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
 	
-	distance=math.sqrt(trans_aim_x_square+trans_aim_y_square)
-	return distance
+	return math.sqrt(trans_aim_x_square+trans_aim_y_square)
 
 def getDistance3D(target1, target2):
 	trans_x=target1.get_translate()[0]
@@ -412,13 +412,8 @@ def getDistance3D(target1, target2):
 	aim_x=target2.get_translate()[0]
 	aim_y=target2.get_translate()[1]
 	aim_z=target2.get_translate()[2]
-
-	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-	trans_aim_z_square=(trans_z - aim_z)*(trans_z - aim_z)
 	
-	distance=math.sqrt(trans_aim_x_square+trans_aim_y_square+trans_aim_z_square)
-	return distance
+	return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
 
 
 

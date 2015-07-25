@@ -57,10 +57,11 @@ class trackingManager(avango.script.Script):
 
 	lastTime=0
 
-	startedTest = False
+	startedTests = False
 	endedTests = False
 
-	created_file =  False
+	created_logfile = False
+	created_replayfile = False
 	flagPrinted = False
 
 	index=0
@@ -118,7 +119,7 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			if(self.endedTests==False):
-				self.startedTest=True
+				self.startedTests=True
 				self.select()
 				if setupEnvironment.logResults:	
 					self.logData()				
@@ -136,13 +137,13 @@ class trackingManager(avango.script.Script):
 		self.disks.setTranslate(
 			avango.gua.make_trans_mat( self.pcNode.Transform.value.get_translate() )
 		)
-		if self.startedTest and self.endedTests==False:
+		if self.startedTests and self.endedTests==False:
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
 			self.autoDetect()
 
-		if setupEnvironment.logResults:	
+		if setupEnvironment.saveReplay:	
 			self.logReplay()#save replay, todo
 
 	def nextSettingStep(self):
@@ -311,21 +312,29 @@ class trackingManager(avango.script.Script):
 		index=random.randint(0, len(settings)-1)
 
 		return settings[index]
-		
+	
+	def getPath(self):
+		path="results/rotation_"+str(setupEnvironment.taskDOFRotate)+"DOF/"
+
+		#create dir if not existent
+		if not os.path.exists(path):
+			os.makedirs(path)
+
+		return path
 
 	def logData(self):
-		if setupEnvironment.taskDOFRotate==3:
-			path="results/results_rotation_3D/"
-		else:
-			path="results/results_rotation_2D/"
-		if(self.startedTest and self.endedTests==False):
-			self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".log", "a+")
-			if(self.flagPrinted==False):
-				self.logSetter()
-				logmanager.log(self.result_file)
-				self.resetValues()
-				self.flagPrinted=True
-			self.result_file.close()
+		path = self.getPath()
+		
+		#fint out which file number
+		if self.created_logfile == False: #create File 
+			self.num_logfiles = len([f for f in os.listdir(path)
+				if os.path.isfile(os.path.join(path, f))])
+			self.created_logfile = True
+
+		if(self.startedTests and self.endedTests== False):
+			self.logSetter()
+			logmanager.writeToFile(path+"rotation_trial"+str(self.num_logfiles)+".csv")
+			self.resetValues()
 
 	def logReplay(self):
 		if setupEnvironment.taskDOFRotate==3:
@@ -347,7 +356,7 @@ class trackingManager(avango.script.Script):
 				# 	"Aimpos: \n"+str(self.disks.Transform.value)+"\n\n")
 				self.result_file.close()	 
 
-	def logSetter(self):
+	'''def logSetter(self):
 		self.setID(self.index)
 		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
@@ -392,7 +401,67 @@ class trackingManager(avango.script.Script):
 		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
 
 		self.trial=self.trial+1
+'''
 
+	def logSetter(self):
+		if self.getErrorRotate() < W[self.index]/2:
+			self.goal= True
+		else:
+			self.goal= False
+
+		if(setupEnvironment.useAutoDetect):
+			hit_type ="Auto"
+		else:
+			hit_type ="Manual"
+			#self.clicks = self.clicks+1
+			if(self.goal):
+				self.succesful_clicks= self.succesful_clicks+1
+
+		self.setMT(self.lastTime, self.timer.value)
+		logmanager.set("USER ID", self.userID)
+		logmanager.set("USER GROUP", self.group)
+
+		if(setupEnvironment.space3D):
+			logmanager.set("DOF_real translate", 3)
+			logmanager.set("DOF_real rotate", 3)
+		else:
+			logmanager.set("DOF_real translate", 2)
+			logmanager.set("DOF_real rotate", 1)
+		logmanager.set("DOF virtual translate", setupEnvironment.getDOFTranslate())
+		logmanager.set("DOF virtual rotate", setupEnvironment.virtualDOFRotate)
+
+		if self.backAndForth:
+			logmanager.set("MovementDirection", "r")
+		else:
+			logmanager.set("MovementDirection", "l")
+
+		logmanager.set("TARGET_DISTANCE_T", 0)
+		logmanager.set("TARGET_WIDTH_T", 0)
+		logmanager.set("TARGET_DISTANCE_R", D)
+		logmanager.set("TARGET_WIDTH_R", W[self.index])
+		logmanager.set("ID_COMBINED", self.ID)
+		logmanager.set("ID_TRANSLATE", 0)
+		logmanager.set("ID_ROTATE", self.ID)
+		logmanager.set("REPETITION", N)
+		logmanager.set("TRIAL", self.trial)
+		#logmanager.set("BUTTON CLICKS", self.clicks)
+		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
+		logmanager.set("SUCCESS", self.goal)
+		logmanager.set("OvershootCountRotate", self.overshoots)
+		logmanager.set("OvershootCountTranslate", 0)
+		logmanager.set("peak acceleration translate", 0)
+		logmanager.set("peak acceleration rotate", self.peak_acceleration)
+		if (self.peak_acceleration>0):
+			logmanager.set("movement continuity rotate", self.first_reversal_acceleration/self.peak_acceleration)
+		logmanager.set("movement continuity translate", 0)
+		logmanager.set("PeakSpeedRotate", self.peak_speed)
+		logmanager.set("PeakSpeedTranslate", 0)
+		logmanager.set("hit_type", hit_type)
+		logmanager.set("MovementTime", self.MT)
+		logmanager.set("error_rotate", self.getErrorRotate())
+		logmanager.set("error_translate", 0)
+
+		self.trial = self.trial+1
 	def setID(self, index):
 		if(index<len(ID)):
 			self.ID = ID[index]

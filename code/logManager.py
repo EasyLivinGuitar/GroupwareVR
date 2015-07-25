@@ -1,216 +1,33 @@
-import avango
-import avango.daemon
-import avango.gua
-import avango.script
-import avango.sound
-import avango.sound.openal
 import math
 
-from examples_common.GuaVE import GuaVE
-from avango.script import field_has_changed
-
-class logManager(avango.script.Script):
-	userID=0
-	group=0
-	condition=None
-	DOF_T_virtual=0
-	DOF_R_virtual=0
-	DOF_T_real=0
-	DOF_R_real=0
-	movement_direction=None
-	target_distance_t=0
-	target_width_t=0
-	rotation_axis=None
-	target_distance_r=0
-	target_width_r=0
-	ID_t=0
-	ID_r=0
-	ID_combined=0
-	repetition=0
-	trial=0
-	button_clicks=0
-	succesful_clicks=0
-	success=None
-	hit_type=None
-	hit_time=0
-	hit_error_t=0
-	hit_error_r=0
-	overshoots=0
-	throughput=0
-	peak_speed_tranlsate = 0
-	peak_speed_rotate = 0
-	peak_acceleration = 0
-	movement_continuity_t=0
-	first_reversal_point=0
-	num_reversal_points=0
-
+class logManager():
 	header_printed=False
 
-	def setUserID(self, ID):
-		self.userID=ID
+	def __init__(self):
+		self.dictionary = {}
 
-	def setGroup(self, grp):
-		self.group=grp
+	def set(self, key, value):
+		self.dictionary[key] = value
 
-	def setCondition(self, task):
-		self.condition = task
+	def writeToFile(self, path):
+		logFile = open(path, "a+")
 
-	'''DOF translate, DOF rotate'''
-	def setDOFVirtual(self, DOFt, DOFr):
-		self.DOF_T_virtual=DOFt
-		self.DOF_R_virtual=DOFr
+		#update
+		if( self.dictionary["MovementTime"] >0):
+			self.dictionary["throughput"] = self.dictionary["ID_COMBINED"]/self.dictionary["MovementTime"]
 
-	'''DOF translate, DOF rotate'''
-	def setDOFReal(self, DOFt, DOFr):
-		self.DOF_T_real=DOFt
-		self.DOF_R_real=DOFr
-
-	def setMovementDirection(self, direction):
-		self.movement_direction=direction
-
-	def setTargetDistance_t(self, distance):
-		self.target_distance_t=distance
-
-	def setTargetWidth_t(self, width):
-		self.target_width_t=width
-
-	def setRotationAxis(self, axis):
-		self.rotation_axis=axis
-
-	def setTargetDistance_r(self, distance):
-		self.target_distance_r=distance
-
-	def setTargetWidth_r(self, width):
-		self.target_width_r=width
-
-	def setID_combined(self, idt, idr):
-		self.ID_t=idt
-		self.ID_r=idr
-		self.ID_combined=self.ID_t+self.ID_r
-
-	def setRepetition(self, rep):
-		self.repetition=rep
-
-	def setTrial(self, tria):
-		self.trial=tria
-
-	def setClicks(self, clicks, clicks_s):
-		self.button_clicks=clicks
-		self.succesful_clicks=clicks_s
-
-	def setSuccess(self, suc):
-		self.success=suc
-
-	def setHit(self, h_type, h_time, error_t, error_r):
-		self.hit_type=h_type
-		self.hit_time=h_time
-		self.hit_error_t=error_t
-		self.hit_error_r=error_r
-		self.setThroughput()
-
-	def setOvershootCoutTranslate(self, shoots):
-		self.overshootsTranslate =shoots
-
-	def setOvershootCountRotate(self, shoots):
-		self.overshootsRotate = shoots
-
-	def setThroughput(self):
-		if(self.hit_time>0):
-			self.throughput=self.ID_combined/self.hit_time
-
-	def setPeakSpeedTranslate(self, peak):
-		self.peak_speed_translate=peak
-
-	def setPeakSpeedRotate(self, peak):
-		self.peak_speed_rotate = peak
-
-	def setTranslateContinuity(self, peak_acc, first_point_acc):
-		self.peak_acceleration_translate = peak_acc
-		if(peak_acc>0):
-			self.movement_continuity_translate = first_point_acc/peak_acc
-
-	def setRotateContinuity(self, peak_acc, first_point_acc):
-		self.peak_acceleration_rotate = peak_acc
-		if (peak_acc > 0):
-			self.movement_continuity_rotate = first_point_acc / peak_acc
-
-	def setReversalPoints(self, first, num):
-		self.first_reversal_point=first
-		self.num_reversal_points=num
-
-	def log(self, result_file):
+		#print header only once
 		if(self.header_printed==False):
-			result_file.write(
-				"USERID , "+
-				"GROUP , "+
-				"CONDITION , "+
-				"DOF_T_VIRTUAL , "+
-				"DOF_R_VIRTUAL , "+
-				"DOF_T_REAL , "+
-				"DOF_R_REAL , "+
-				"MOVEMENT_DIRECTION , "+ 
-				"TARGET_DISTANCE_T , "+
-				"TARGET_WIDTH_T , "+
-				"ROTATION_AXIS , "+
-				"TARGET_DISTANCE_R , "+
-				"TARGET_WIDTH_R , "+
-				"ID_T , "+
-				"ID_R , "+
-				"ID_COMBINED , "+
-				"REPETITION , "+
-				"TRIAL , "+
-				"BUTTON CLICKS , "+
-				"SUCCESFULL CLICKS , " +
-				"SUCCESS , "+
-				"HIT_TYPE , "+
-				"HIT_TIME , "+
-				"HIT_ERROR_T , "+
-				"HIT_ERROR_R , "+
-				"OVERSHOOTS , "+
-				"THROUGHPUT , "+
-				"PEAK_SPEED_TRANSLATE , "+
-				"PEAK_SPEED_ROTATE , "+
-				"PEAK_ACCELERATION_TRANSLATE , "+
-				"PEAK_ACCELERATION_ROTATE , "+
-				"MOVEMENT_CONTINUITY_T , "+
-				"FIRST_REVERSAL_POINT , "+
-				"NUM_REVERSAL_POINTS , "+
-				"\n \n")
-			self.header_printed=True
+			header = ""
+			for key in self.dictionary.keys():
+				header = header + str(key) + ","
+			header = header+"\n\n" 
+			logFile.write(header)
+			self.header_printed = True
 
-		result_file.write(
-			str(self.userID)+ " , "+
-			str(self.group)+" , "+
-			str(self.condition)+" , "+
-			str(self.DOF_T_virtual)+" , "+
-			str(self.DOF_R_virtual)+" , "+
-			str(self.DOF_T_real)+" , "+
-			str(self.DOF_R_real)+" , "+
-			str(self.movement_direction)+" , "+
-			str(self.target_distance_t)+" , "+
-			str(self.target_width_t)+" , "+
-			str(self.rotation_axis)+" , "+
-			str(self.target_distance_r)+" , "+
-			str(self.target_width_r)+" , "+
-			str(self.ID_t)+" , "+
-			str(self.ID_r)+" , "+
-			str(self.ID_combined)+" , "+
-			str(self.repetition)+" , "+
-			str(self.trial)+" , "+
-			str(self.button_clicks)+" , "+
-			str(self.succesful_clicks)+" , "+
-			str(self.success)+" , "+
-			str(self.hit_type)+" , "+
-			str(self.hit_time)+" , "+
-			str(self.hit_error_t)+" , "+
-			str(self.hit_error_r)+" , "+
-			str(self.overshoots)+" , "+
-			str(self.throughput)+" , "+
-			str(self.peak_speed_translate)+" , "+
-			str(self.peak_speed_rotate)+" , "+
-			str(self.peak_acceleration_translate)+" , "+
-			str(self.peak_acceleration_rotate)+" , "+
-			str(self.movement_continuity_t)+" , "+
-			str(self.first_reversal_point)+" , "+
-			str(self.num_reversal_points)+" , "+
-			"\n")
+		line = ""
+		for value in self.dictionary.values():
+			line = line + str(value) + ","
+		line = line + "\n"
+		logFile.write(line)	
+		logFile.close()
