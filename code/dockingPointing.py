@@ -349,18 +349,18 @@ class trackingManager(avango.script.Script):
 		logmanager.set("USER GROUP", self.group)
 
 		if(setupEnvironment.space3D):
-			logmanager.set("DOF_real translate", 3)
-			logmanager.set("DOF_real rotate", 3)
+			logmanager.set("DOF_REAL_TRANSLATE", 3)
+			logmanager.set("DOF_REAL_ROTATE", 3)
 		else:
-			logmanager.set("DOF_real translate", 2)
-			logmanager.set("DOF_real rotate", 1)
-		logmanager.set("DOF virtual translate", setupEnvironment.getDOFTranslate())
-		logmanager.set("DOF virtual rotate", setupEnvironment.virtualDOFRotate)
+			logmanager.set("DOF_REAL_TRANSLATE", 2)
+			logmanager.set("DOF_REAL_ROTATE", 1)
+		logmanager.set("DOF_VIRTUAL_TRANSLATE", setupEnvironment.getDOFTranslate())
+		logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
 
 		if self.backAndForth:
-			logmanager.set("MovementDirection", "r")
+			logmanager.set("MOVEMENT_DIRECTION", "r")
 		else:
-			logmanager.set("MovementDirection", "l")
+			logmanager.set("MOVEMENT_DIRECTION", "l")
 
 		logmanager.set("TARGET_DISTANCE_T", D_trans)
 		logmanager.set("TARGET_WIDTH_T", W_trans[self.index])
@@ -378,20 +378,20 @@ class trackingManager(avango.script.Script):
 		logmanager.set("BUTTON CLICKS", self.clicks)
 		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
 		logmanager.set("SUCCESS", self.goal)
-		logmanager.set("OvershootCountRotate", self.overshootsRotate)
-		logmanager.set("OvershootCountTranslate", self.overshootsTranslate)
-		logmanager.set("peak acceleration translate", self.peak_acceleration_translate)
-		logmanager.set("peak acceleration rotate", self.peak_acceleration_rotate)
+		logmanager.set("OVERSHOOTS_ROTATE", self.overshootsRotate)
+		logmanager.set("OVERSHOOTS_TRANSLATE", self.overshootsTranslate)
+		logmanager.set("PEAK_ACCELERATION_TRANSLATE", self.peak_acceleration_translate)
+		logmanager.set("PEAK_ACCELERATION_ROTATE", self.peak_acceleration_rotate)
 		if (self.peak_acceleration_rotate>0):
-			logmanager.set("movement continuity rotate", self.first_reversal_acceleration_rotate/self.peak_acceleration_rotate)
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration_rotate/self.peak_acceleration_rotate)
 		if (self.peak_acceleration_translate > 0):
-			logmanager.set("movement continuity translate", self.first_reversal_acceleration_translate/self.peak_acceleration_translate)
-		logmanager.set("PeakSpeedRotate", self.peak_speed_rotate)
-		logmanager.set("PeakSpeedTranslate", self.peak_speed_translate)
-		logmanager.set("hit_type", hit_type)
-		logmanager.set("MovementTime", self.MT)
-		logmanager.set("error_rotate", self.getErrorRotate())
-		logmanager.set("error_translate", self.getErrorTranslate())
+			logmanager.set("MOVEMENT_CONTINUITY_TRANSLATE", self.first_reversal_acceleration_translate/self.peak_acceleration_translate)
+		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed_rotate)
+		logmanager.set("PEAK_SPEED_TRANSLATE", self.peak_speed_translate)
+		logmanager.set("HIT_TYPE", hit_type)
+		logmanager.set("MOVEMENT_TIME", self.MT)
+		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
+		logmanager.set("ERROR_TRANSLATE", self.getErrorTranslate())
 
 		self.trial = self.trial+1
 
