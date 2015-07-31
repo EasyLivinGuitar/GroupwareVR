@@ -356,54 +356,11 @@ class trackingManager(avango.script.Script):
 				# 	"Aimpos: \n"+str(self.disks.Transform.value)+"\n\n")
 				self.result_file.close()	 
 
-	'''def logSetter(self):
+	def logSetter(self):
 		self.setID(self.index)
 		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
-		logmanager.setUserID(self.userID)
-		logmanager.setGroup(self.group)
-		if setupEnvironment.space3D:
-			# if setupEnvironment.reduceDOFTranslate:
-			# 	logmanager.setCondition("rotation2D_air_locked_virtual")
-			# 	logmanager.setDOFVirtual(0, 1)
-			# else:
-			# 	logmanager.setCondition("rotation2D_air_free_virtual")
-			# 	logmanager.setDOFVirtual(0, 3)
-			logmanager.setDOFVirtual(setupEnvironment.getDOFTranslate(), setupEnvironment.virtualDOFRotate)
-			logmanager.setDOFReal(0, 3)
-		else:
-			# if setupEnvironment.reduceDOFTranslate:
-			logmanager.setCondition("rotation2D_table_locked_virtual")
-			logmanager.setDOFVirtual(0, 1)
-			logmanager.setDOFReal(0, 1)
 
-		if self.backAndForth:
-			logmanager.setMovementDirection("r")
-		else:
-			logmanager.setMovementDirection("l")
-
-		logmanager.setRotationAxis("y")
-		logmanager.setTargetDistance_r(D)
-		logmanager.setTargetWidth_r(W[self.index])
-		logmanager.setID_combined(0, self.ID)
-		logmanager.setRepetition(N)
-		logmanager.setTrial(self.trial)
-		if(setupEnvironment.useAutoDetect==False):
-			logmanager.setClicks(self.trial, self.succesful_clicks)
-			hittype="BUTTON"
-		else:
-			hittype="AUTO"
-		logmanager.setSuccess(self.goal)
-		logmanager.setHit(hittype, self.MT, 0, self.getErrorRotate())
-		logmanager.setOvershootsRotate(self.overshoots)
-		logmanager.setPeakSpeed(self.peak_speed)
-		logmanager.setMovementContinuity(self.peak_acceleration, self.first_reversal_acceleration)
-		logmanager.setReversalPoints(self.first_reversal_point, len(self.reversal_points))
-
-		self.trial=self.trial+1
-'''
-
-	def logSetter(self):
 		if self.getErrorRotate() < W[self.index]/2:
 			self.goal= True
 		else:
@@ -417,51 +374,49 @@ class trackingManager(avango.script.Script):
 			if(self.goal):
 				self.succesful_clicks= self.succesful_clicks+1
 
-		self.setMT(self.lastTime, self.timer.value)
-		logmanager.set("USER ID", self.userID)
-		logmanager.set("USER GROUP", self.group)
-
-		if(setupEnvironment.space3D):
-			logmanager.set("DOF_real translate", 3)
-			logmanager.set("DOF_real rotate", 3)
+		logmanager.set("USER_ID", self.userID)
+		logmanager.set("GROUP", self.group)
+		if setupEnvironment.space3D:
+			logmanager.set("DOF_VIRTUAL_TRANSLATE", setupEnvironment.getDOFTranslate())
+			logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
+			logmanager.set("DOF_REAL_TRANSLATE", 0)
+			logmanager.set("DOF_REAL_ROTATE", 3)
 		else:
-			logmanager.set("DOF_real translate", 2)
-			logmanager.set("DOF_real rotate", 1)
-		logmanager.set("DOF virtual translate", setupEnvironment.getDOFTranslate())
-		logmanager.set("DOF virtual rotate", setupEnvironment.virtualDOFRotate)
+			# if setupEnvironment.reduceDOFTranslate:
+			logmanager.set("DOF_VIRTUAL_TRANSLATE", 0)
+			logmanager.set("DOF_VIRTUAL_ROTATE", 1)
+			logmanager.set("DOF_REAL_TRANSLATE", 0)
+			logmanager.set("DOF_REAL_ROTATE", 1)
 
 		if self.backAndForth:
-			logmanager.set("MovementDirection", "r")
+			logmanager.set("MOVEMENT_DIRECTION","r")
 		else:
-			logmanager.set("MovementDirection", "l")
+			logmanager.set("MOVEMENT_DIRECTION","l")
 
-		logmanager.set("TARGET_DISTANCE_T", 0)
-		logmanager.set("TARGET_WIDTH_T", 0)
-		logmanager.set("TARGET_DISTANCE_R", D)
-		logmanager.set("TARGET_WIDTH_R", W[self.index])
+		logmanager.set("ROTATION_AXIS","y")
+		logmanager.set("TARGET_DISTANCE_ROTATE",D)
+		logmanager.set("TARGET_WIDTH_ROTATE",W[self.index])
 		logmanager.set("ID_COMBINED", self.ID)
-		logmanager.set("ID_TRANSLATE", 0)
-		logmanager.set("ID_ROTATE", self.ID)
-		logmanager.set("REPETITION", N)
+		logmanager.set("REPETITION",N)
 		logmanager.set("TRIAL", self.trial)
-		#logmanager.set("BUTTON CLICKS", self.clicks)
-		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
-		logmanager.set("SUCCESS", self.goal)
-		logmanager.set("OvershootCountRotate", self.overshoots)
-		logmanager.set("OvershootCountTranslate", 0)
-		logmanager.set("peak acceleration translate", 0)
-		logmanager.set("peak acceleration rotate", self.peak_acceleration)
-		if (self.peak_acceleration>0):
-			logmanager.set("movement continuity rotate", self.first_reversal_acceleration/self.peak_acceleration)
-		logmanager.set("movement continuity translate", 0)
-		logmanager.set("PeakSpeedRotate", self.peak_speed)
-		logmanager.set("PeakSpeedTranslate", 0)
-		logmanager.set("hit_type", hit_type)
-		logmanager.set("MovementTime", self.MT)
-		logmanager.set("error_rotate", self.getErrorRotate())
-		logmanager.set("error_translate", 0)
+		if(setupEnvironment.useAutoDetect==False):
+			logmanager.set("CLICKS", self.trial)
+			logmanager.set("SUCCESSFUL_CLICKS", self.succesful_clicks)
+		logmanager.set("SUCCESS",self.goal)
+		logmanager.set("HIT_TYPE", hit_type)
+		logmanager.set("MOVEMENT_TIME", self.MT)
+		logmanager.set("ERROR_TRANSLATE", 0)
+		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
 
-		self.trial = self.trial+1
+		logmanager.set("OVERSHOOTS_ROTATE",self.overshoots)
+		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed)
+		if(self.peak_acceleration > 0):
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration/self.peak_acceleration)
+		logmanager.set("FIRST_REVERSAL_POINT", self.first_reversal_point)
+		logmanager.set("REVERSAL_POINTS", len(self.reversal_points))
+
+		self.trial=self.trial+1
+
 	def setID(self, index):
 		if(index<len(ID)):
 			self.ID = ID[index]
