@@ -35,6 +35,12 @@ for i in range(0, len(ID)):
 		targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 	W_trans.append(D_trans/(2**(ID[i]/divisor)-1)) #in degrees, Fitt's Law umgeformt nach W
 
+
+THRESHHOLD_TRANSLATE=0.3
+FRAMES_FOR_AUTODETECT_TRANSLATE=3
+
+FRAMES_FOR_AUTODETECT_ROTATE=3
+THRESHHOLD_ROTATE=40
 FRAMES_FOR_SPEED=4 #How many frames taken to calculate speed and acceleration
 
 
@@ -93,24 +99,24 @@ class trackingManager(avango.script.Script):
 	first_reversal_acceleration_rotate = 0
 	first_reversal_point_translate = 0
 	first_reversal_point_rotate = 0
-	reversal_points=[]
+	first_translate = True
+	first_rotate = True
+	reversal_points_translate=[]
+	reversal_points_rotate=[]
 
 	succesful_clicks= 0
 
-	current_speed = 0
-	peak_speed= 0
-	current_acceleration = 0
-	peak_acceleration= 0
-	first_reversal_acceleration= 0
-	first_reversal_point= 0
-	reversal_points=[]
 	frame_counter = 0
 	frame_counter2 = 0
 
-	low_speed_counter= 0
+	low_speed_counter_translate = 0
+	low_speed_counter_rotate = 0
+
+	local_peak_speed_rotate=0
+	speededup=False
+
 
 	inside = False
-	first= True
 
 
 	# Logging
@@ -179,7 +185,8 @@ class trackingManager(avango.script.Script):
 			self.frame_counter_acceleration = self.frame_counter_acceleration+1
 			self.checkTranslateOvershoots()
 			self.checkRotateOvershoots()
-			#self.autoDetect()
+			self.checkReversalTranslate()
+			self.checkReversalRotate()
 
 		if setupEnvironment.saveReplay:	
 			self.logReplay()
@@ -349,18 +356,18 @@ class trackingManager(avango.script.Script):
 		logmanager.set("USER GROUP", self.group)
 
 		if(setupEnvironment.space3D):
-			logmanager.set("DOF_real translate", 3)
-			logmanager.set("DOF_real rotate", 3)
+			logmanager.set("DOF_REAL_TRANSLATE", 3)
+			logmanager.set("DOF_REAL_ROTATE", 3)
 		else:
-			logmanager.set("DOF_real translate", 2)
-			logmanager.set("DOF_real rotate", 1)
-		logmanager.set("DOF virtual translate", setupEnvironment.getDOFTranslate())
-		logmanager.set("DOF virtual rotate", setupEnvironment.virtualDOFRotate)
+			logmanager.set("DOF_REAL_TRANSLATE", 2)
+			logmanager.set("DOF_REAL_ROTATE", 1)
+		logmanager.set("DOF_VIRTUAL_TRANSLATE", setupEnvironment.getDOFTranslate())
+		logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
 
 		if self.backAndForth:
-			logmanager.set("MovementDirection", "r")
+			logmanager.set("MOVEMENT_DIRECTION", "r")
 		else:
-			logmanager.set("MovementDirection", "l")
+			logmanager.set("MOVEMENT_DIRECTION", "l")
 
 		logmanager.set("TARGET_DISTANCE_T", D_trans)
 		logmanager.set("TARGET_WIDTH_T", W_trans[self.index])
@@ -378,20 +385,29 @@ class trackingManager(avango.script.Script):
 		logmanager.set("BUTTON CLICKS", self.clicks)
 		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
 		logmanager.set("SUCCESS", self.goal)
-		logmanager.set("OvershootCountRotate", self.overshootsRotate)
-		logmanager.set("OvershootCountTranslate", self.overshootsTranslate)
-		logmanager.set("peak acceleration translate", self.peak_acceleration_translate)
-		logmanager.set("peak acceleration rotate", self.peak_acceleration_rotate)
+		logmanager.set("OVERSHOOTS_ROTATE", self.overshootsRotate)
+		logmanager.set("OVERSHOOTS_TRANSLATE", self.overshootsTranslate)
+		logmanager.set("PEAK_ACCELERATION_TRANSLATE", self.peak_acceleration_translate)
+		logmanager.set("PEAK_ACCELERATION_ROTATE", self.peak_acceleration_rotate)
 		if (self.peak_acceleration_rotate>0):
-			logmanager.set("movement continuity rotate", self.first_reversal_acceleration_rotate/self.peak_acceleration_rotate)
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration_rotate/self.peak_acceleration_rotate)
+		else:
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
 		if (self.peak_acceleration_translate > 0):
-			logmanager.set("movement continuity translate", self.first_reversal_acceleration_translate/self.peak_acceleration_translate)
-		logmanager.set("PeakSpeedRotate", self.peak_speed_rotate)
-		logmanager.set("PeakSpeedTranslate", self.peak_speed_translate)
-		logmanager.set("hit_type", hit_type)
-		logmanager.set("MovementTime", self.MT)
-		logmanager.set("error_rotate", self.getErrorRotate())
-		logmanager.set("error_translate", self.getErrorTranslate())
+			logmanager.set("MOVEMENT_CONTINUITY_TRANSLATE", self.first_reversal_acceleration_translate/self.peak_acceleration_translate)
+		else:
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
+		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed_rotate)
+		logmanager.set("PEAK_SPEED_TRANSLATE", self.peak_speed_translate)
+		logmanager.set("HIT_TYPE", hit_type)
+		logmanager.set("MOVEMENT_TIME", self.MT)
+		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
+		logmanager.set("ERROR_TRANSLATE", self.getErrorTranslate())
+		logmanager.set("FIRST_REVERSAL_ROTATE", self.first_reversal_point_rotate)
+		logmanager.set("FIRST_REVERSAL_TRANSLATE", self.first_reversal_point_translate)
+		logmanager.set("REVERSAL_POINTS_ROTATE", len(self.reversal_points_rotate))
+		logmanager.set("REVERSAL_POINTS_TRANSLATE", len(self.reversal_points_translate))
+
 
 		self.trial = self.trial+1
 
@@ -411,10 +427,10 @@ class trackingManager(avango.script.Script):
 				self.current_speed_rotate = div / time
 
 				if(self.current_speed_rotate < 10**-3):
-					self.current_speed= 0
+					self.current_speed_rotate= 0
 
 				if(self.current_speed_rotate > self.peak_speed_rotate):
-					self.peak_speed_rotate = self.current_speed
+					self.peak_speed_rotate = self.current_speed_rotate
 
 	def setSpeedTranslate(self):
 		if(self.frame_counter_speed % 5 == 0):
@@ -465,9 +481,48 @@ class trackingManager(avango.script.Script):
 				if(self.current_acceleration_rotate > self.peak_acceleration_rotate):
 					self.peak_acceleration_rotate = self.current_acceleration_rotate
 
+	def checkReversalTranslate(self):
+		if(math.fabs(self.current_speed_translate) < THRESHHOLD_TRANSLATE and self.peak_speed_translate>THRESHHOLD_TRANSLATE):
+			if(self.low_speed_counter_translate < FRAMES_FOR_AUTODETECT_TRANSLATE-1):
+				self.low_speed_counter_translate=self.low_speed_counter_translate+1
+			else:
+				self.low_speed_counter_translate=0
+				if(self.first_translate):
+					self.first_reversal_point_translate=self.pcNode.Transform.value.get_translate().x
+					self.first_reversal_acceleration_translate=self.current_acceleration_translate
+					self.first_translate=False
+				self.reversal_points_translate.append(self.pcNode.Transform.value.get_translate().x)
+
+	def checkReversalRotate(self):
+		if(math.fabs(self.current_speed_rotate) < THRESHHOLD_ROTATE and self.peak_speed_rotate>THRESHHOLD_ROTATE):
+			if(self.low_speed_counter_rotate < FRAMES_FOR_AUTODETECT_ROTATE-1):
+				self.low_speed_counter_rotate=self.low_speed_counter_rotate+1
+			else:
+				self.low_speed_counter_rotate=0
+				if(self.first_rotate):
+					self.first_reversal_point_rotate=self.pcNode.Transform.value.get_rotate().get_angle()
+					self.first_reversal_acceleration_rotate=self.current_acceleration_rotate
+					self.first_rotate=False
+
+				if(self.local_peak_speed_rotate>THRESHHOLD_ROTATE):
+					self.speededup=True
+					self.local_peak_speed_rotate=0
+				
+				if(self.speededup):
+					self.reversal_points_rotate.append(self.pcNode.Transform.value.get_rotate().get_angle())
+					self.speededup=False
+
 	def resetValues(self):
 		self.overshootsTranslate = 0
-		pass
+		self.overshootsRotate = 0
+		self.peak_speed_translate = 0
+		self.peak_acceleration_translate = 0
+		self.peak_speed_rotate = 0
+		self.peak_acceleration_rotate = 0
+		self.reversal_points_translate = []
+		self.reversal_points_rotate = []
+		self.first_translate = True
+		self.first_rotate = True
 
 	def setID(self, index):
 		if(index<len(ID)):
