@@ -11,7 +11,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-DISABLEROTATION= False
+DISABLEROTATION= True
 
 
 r= setupEnvironment.r #circle radius

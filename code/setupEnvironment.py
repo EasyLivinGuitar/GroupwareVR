@@ -28,10 +28,10 @@ disableZ = False
 disableY = False
 
 '''if one rotation axis should be locked/disabled. Switches beetween 3DOf and 1DOF'''
-virtualDOFRotate = 3
+virtualDOFRotate = 1
 
 '''should the task swich between rotation aims using 3 or 1 dof?'''
-taskDOFRotate=3
+taskDOFRotate = 1
 
 '''is the task above the table or is it on the table?'''
 space3D = True
