@@ -426,6 +426,9 @@ class trackingManager(avango.script.Script):
 				if(self.current_speed_rotate > self.peak_speed_rotate):
 					self.peak_speed_rotate = self.current_speed_rotate
 
+				if(self.current_speed_rotate > self.local_peak_speed_rotate):
+					self.local_peak_speed_rotate = self.current_speed_rotate
+
 	def setSpeedTranslate(self):
 		if(self.frame_counter_speed % 5 == 0):
 			self.TransTranslation1 = self.pcNode.Transform.value.get_translate()
@@ -498,8 +501,8 @@ class trackingManager(avango.script.Script):
 				if(self.first_rotate):
 					self.first_reversal_point_rotate = self.pcNode.Transform.value.get_rotate().get_angle()
 					self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
+					self.reversal_points_rotate.append(self.first_reversal_point_rotate)
 					self.first_rotate=False
-					# print("reversal")
 
 				if(self.local_peak_speed_rotate>THRESHHOLD_ROTATE):
 					self.speededup=True
