@@ -465,7 +465,7 @@ class DisksContainer():
 
 	'''setup the position of the disk inside the container'''
 	def setDisksTransMats(self, diam):
-		print("scaling to"+str(diam))
+		# print("scaling to"+str(diam))
 		self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)
 		self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)	
 		self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -r)*avango.gua.make_scale_mat(diam)

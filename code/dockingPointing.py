@@ -195,25 +195,27 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(ID)):
 			#auswerten
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
-				print("HIT: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal= True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 			else:
-				print("MISS: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal= False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 
 	def nextSettingStep(self):
-		if(self.startedTests== False):
-			self.lastTime = self.timer.value
-		self.startedTests= True
-		print(self.index)
 		if(self.counter%N == N-1):
-			self.index= self.index+1
+			self.index = self.index+1
+	
+		if(self.startedTests == False):
+			self.lastTime = self.timer.value
+			self.startedTests = True
+		else:
+			self.counter= self.counter+1
+		
+
 
 		if(self.index==len(ID)):
-			self.endedTests= True
+			self.endedTests = True
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
@@ -257,9 +259,6 @@ class trackingManager(avango.script.Script):
 				
 					self.disks.setDisksTransMats(targetDiameter[self.index])
 
-			
-			self.counter= self.counter+1
-
 			self.setID(self.index)
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
@@ -297,7 +296,7 @@ class trackingManager(avango.script.Script):
 				if os.path.isfile(os.path.join(path, f))])
 			self.created_logfile = True
 
-		if(self.startedTests and self.endedTests== False):
+		if(self.startedTests and self.endedTests == False):
 			self.logSetter()
 			logmanager.writeToFile(path+"docking_trial"+str(self.num_logfiles)+".csv")
 			self.resetValues()
@@ -527,12 +526,10 @@ class trackingManager(avango.script.Script):
 	def setID(self, index):
 		if(index<len(ID)):
 			self.ID = ID[index]
-		print("ID: "+ str(self.ID))
 
 	def setMT(self, start, end):
 		self.MT=end-start
 		self.lastTime = self.timer.value
-		print("Time: " + str(self.MT))
 
 	def setTP(self, index):
 		if(self.MT>0 and self.current_index<len(ID)):
