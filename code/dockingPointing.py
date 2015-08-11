@@ -130,8 +130,6 @@ class trackingManager(avango.script.Script):
 	MT= 0
 	ID= 0
 	TP= 0
-	overshoots= 0
-
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
@@ -205,7 +203,7 @@ class trackingManager(avango.script.Script):
 	def nextSettingStep(self):
 		if(self.counter%N == N-1):
 			self.index = self.index+1
-	
+
 		if(self.startedTests == False):
 			self.lastTime = self.timer.value
 			self.startedTests = True
@@ -323,8 +321,8 @@ class trackingManager(avango.script.Script):
 		if(self.getErrorTranslate() < self.aim.Transform.value.get_scale().x/2):
 			self.overshootInside_translate = True
 		else:
-			if(self.overshootInside_translate):
-				self.overshoots = self.overshootsTranslate+1
+			if(self.overshootInside_translate):#
+				self.overshootsTranslate = self.overshootsTranslate+1
 				self.overshootInside_translate = False
 
 	def checkRotateOvershoots(self):
@@ -332,7 +330,8 @@ class trackingManager(avango.script.Script):
 			self.overshootInside_rotate = True
 		else:
 			if(self.overshootInside_rotate):
-				self.overshootsTranslate = self.overshootsRotate+1
+				print("Overshoot")
+				self.overshootsRotate = self.overshootsRotate+1
 				self.overshootInside_rotate = False
 
 
