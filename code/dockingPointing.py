@@ -471,7 +471,7 @@ class trackingManager(avango.script.Script):
 				self.current_acceleration_rotate = div/time
 				
 				#noise filter
-				if(self.current_acceleration_rotate < 1):
+				if(math.fabs(self.current_acceleration_rotate) < 1):
 					self.current_acceleration_rotate = 0
 
 				if(self.current_acceleration_rotate > self.peak_acceleration_rotate):
@@ -496,9 +496,10 @@ class trackingManager(avango.script.Script):
 			else:
 				self.low_speed_counter_rotate=0
 				if(self.first_rotate):
-					self.first_reversal_point_rotate=self.pcNode.Transform.value.get_rotate().get_angle()
-					self.first_reversal_acceleration_rotate=self.current_acceleration_rotate
+					self.first_reversal_point_rotate = self.pcNode.Transform.value.get_rotate().get_angle()
+					self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
 					self.first_rotate=False
+					# print("reversal")
 
 				if(self.local_peak_speed_rotate>THRESHHOLD_ROTATE):
 					self.speededup=True
