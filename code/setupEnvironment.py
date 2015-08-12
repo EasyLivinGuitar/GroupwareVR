@@ -23,7 +23,7 @@ Then start the scene with the according start.sh
 
 '''Settings'''
 
-'''diablse translation on this axis'''
+'''disable translation on this axis'''
 disableZ = False
 disableY = False
 
@@ -36,9 +36,9 @@ taskDOFRotate = 1
 '''is the task above the table or is it on the table?'''
 space3D = True
 
-offsetTracking =  avango.gua.make_trans_mat(0.0, -0.14 - 0.405, 0.68)
+offsetTracking =  avango.gua.make_trans_mat(0.0, -0.34, 0.50)
 
-'''get the position pf the center where the pointer and the aim is located'''
+'''get the position of the center where the pointer and the aim is located.'''
 centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
 
 logResults = True
@@ -49,8 +49,11 @@ useAutoDetect =  False
 
 randomTargets = False
 
-'''radius of spikes from center'''
-r=0.10
+'''radius of spikes from center in the model file'''
+r_model=0.10
+
+'''radius of spikes displayed'''
+r = 0.20
 
 
 
@@ -196,6 +199,7 @@ class PencilContainer(avango.script.Script):
 	def __init__(self):
 		self.super(PencilContainer).__init__()
 		self.pencil = loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
+		self.pencil.Transform.value = avango.gua.make_scale_mat(r/r_model)
 		#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 		#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
 		#pencil.Material.value.set_uniform("Emissivity", 1.0)
@@ -211,10 +215,11 @@ class PencilContainer(avango.script.Script):
 		pointer_device_sensor.Matrix
 		everyObject.Children.value.append(self.pencil)
 
+
 	@field_has_changed(inputMat)
 	def pointermat_changed(self):
 		#get input
-		self.pencil.Transform.value = self.inputMat.value
+		self.pencil.Transform.value = self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
 		#then reduce
 		self.reducePencilMat()
 
@@ -257,7 +262,7 @@ class PencilContainer(avango.script.Script):
 			z
 		)
 
-		self.pencil.Transform.value = translation * yRot		
+		self.pencil.Transform.value = translation * yRot * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())		
 
 
 class FieldManager(avango.script.Script):
@@ -428,6 +433,7 @@ class DisksContainer():
 		self.disk6 = None
 		self.node = None
 
+	'''for attaching the disk to the pointer, the pointer is needed'''
 	def setupDisks(self, pencilNode):
 		#attack disks to pointer
 		self.node = avango.gua.nodes.TransformNode(
