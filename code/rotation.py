@@ -22,7 +22,7 @@ rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
 
-N=30 #number of tests per ID
+N=15 #number of tests per ID
 ID=[4, 5, 6] #fitt's law
 
 W=[]
