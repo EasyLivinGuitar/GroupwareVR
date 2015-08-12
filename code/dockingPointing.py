@@ -11,7 +11,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-DISABLEROTATION= False
+DISABLEROTATION= True
 
 
 r= setupEnvironment.r #circle radius
@@ -130,8 +130,6 @@ class trackingManager(avango.script.Script):
 	MT= 0
 	ID= 0
 	TP= 0
-	overshoots= 0
-
 
 	def __init__(self):
 		self.super(trackingManager).__init__()
@@ -195,25 +193,27 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(ID)):
 			#auswerten
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
-				print("HIT: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal= True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 			else:
-				print("MISS: Rot: " + str(self.getErrorRotate())+"° "+ "Trans: "+ str(self.getErrorTranslate()))
 				self.goal= False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
 
 	def nextSettingStep(self):
-		if(self.startedTests== False):
-			self.lastTime = self.timer.value
-		self.startedTests= True
-		print(self.index)
 		if(self.counter%N == N-1):
-			self.index= self.index+1
+			self.index = self.index+1
+
+		if(self.startedTests == False):
+			self.lastTime = self.timer.value
+			self.startedTests = True
+		else:
+			self.counter= self.counter+1
+		
+
 
 		if(self.index==len(ID)):
-			self.endedTests= True
+			self.endedTests = True
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
@@ -257,9 +257,6 @@ class trackingManager(avango.script.Script):
 				
 					self.disks.setDisksTransMats(targetDiameter[self.index])
 
-			
-			self.counter= self.counter+1
-
 			self.setID(self.index)
 		else: #trial over
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
@@ -297,7 +294,7 @@ class trackingManager(avango.script.Script):
 				if os.path.isfile(os.path.join(path, f))])
 			self.created_logfile = True
 
-		if(self.startedTests and self.endedTests== False):
+		if(self.startedTests and self.endedTests == False):
 			self.logSetter()
 			logmanager.writeToFile(path+"docking_trial"+str(self.num_logfiles)+".csv")
 			self.resetValues()
@@ -324,8 +321,8 @@ class trackingManager(avango.script.Script):
 		if(self.getErrorTranslate() < self.aim.Transform.value.get_scale().x/2):
 			self.overshootInside_translate = True
 		else:
-			if(self.overshootInside_translate):
-				self.overshoots = self.overshootsTranslate+1
+			if(self.overshootInside_translate):#
+				self.overshootsTranslate = self.overshootsTranslate+1
 				self.overshootInside_translate = False
 
 	def checkRotateOvershoots(self):
@@ -333,7 +330,7 @@ class trackingManager(avango.script.Script):
 			self.overshootInside_rotate = True
 		else:
 			if(self.overshootInside_rotate):
-				self.overshootsTranslate = self.overshootsRotate+1
+				self.overshootsRotate = self.overshootsRotate+1
 				self.overshootInside_rotate = False
 
 
@@ -413,16 +410,13 @@ class trackingManager(avango.script.Script):
 
 	def setSpeedRotate(self):
 		if(self.frame_counter_speed % 5 == 0):
-			# self.PencilRotation1= setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
 			self.PencilRotation1= self.pcNode.Transform.value.get_rotate()
 			self.start_time = self.timer.value
 		else: 
 			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
-				# self.PencilRotation2= setupEnvironment.get_euler_angles(self.pencilTransMat.value.get_rotate())
-				self.PencilRotation2= self.pcNode.Transform.value.get_rotate()
+				self.PencilRotation2 = self.pcNode.Transform.value.get_rotate()
 				self.end_time = self.timer.value
-				# div=math.fabs(self.PencilRotation2[0]-self.PencilRotation1[0])+math.fabs(self.PencilRotation2[1]-self.PencilRotation1[1])+ math.fabs(self.PencilRotation2[2]-self.PencilRotation1[2])
-				div= setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div = setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 				time = self.end_time-self.start_time
 				self.current_speed_rotate = div / time
 
@@ -431,6 +425,9 @@ class trackingManager(avango.script.Script):
 
 				if(self.current_speed_rotate > self.peak_speed_rotate):
 					self.peak_speed_rotate = self.current_speed_rotate
+
+				if(self.current_speed_rotate > self.local_peak_speed_rotate):
+					self.local_peak_speed_rotate = self.current_speed_rotate
 
 	def setSpeedTranslate(self):
 		if(self.frame_counter_speed % 5 == 0):
@@ -453,14 +450,14 @@ class trackingManager(avango.script.Script):
 		
 	def setAccelerationTranslate(self):
 		if(self.frame_counter_acceleration % 5 == 0):
-			self.speed_time1= self.current_speed_translate
-			self.start_time2= self.timer.value
+			self.speed_at_start_translate = self.current_speed_translate
+			self.start_time_translate = self.timer.value
 		else:
 			if(self.frame_counter_acceleration % 5 == FRAMES_FOR_SPEED-1):
-				self.speed_time2 = self.current_speed_translate
-				self.end_time2 = self.timer.value
-				div = self.speed_time2-self.speed_time1
-				time = self.end_time2-self.start_time2
+				
+				div = self.current_speed_translate - self.speed_at_start_translate
+				time = self.timer.value - self.start_time_translate
+				
 				self.current_acceleration_translate = div/time
 
 				if(self.current_acceleration_translate > self.peak_acceleration_translate):
@@ -468,15 +465,17 @@ class trackingManager(avango.script.Script):
 
 	def setAccelerationRotate(self):
 		if(self.frame_counter_acceleration % 5 == 0):
-			self.speed_time1= self.current_speed_rotate
-			self.start_time2= self.timer.value
+			self.speed_at_start_rotate = self.current_speed_rotate
+			self.start_time_rotate = self.timer.value
 		else:
 			if(self.frame_counter_acceleration % 5 == FRAMES_FOR_SPEED-1):
-				self.speed_time2= self.current_speed_rotate
-				self.end_time2 = self.timer.value
-				div = self.speed_time2 - self.speed_time1
-				time = self.end_time2-self.start_time2
+				div = self.current_speed_rotate - self.speed_at_start_rotate
+				time = self.timer.value - self.start_time_rotate
 				self.current_acceleration_rotate = div/time
+				
+				#noise filter
+				if(math.fabs(self.current_acceleration_rotate) < 1):
+					self.current_acceleration_rotate = 0
 
 				if(self.current_acceleration_rotate > self.peak_acceleration_rotate):
 					self.peak_acceleration_rotate = self.current_acceleration_rotate
@@ -500,8 +499,9 @@ class trackingManager(avango.script.Script):
 			else:
 				self.low_speed_counter_rotate=0
 				if(self.first_rotate):
-					self.first_reversal_point_rotate=self.pcNode.Transform.value.get_rotate().get_angle()
-					self.first_reversal_acceleration_rotate=self.current_acceleration_rotate
+					self.first_reversal_point_rotate = self.pcNode.Transform.value.get_rotate().get_angle()
+					self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
+					self.reversal_points_rotate.append(self.first_reversal_point_rotate)
 					self.first_rotate=False
 
 				if(self.local_peak_speed_rotate>THRESHHOLD_ROTATE):
@@ -527,12 +527,10 @@ class trackingManager(avango.script.Script):
 	def setID(self, index):
 		if(index<len(ID)):
 			self.ID = ID[index]
-		print("ID: "+ str(self.ID))
 
 	def setMT(self, start, end):
 		self.MT=end-start
 		self.lastTime = self.timer.value
-		print("Time: " + str(self.MT))
 
 	def setTP(self, index):
 		if(self.MT>0 and self.current_index<len(ID)):

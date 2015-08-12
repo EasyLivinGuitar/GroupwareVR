@@ -137,7 +137,7 @@ class trackingManager(avango.script.Script):
 		self.disks.setTranslate(
 			avango.gua.make_trans_mat( self.pcNode.Transform.value.get_translate() )
 		)
-		if self.startedTests and self.endedTests==False:
+		if self.endedTests==False:
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
@@ -243,9 +243,9 @@ class trackingManager(avango.script.Script):
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
-				self.end_time=self.timer.value
 				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
-				time=self.end_time-self.start_time
+
+				time=self.timer.value - self.start_time
 				self.current_speed=div/time
 
 				if(self.current_speed<10**-3):
@@ -377,16 +377,11 @@ class trackingManager(avango.script.Script):
 		logmanager.set("USER_ID", self.userID)
 		logmanager.set("GROUP", self.group)
 		if setupEnvironment.space3D:
-			logmanager.set("DOF_VIRTUAL_TRANSLATE", setupEnvironment.getDOFTranslate())
-			logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
-			logmanager.set("DOF_REAL_TRANSLATE", 0)
 			logmanager.set("DOF_REAL_ROTATE", 3)
 		else:
-			# if setupEnvironment.reduceDOFTranslate:
-			logmanager.set("DOF_VIRTUAL_TRANSLATE", 0)
-			logmanager.set("DOF_VIRTUAL_ROTATE", 1)
-			logmanager.set("DOF_REAL_TRANSLATE", 0)
 			logmanager.set("DOF_REAL_ROTATE", 1)
+
+		logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
 
 		if self.backAndForth:
 			logmanager.set("MOVEMENT_DIRECTION","r")
@@ -405,13 +400,14 @@ class trackingManager(avango.script.Script):
 		logmanager.set("SUCCESS",self.goal)
 		logmanager.set("HIT_TYPE", hit_type)
 		logmanager.set("MOVEMENT_TIME", self.MT)
-		logmanager.set("ERROR_TRANSLATE", 0)
 		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
 
 		logmanager.set("OVERSHOOTS_ROTATE",self.overshoots)
 		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed)
 		if(self.peak_acceleration > 0):
 			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration/self.peak_acceleration)
+		else:
+			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
 		logmanager.set("FIRST_REVERSAL_POINT", self.first_reversal_point)
 		logmanager.set("REVERSAL_POINTS", len(self.reversal_points))
 
