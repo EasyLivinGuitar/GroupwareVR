@@ -28,10 +28,10 @@ disableZ = False
 disableY = False
 
 '''if one rotation axis should be locked/disabled. Switches beetween 3DOf and 1DOF'''
-virtualDOFRotate = 1
+virtualDOFRotate = 3
 
 '''should the task swich between rotation aims using 3 or 1 dof?'''
-taskDOFRotate = 1
+taskDOFRotate = 3
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -44,7 +44,7 @@ centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
 logResults = True
 saveReplay = False
 
-'''if true needs a button press or next step, if false then autodetects'''
+'''if false needs a button press or next step, if true then autodetects'''
 useAutoDetect =  False
 
 randomTargets = False
