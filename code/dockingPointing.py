@@ -43,6 +43,10 @@ FRAMES_FOR_AUTODETECT_ROTATE=3
 THRESHHOLD_ROTATE=40
 FRAMES_FOR_SPEED=4 #How many frames taken to calculate speed and acceleration
 
+if DISABLEROTATION:
+	taskString = "pointing"
+else:
+	taskString = "docking"
 
 graph = avango.gua.nodes.SceneGraph(Name ="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
@@ -274,10 +278,7 @@ class trackingManager(avango.script.Script):
 
 
 	def getPath(self):
-		if DISABLEROTATION:
-			path="results/pointing_"+str(setupEnvironment.taskDOFRotate)+"DOF/"
-		else:
-			path="results/docking_"+str(setupEnvironment.taskDOFRotate)+"DOF/"
+		path="results/"+taskString+"_"+str(setupEnvironment.taskDOFRotate)+"DOF/"
 
 		#create dir if not existent
 		if not os.path.exists(path):
@@ -296,7 +297,7 @@ class trackingManager(avango.script.Script):
 
 		if(self.startedTests and self.endedTests == False):
 			self.logSetter()
-			logmanager.writeToFile(path+"docking_trial"+str(self.num_logfiles)+".csv")
+			logmanager.writeToFile(path+taskString+"_trial"+str(self.num_logfiles)+".csv")
 			self.resetValues()
 
 	def logReplay(self):
@@ -308,7 +309,7 @@ class trackingManager(avango.script.Script):
 					if os.path.isfile(os.path.join(path, f))])
 				self.created_replayfile = True
 			else: #write permanent values
-				self.result_file = open(path+"docking_trial"+str(self.num_files)+".replay", "a+")
+				self.result_file = open(path+taskString+"_trial"+str(self.num_logfiles)+".replay", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
