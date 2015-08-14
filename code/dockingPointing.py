@@ -11,7 +11,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-DISABLEROTATION= True
+DISABLEROTATION = False
 
 
 r= setupEnvironment.r #circle radius
@@ -197,15 +197,23 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(ID)):
 			#auswerten
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
+				#hit
 				self.goal= True
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+				if DISABLEROTATION:
+					setupEnvironment.playSound("balloon")
+				else:
+					setupEnvironment.playSound("hit_rotate")
 			else:
+				#miss
 				self.goal= False
 				setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+				setupEnvironment.playSound("miss")
 
 
 	def nextSettingStep(self):
 		if(self.counter%N == N-1):
+			setupEnvironment.playSound("levelUp")
 			self.index = self.index+1
 
 		if(self.startedTests == False):

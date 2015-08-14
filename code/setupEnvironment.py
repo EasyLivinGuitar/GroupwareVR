@@ -28,10 +28,10 @@ disableZ = False
 disableY = False
 
 '''if one rotation axis should be locked/disabled. Switches beetween 3DOf and 1DOF'''
-virtualDOFRotate = 3
+virtualDOFRotate = 1
 
 '''should the task swich between rotation aims using 3 or 1 dof?'''
-taskDOFRotate = 3
+taskDOFRotate = 1
 
 '''is the task above the table or is it on the table?'''
 space3D = True
@@ -71,13 +71,16 @@ window = avango.gua.nodes.GlfwWindow(
 		LeftResolution=resolution,
 		RightResolution=resolution,
 		StereoMode=avango.gua.StereoMode.CHECKERBOARD
-		)
+)
 
 #sound
 soundtraverser = avango.sound.nodes.SoundTraverser()
 soundRenderer = avango.sound.openal.nodes.OpenALSoundRenderer()
 soundRenderer.Device.value = ""
 soundtraverser.Renderers.value = [soundRenderer]
+
+hitRotateSound = avango.sound.nodes.SoundSource()
+#levelUpSound = avango.sound.nodes.SoundSource()
 balloonSound = avango.sound.nodes.SoundSource()
 missSound = avango.sound.nodes.SoundSource()
 
@@ -181,6 +184,16 @@ def setup(graph):
 	balloonSound.Play.value = True
 	graph.Root.value.Children.value.extend([balloonSound])
 
+	hitRotateSound.URL.value = "data/sounds/hit_rotate.wav"
+	hitRotateSound.Loop.value = False
+	hitRotateSound.Play.value = True
+	graph.Root.value.Children.value.extend([hitRotateSound])
+
+	# levelUpSound.URL.value = "data/sounds/level_up.wav"
+	# levelUpSound.Loop.value = False
+	# levelUpSound.Play.value = True
+	# graph.Root.value.Children.value.extend([levelUpSound])
+
 	missSound.URL.value = "data/sounds/miss.ogg"
 	missSound.Loop.value = False
 	missSound.Play.value = True
@@ -222,6 +235,7 @@ class PencilContainer(avango.script.Script):
 		self.pencil.Transform.value = self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
 		#then reduce
 		self.reducePencilMat()
+		print(self.inputMat.value)
 
 	def getNode(self):
 		return self.pencil
@@ -266,18 +280,12 @@ class PencilContainer(avango.script.Script):
 
 
 class FieldManager(avango.script.Script):
-	TransMat = avango.gua.SFMatrix4()
 	timer= avango.SFFloat()
 	time= 0
 
 	def __init__(self):
-
 		self.super(FieldManager).__init__()
 	
-	@field_has_changed(TransMat)
-	def transMatHasChanged(self):
-		print(self.TransMat.value)
-
 	@field_has_changed(timer)
 	def update(self):
 		if(self.timer.value>=self.time):
@@ -309,6 +317,13 @@ def playSound(sound):
 	else:
 		if (sound == "miss"):
 			missSound.Play.value = True
+		else:
+			if sound == "hit_rotate":
+				hitRotateSound.Play.value = True
+			# else:
+			# 	if sound == "levelUp":
+			# 		levelUpSound.Play.value = True
+
 
 
 ## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
