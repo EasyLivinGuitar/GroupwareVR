@@ -27,15 +27,16 @@ Then start the scene with the according start.sh
 disableZ = False
 disableY = False
 
-'''if one rotation axis should be locked/disabled. Switches beetween 3DOf and 1DOF'''
-virtualDOFRotate = 1
+'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
+virtualDOFRotate = 3
 
-'''should the task swich between rotation aims using 3 or 1 dof?'''
-taskDOFRotate = 1
+'''should the task swich between rotation aims using 3  or 1 DOF?'''
+taskDOFRotate = 3
 
 '''is the task above the table or is it on the table?'''
 space3D = True
 
+''' difference from screen center to center of tracking'''
 offsetTracking =  avango.gua.make_trans_mat(0.0, -0.34, 0.50)
 
 '''get the position of the center where the pointer and the aim is located.'''
