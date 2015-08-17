@@ -510,7 +510,7 @@ class DisksContainer():
 		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
 
 		if virtualDOFRotate==3:
-			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 1.0, 0.0, 0.6))
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 1.0, 0.0, 0.6))
 			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
 
 	def setColor(self):

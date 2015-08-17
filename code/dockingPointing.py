@@ -11,7 +11,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-DISABLEROTATION = True
+DISABLEROTATION = False
 
 
 r = setupEnvironment.r #circle radius
@@ -137,8 +137,7 @@ class trackingManager(avango.script.Script):
 		self.super(trackingManager).__init__()
 		self.isInside = False;
 		self.startTime = 0
-		self.backAndForth = False
-		self.backAndForthAgain = False;
+		self.taskNum = 0
 		self.disks = setupEnvironment.DisksContainer()
 		self.aim = None
 		self.aimShadow = None
@@ -245,12 +244,12 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(ID)):
 			#move target			
 			if setupEnvironment.randomTargets:
-				if (not DISABLEROTATION):
+				if not DISABLEROTATION:
 					if setupEnvironment.taskDOFRotate ==3:
-						rotation= self.getRandomRotation3D()
+						rotation = self.getRandomRotation3D()
 						self.disks.setRotation(rotation)
 					else:
-						rotation= self.getRandomRotation2D()
+						rotation = self.getRandomRotation2D()
 						self.disks.setRotation(rotation)
 			else:
 
@@ -262,25 +261,27 @@ class trackingManager(avango.script.Script):
 				self.aim.Transform.value = avango.gua.make_trans_mat(self.aim.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])
 				self.aimShadow.Transform.value = avango.gua.make_trans_mat(self.aimShadow.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])	
 				
-				if (not DISABLEROTATION):
-					if self.backAndForth: #aim get right
-						distance = 0
-						rotateAroundX = 0
-						self.backAndForth= False
+				if not DISABLEROTATION:
+					if self.taskNum==0 or self.taskNum==2:
+						distance = D_rot
+						if setupEnvironment.taskDOFRotate == 3:
+							rotateAroundX = 1
+						else:
+							rotateAroundX = 0
 					else:
 						distance = D_rot
-						self.backAndForth= True
-						rotateAroundX= 0
-						if not self.backAndForthAgain:
-							self.backAndForthAgain= True
-							if setupEnvironment.taskDOFRotate ==3:
-								rotateAroundX=1
-							else:
-								rotateAroundX= 0
+						if self.taskNum==1:
+							rotateAroundX= 0
+						else:#3
+							distance = 0
+							rotateAroundX = 0
+							
 
 					self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
-				
-					self.disks.setDisksTransMats(targetDiameter[self.index])
+					self.taskNum = (self.taskNum+1) % 4
+
+				self.disks.setDisksTransMats(targetDiameter[self.index])
+					
 
 			self.setID(self.index)
 		else: #trial over
@@ -381,10 +382,10 @@ class trackingManager(avango.script.Script):
 		logmanager.set("DOF VIRTUAL T", setupEnvironment.getDOFTranslate())
 		logmanager.set("DOF VIRTUAL R", setupEnvironment.virtualDOFRotate)
 
-		if self.backAndForth:
-			logmanager.set("movement direction", "r")
-		else:
-			logmanager.set("movement direction", "l")
+		#if self.backAndForth:
+		logmanager.set("movement direction", "r")
+		#else:
+		#	logmanager.set("movement direction", "l")
 
 		logmanager.set("target distance T", D_trans)
 		logmanager.set("target width T", W_trans[self.index])
