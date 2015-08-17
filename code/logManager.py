@@ -16,13 +16,13 @@ class logManager():
 	def writeToFile(self, path):
 		logFile = open(path, "a+")
 
-		MT_index = self.findIndexOf("MOVEMENT_TIME")
-		ID_index = self.findIndexOf("ID_COMBINED")
+		mt = self.dictionary[self.findIndexOf("MT")][1]
+		id_combined = self.dictionary[self.findIndexOf("ID combined")][1]
 
-		if(self.dictionary[MT_index][1]>0):
-			self.dictionary.append(("THROUGHPUT", self.dictionary[ID_index][1]/self.dictionary[MT_index][1]))
+		if(mt>0):
+			self.dictionary.append(("TP", id_combined / mt))
 		else:
-			self.dictionary.append(("THROUGHPUT", "ERROR"))
+			self.dictionary.append(("TP", "ERROR"))
 
 		# print header only once
 		if(self.header_printed == False):

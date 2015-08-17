@@ -1,5 +1,0 @@
-- logging Reihenfolge
-- logging leere Felder im log fix
-- autodetect
-- replay?
-- (sound)

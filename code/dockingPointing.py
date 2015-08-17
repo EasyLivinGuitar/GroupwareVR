@@ -14,7 +14,7 @@ from avango.script import field_has_changed
 DISABLEROTATION = False
 
 
-r= setupEnvironment.r #circle radius
+r = setupEnvironment.r #circle radius
 
 #fitt's law parameter
 D_rot=45 #in degrees
@@ -23,7 +23,7 @@ ID=[3, 5, 6] #fitt's law
 N=15 #number of tests per ID
 W_rot=[]
 W_trans=[]
-targetDiameter=[]
+targetDiameter =[]
 for i in range(0, len(ID)):
 	W_rot.append(D_rot/(2**(ID[i]/2)-1)) #in degrees, Fitt's Law umgeformt nach W
 
@@ -52,7 +52,7 @@ graph = avango.gua.nodes.SceneGraph(Name ="scenegraph") #Create Graph
 loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 
-logmanager=logManager.logManager()
+logmanager =logManager.logManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
@@ -67,7 +67,7 @@ class trackingManager(avango.script.Script):
 	created_replayfile = False
 
 	current_index= 0
-	counter= 0
+	counter = 0
 
 	#Logging
 	userID= 0
@@ -129,8 +129,8 @@ class trackingManager(avango.script.Script):
 	trial= 0
 	hits= 0
 	goal = False
-	error= 0
-	last_error= 0
+	error = 0
+	last_error = 0
 	MT= 0
 	ID= 0
 	TP= 0
@@ -220,7 +220,7 @@ class trackingManager(avango.script.Script):
 			self.lastTime = self.timer.value
 			self.startedTests = True
 		else:
-			self.counter= self.counter+1
+			self.counter = self.counter+1
 		
 
 
@@ -362,60 +362,59 @@ class trackingManager(avango.script.Script):
 		logmanager.set("USER GROUP", self.group)
 
 		if(setupEnvironment.space3D):
-			logmanager.set("DOF_REAL_TRANSLATE", 3)
-			logmanager.set("DOF_REAL_ROTATE", 3)
+			logmanager.set("DOF real T", 3)
+			logmanager.set("DOF real R", 3)
 		else:
-			logmanager.set("DOF_REAL_TRANSLATE", 2)
-			logmanager.set("DOF_REAL_ROTATE", 1)
-		logmanager.set("DOF_VIRTUAL_TRANSLATE", setupEnvironment.getDOFTranslate())
-		logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
+			logmanager.set("DOF REAL T", 2)
+			logmanager.set("DOF REAL R", 1)
+		logmanager.set("DOF VIRTUAL T", setupEnvironment.getDOFTranslate())
+		logmanager.set("DOF VIRTUAL R", setupEnvironment.virtualDOFRotate)
 
 		if self.backAndForth:
-			logmanager.set("MOVEMENT_DIRECTION", "r")
+			logmanager.set("movement direction", "r")
 		else:
-			logmanager.set("MOVEMENT_DIRECTION", "l")
+			logmanager.set("movement direction", "l")
 
-		logmanager.set("TARGET_DISTANCE_T", D_trans)
-		logmanager.set("TARGET_WIDTH_T", W_trans[self.index])
-		logmanager.set("TARGET_DISTANCE_R", D_rot)
-		logmanager.set("TARGET_WIDTH_R", W_rot[self.index])
-		logmanager.set("ID_COMBINED", self.ID)
+		logmanager.set("target distance T", D_trans)
+		logmanager.set("target width T", W_trans[self.index])
+		logmanager.set("target distance R", D_rot)
+		logmanager.set("target width R", W_rot[self.index])
+		logmanager.set("ID combined", self.ID)
 		if DISABLEROTATION:
-			logmanager.set("ID_TRANSLATE", self.ID)
-			logmanager.set("ID_ROTATE", 0)
+			logmanager.set("ID T", self.ID)
+			logmanager.set("ID R", 0)
 		else:
-			logmanager.set("ID_TRANSLATE", self.ID/2)
-			logmanager.set("ID_ROTATE", self.ID/2)
+			logmanager.set("ID T", self.ID/2)
+			logmanager.set("ID R ", self.ID/2)
 		logmanager.set("REPETITION", N)
 		logmanager.set("TRIAL", self.trial)
 		logmanager.set("BUTTON CLICKS", self.clicks)
 		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
 		logmanager.set("SUCCESS", self.goal)
-		logmanager.set("OVERSHOOTS_ROTATE", self.overshootsRotate)
-		logmanager.set("OVERSHOOTS_TRANSLATE", self.overshootsTranslate)
-		logmanager.set("PEAK_ACCELERATION_TRANSLATE", self.peak_acceleration_translate)
-		logmanager.set("PEAK_ACCELERATION_ROTATE", self.peak_acceleration_rotate)
-		if (self.peak_acceleration_rotate>0):
-			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration_rotate/self.peak_acceleration_rotate)
+		logmanager.set("OVERSHOOTS R", self.overshootsRotate)
+		logmanager.set("OVERSHOOTS T", self.overshootsTranslate)
+		logmanager.set("PEAK ACCELERATION T", self.peak_acceleration_translate)
+		logmanager.set("PEAK ACCELERATION R", self.peak_acceleration_rotate)
+		if (self.peak_acceleration_rotate > 0):
+			logmanager.set("MOVEMENT CONTINUITY R", self.first_reversal_acceleration_rotate / self.peak_acceleration_rotate)
 		else:
-			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
+			logmanager.set("MOVEMENT CONTINUITY R", "#DIV0")
 		if (self.peak_acceleration_translate > 0):
-			logmanager.set("MOVEMENT_CONTINUITY_TRANSLATE", self.first_reversal_acceleration_translate/self.peak_acceleration_translate)
+			logmanager.set("MOVEMENT CONTINUITY T", self.first_reversal_acceleration_translate / self.peak_acceleration_translate)
 		else:
-			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
-		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed_rotate)
-		logmanager.set("PEAK_SPEED_TRANSLATE", self.peak_speed_translate)
-		logmanager.set("HIT_TYPE", hit_type)
-		logmanager.set("MOVEMENT_TIME", self.MT)
-		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
-		logmanager.set("ERROR_TRANSLATE", self.getErrorTranslate())
-		logmanager.set("FIRST_REVERSAL_ROTATE", self.first_reversal_point_rotate)
-		logmanager.set("FIRST_REVERSAL_TRANSLATE", self.first_reversal_point_translate)
-		logmanager.set("REVERSAL_POINTS_ROTATE", len(self.reversal_points_rotate))
-		logmanager.set("REVERSAL_POINTS_TRANSLATE", len(self.reversal_points_translate))
+			logmanager.set("MOVEMENT CONTINUITY R", "#DIV0")
+		logmanager.set("PEAK SPEED R", self.peak_speed_rotate)
+		logmanager.set("PEAK SPEED T", self.peak_speed_translate)
+		logmanager.set("HIT TYPE", hit_type)
+		logmanager.set("MT", self.MT)
+		logmanager.set("ERROR R ", self.getErrorRotate())
+		logmanager.set("ERROR T", self.getErrorTranslate())
+		logmanager.set("FIRST REVERSAL R", self.first_reversal_point_rotate)
+		logmanager.set("FIRST REVERSAL T", self.first_reversal_point_translate)
+		logmanager.set("REVERSAL POINTS R", len(self.reversal_points_rotate))
+		logmanager.set("REVERSAL POINTS T", len(self.reversal_points_translate))
 
-
-		self.trial = self.trial+1
+		self.trial = self.trial + 1
 
 	def setSpeedRotate(self):
 		if(self.frame_counter_speed % 5 == 0):
@@ -555,10 +554,10 @@ class trackingManager(avango.script.Script):
 					print("Test ended")
 
 
-def start ():
+def start():
 	trackManager = trackingManager()
-	trackManager.userID=input("USER_ID: ")
-	trackManager.group=input("GROUP: ")
+	trackManager.userID = input("USER ID: ")
+	trackManager.group = input("GROUP: ")
 
 	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
@@ -568,7 +567,7 @@ def start ():
 	aimBalloon.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
 	setupEnvironment.everyObject.Children.value.append(aimBalloon)
 
-	aimShadow  = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 	setupEnvironment.everyObject.Children.value.append(aimShadow)
@@ -585,9 +584,8 @@ def start ():
 
 
 	#listen to button
-	button_sensor=avango.daemon.nodes.DeviceSensor(DeviceService =avango.daemon.DeviceService())
+	button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 	button_sensor.Station.value ="device-pointer"
-
 	trackManager.Button.connect_from(button_sensor.Button0)
 
 	#timer

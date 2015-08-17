@@ -235,7 +235,7 @@ class PencilContainer(avango.script.Script):
 		self.pencil.Transform.value = self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
 		#then reduce
 		self.reducePencilMat()
-		print(self.inputMat.value)
+		#print(self.inputMat.value)
 
 	def getNode(self):
 		return self.pencil
