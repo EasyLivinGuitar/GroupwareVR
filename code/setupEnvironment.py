@@ -55,9 +55,12 @@ r_model=0.10
 '''radius of spikes displayed'''
 r = 0.20
 
+'''highlight if inside the target'''
+showWhenInTarget = True
 
 
-timer=avango.nodes.TimeSensor()
+
+timer = avango.nodes.TimeSensor()
 
 res_pass = avango.gua.nodes.ResolvePassDescription()
 
@@ -456,28 +459,22 @@ class DisksContainer():
 		)
 
 		self.disk1 = loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
 		self.node.Children.value.append(self.disk1)
 		
 		self.disk2 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
 		self.node.Children.value.append(self.disk2)
 
 		self.disk3 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		self.node.Children.value.append(self.disk3)
 
 		self.disk6 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 		self.node.Children.value.append(self.disk6)
 
 		if virtualDOFRotate==3:
 			self.disk4 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
 			self.node.Children.value.append(self.disk4)
 	
 			self.disk5 = loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 			self.node.Children.value.append(self.disk5)
 
 
@@ -504,3 +501,23 @@ class DisksContainer():
 	
 	def getRotate(self):
 		return self.node.Transform.value.get_rotate_scale_corrected()
+
+	def highlightRed(self):
+		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.0, 1.0, 0.6))
+		self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
+		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
+		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
+
+		if virtualDOFRotate==3:
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 1.0, 0.0, 0.6))
+			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
+
+	def setColor(self):
+		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
+		self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
+		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
+
+		if virtualDOFRotate==3:
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
+			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
