@@ -189,6 +189,9 @@ class trackingManager(avango.script.Script):
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
 				else:
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
+			self.aim.Material.EnableBackfaceCulling = False
+			self.aim.Material.EnableBackFaceCulling = False
+			self.aim.Material.BackfaceCulling = False
 
 		#set logging vars
 		if self.startedTests and self.endedTests== False:
@@ -379,10 +382,7 @@ class trackingManager(avango.script.Script):
 		logmanager.set("DOF virtual T", setupEnvironment.getDOFTranslate())
 		logmanager.set("DOF virtual R", setupEnvironment.virtualDOFRotate)
 
-		#if self.backAndForth:
-		logmanager.set("movement direction", "r")
-		#else:
-		#	logmanager.set("movement direction", "l")
+		logmanager.set("movement direction", self.aim.Transform.value.get_translate()-self.aimShadow.Transform.value.get_translate())
 
 		logmanager.set("target distance T", D_trans)
 		logmanager.set("target width T", W_trans[self.index])
@@ -574,14 +574,15 @@ def start():
 	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
 	setupEnvironment.setup(graph)
 
-	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aim.Transform.value = avango.gua.make_trans_mat(-D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
-	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
+	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
 	setupEnvironment.everyObject.Children.value.append(trackManager.aim)
 
-	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/sphere_new.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+	trackManager.aimShadow.Material.EnableBackFaceCulling = False
 	setupEnvironment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes

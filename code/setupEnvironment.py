@@ -24,9 +24,9 @@ Then start the scene with the according start.sh
 '''Settings'''
 
 '''disable translation on this axis'''
-disableZ = True
-disableY = True
-disableX = True #should only be used for rotation
+disableZ = False
+disableY = False
+disableX = False #should only be used for rotation
 
 '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 virtualDOFRotate = 3
