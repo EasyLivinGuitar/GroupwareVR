@@ -41,7 +41,7 @@ space3D = True
 offsetTracking =  avango.gua.make_trans_mat(0.0, -0.34, 0.50)
 
 '''get the position of the center where the pointer and the aim is located.'''
-centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0.38)
+centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0)
 
 logResults = True
 saveReplay = False

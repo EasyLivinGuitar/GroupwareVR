@@ -91,7 +91,7 @@ class trackingManager(avango.script.Script):
 	#Logging
 	userID=0
 	group=0
-	trial=0
+	trial=1
 	succesful_clicks=0
 	MT=0
 	ID=0
@@ -120,7 +120,6 @@ class trackingManager(avango.script.Script):
 	def button_pressed(self):
 		if self.Button.value==True:
 			if(self.endedTests==False):
-				self.startedTests=True
 				self.select()
 				if setupEnvironment.logResults:	
 					self.logData()				
@@ -206,8 +205,10 @@ class trackingManager(avango.script.Script):
 
 				self.disks.setDisksTransMats(targetDiameter[self.index])
 
-			
-			self.counter=self.counter+1
+			if(self.startedTests):
+				self.counter=self.counter+1
+			else:
+				self.startedTests=True
 
 			self.setID(self.index)
 		else: #trial over
