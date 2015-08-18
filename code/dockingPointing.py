@@ -72,7 +72,7 @@ class trackingManager(avango.script.Script):
 	#Logging
 	userID = 0
 	group = 0
-	trial = 0
+	trial = 1
 	clicks = 0
 
 	MT = 0
