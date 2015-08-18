@@ -25,20 +25,20 @@ rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 N=15 #number of tests per ID
 ID=[4, 5, 6] #fitt's law
 
-W=[]
+W_rot=[]
 
 for i in range(0, len(ID)):
 	if setupEnvironment.randomTargets:
-		D=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
-		W=[D[0]/(2**ID[0]-1), D[0]/(2**ID[1]-1), D[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W
+		D_rot=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
+		W_rot=[D_rot[0]/(2**ID[0]-1), D_rot[0]/(2**ID[1]-1), D_rot[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W_rot
 	else:
-		D=100
-		W.append(D/(2**ID[i]-1))
+		D_rot=100
+		W_rot.append(D_rot/(2**ID[i]-1))
 
 targetDiameter = [
-	2*r*math.tan(W[0]/2*math.pi/180),
-	2*r*math.tan(W[1]/2*math.pi/180),
-	2*r*math.tan(W[2]/2*math.pi/180)
+	2*r*math.tan(W_rot[0]/2*math.pi/180),
+	2*r*math.tan(W_rot[1]/2*math.pi/180),
+	2*r*math.tan(W_rot[2]/2*math.pi/180)
 ]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 # print(targetDiameter)
@@ -76,17 +76,17 @@ class trackingManager(avango.script.Script):
 
 	current_speed=0
 	current_acceleration=0
-	peak_acceleration=0
-	peak_speed=0
+	peak_acceleration_r=0
+	peak_speed_r=0
 	speed_time1=0
 	speed_time2=0
 	first=False
-	reversal_points=[]
-	first_reversal_acceleration=0
-	first_reversal_point=0
-	low_speed_counter=0
-	speededup=True
-	local_peak_speed=0
+	reversal_points_r = []
+	first_reversal_acceleration_r = 0
+	first_reversal_point_r = 0
+	low_speed_counter = 0
+	speededup = True
+	local_peak_speed_r = 0
 
 	#Logging
 	userID=0
@@ -96,7 +96,7 @@ class trackingManager(avango.script.Script):
 	MT=0
 	ID=0
 	TP=0
-	overshoots=0
+	overshoots_r=0
 
 	overshootInside=False
 	goal=False
@@ -110,6 +110,7 @@ class trackingManager(avango.script.Script):
 		self.backAndForthAgain = False;
 		self.disks = setupEnvironment.DisksContainer()
 		self.pcNode = None
+		self.taskNum = 0
 
 	def __del__(self):
 		if setupEnvironment.logResults:
@@ -137,7 +138,17 @@ class trackingManager(avango.script.Script):
 		self.disks.setTranslate(
 			avango.gua.make_trans_mat( self.pcNode.Transform.value.get_translate() )
 		)
-		if self.endedTests==False:
+
+		if not self.endedTests:
+			#highlight rotation if near target
+			if setupEnvironment.showWhenInTarget:	
+				#highlight rotation if near target
+				if self.getErrorRotate() < W_rot[self.index]/2:
+					self.disks.highlightRed()
+				else:
+					self.disks.setColor()
+
+		if self.startedTests and self.endedTests==False:
 			self.setSpeed()
 			self.setAcceleration()
 			self.setOvershoots()
@@ -146,56 +157,8 @@ class trackingManager(avango.script.Script):
 		if setupEnvironment.saveReplay:	
 			self.logReplay()#save replay, todo
 
-	def nextSettingStep(self):
-		# print(self.index)
-		if(self.counter%N == N-1):
-			self.index=self.index+1
-
-		if(self.index==len(W)):
-			self.endedTests=True
-
-		#print("P:"+str( pencilRot )+"")
-		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
-		if(self.index < len(W)):
-
-			#move target			
-			if setupEnvironment.randomTargets:#select from random targets?
-				if setupEnvironment.taskDOFRotate==3:
-					self.disks.setRotation(self.getRandomRotation3D())
-				else:
-					self.disks.setRotation(self.getRandomRotation2D())
-
-			else:
-				if self.backAndForth: #aim get right
-					distance=0
-					rotateAroundX=0;
-					self.backAndForth=False
-				else:
-					distance=D
-					rotateAroundX=0
-					if self.backAndForthAgain:
-						self.backAndForthAgain = False
-						if setupEnvironment.taskDOFRotate==3:
-							rotateAroundX = 1
-						else:
-							rotateAroundX = 0
-					else:
-						self.backAndForthAgain = True 
-					self.backAndForth=True
-
-				self.disks.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-			
-				self.disks.setDisksTransMats(targetDiameter[self.index])
-
-			
-			self.counter=self.counter+1
-
-			self.setID(self.index)
-		else: #trial over
-			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
-
 	def select(self):
-		if self.getErrorRotate() < W[self.index]/2:
+		if self.getErrorRotate() < W_rot[self.index]/2:
 			# print("HIT:" + str(self.getErrorRotate())+"°")
 			self.goal=True
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
@@ -206,6 +169,50 @@ class trackingManager(avango.script.Script):
 			self.goal=False
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 
+	def nextSettingStep(self):
+		# print(self.index)
+		if(self.counter%N == N-1):
+			self.index=self.index+1
+
+		if(self.index==len(W_rot)):
+			self.endedTests=True
+
+		#print("P:"+str( pencilRot )+"")
+		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
+		if(self.index < len(W_rot)):
+
+			#move target			
+			if setupEnvironment.randomTargets:#select from random targets?
+				if setupEnvironment.taskDOFRotate==3:
+					self.disks.setRotation(self.getRandomRotation3D())
+				else:
+					self.disks.setRotation(self.getRandomRotation2D())
+
+			else:
+				if self.taskNum==0 or self.taskNum==2:
+					distance = D_rot
+					if setupEnvironment.taskDOFRotate == 3:
+						rotateAroundX = 1
+					else:
+						rotateAroundX = 0
+				else:
+					distance = D_rot
+					rotateAroundX = 0
+					if self.taskNum==3:
+						distance = 0
+
+				self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
+				self.taskNum = (self.taskNum+1) % 4
+
+				self.disks.setDisksTransMats(targetDiameter[self.index])
+
+			
+			self.counter=self.counter+1
+
+			self.setID(self.index)
+		else: #trial over
+			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
+
 
 	def getErrorRotate(self):
 		return setupEnvironment.getRotationError1D(
@@ -214,25 +221,25 @@ class trackingManager(avango.script.Script):
 		)
 
 	def autoDetect(self):
-		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed>THRESHHOLD):
+		if(math.fabs(self.current_speed) < THRESHHOLD and self.peak_speed_r>THRESHHOLD):
 			if(self.low_speed_counter < FRAMES_FOR_AUTODETECT-1):
 				self.low_speed_counter=self.low_speed_counter+1
 			else:
 				self.low_speed_counter=0
 				if(self.first):
-					self.first_reversal_point=self.pcNode.Transform.value.get_rotate().get_angle()
-					# print(self.first_reversal_point)
-					self.first_reversal_acceleration=self.current_acceleration
+					self.first_reversal_point_r=self.pcNode.Transform.value.get_rotate().get_angle()
+					# print(self.first_reversal_point_r)
+					self.first_reversal_acceleration_r=self.current_acceleration
 					self.first=False
 
-				# print(self.local_peak_speed)
-				if(self.local_peak_speed>THRESHHOLD):
+				# print(self.local_peak_speed_r)
+				if(self.local_peak_speed_r>THRESHHOLD):
 					self.speededup=True
-					self.local_peak_speed=0
+					self.local_peak_speed_r=0
 				
 				if(self.speededup):
 					print("reversal")
-					self.reversal_points.append(self.pcNode.Transform.value.get_rotate().get_angle())
+					self.reversal_points_r.append(self.pcNode.Transform.value.get_rotate().get_angle())
 					self.speededup=False
 
 
@@ -251,14 +258,14 @@ class trackingManager(avango.script.Script):
 				if(self.current_speed<10**-3):
 					self.current_speed=0
 
-				if(self.current_speed>self.peak_speed):
-					self.peak_speed=self.current_speed
+				if(self.current_speed>self.peak_speed_r):
+					self.peak_speed_r=self.current_speed
 				
-				if(self.current_speed>self.local_peak_speed):
-					self.local_peak_speed=self.current_speed
+				if(self.current_speed>self.local_peak_speed_r):
+					self.local_peak_speed_r=self.current_speed
 			
 				# print(self.current_speed)
-				# print(self.peak_speed)
+				# print(self.peak_speed_r)
 		self.frame_counter=self.frame_counter+1
 
 	def setAcceleration(self):
@@ -273,29 +280,29 @@ class trackingManager(avango.script.Script):
 				time=self.end_time2-self.start_time2
 				self.current_acceleration=div/time
 
-				if(self.current_acceleration>self.peak_acceleration):
-					self.peak_acceleration=self.current_acceleration
+				if(self.current_acceleration>self.peak_acceleration_r):
+					self.peak_acceleration_r=self.current_acceleration
 
 		self.frame_counter2=self.frame_counter2+1
 
 	def setOvershoots(self):
-		if(self.getErrorRotate() < W[self.index]/2):
+		if(self.getErrorRotate() < W_rot[self.index]/2):
 			self.overshootInside = True
 		else:
 			if(self.overshootInside):
-				self.overshoots=self.overshoots+1
+				self.overshoots_r=self.overshoots_r+1
 				self.overshootInside=False
 
 
 	def resetValues(self):
-		self.overshoots=0
-		self.peak_acceleration=0
-		self.first_reversal_acceleration=0
-		self.peak_speed=0
+		self.overshoots_r=0
+		self.peak_acceleration_r=0
+		self.first_reversal_acceleration_r=0
+		self.peak_speed_r=0
 		self.first=True
 		self.overshootInside=False
 		self.goal=False
-		self.reversal_points=[]
+		self.reversal_points_r=[]
 
 	def getRandomRotation3D(self):
 		settings=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
@@ -361,7 +368,7 @@ class trackingManager(avango.script.Script):
 		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
 
-		if self.getErrorRotate() < W[self.index]/2:
+		if self.getErrorRotate() < W_rot[self.index]/2:
 			self.goal= True
 		else:
 			self.goal= False
@@ -376,40 +383,37 @@ class trackingManager(avango.script.Script):
 
 		logmanager.set("USER_ID", self.userID)
 		logmanager.set("GROUP", self.group)
-		if setupEnvironment.space3D:
-			logmanager.set("DOF_REAL_ROTATE", 3)
+		if(setupEnvironment.space3D):
+			logmanager.set("DOF real R", 3)
 		else:
-			logmanager.set("DOF_REAL_ROTATE", 1)
-
-		logmanager.set("DOF_VIRTUAL_ROTATE", setupEnvironment.virtualDOFRotate)
-
-		if self.backAndForth:
-			logmanager.set("MOVEMENT_DIRECTION","r")
-		else:
-			logmanager.set("MOVEMENT_DIRECTION","l")
-
-		logmanager.set("ROTATION_AXIS","y")
-		logmanager.set("TARGET_DISTANCE_ROTATE",D)
-		logmanager.set("TARGET_WIDTH_ROTATE",W[self.index])
-		logmanager.set("ID_COMBINED", self.ID)
+			logmanager.set("DOF real R", 1)
+		logmanager.set("DOF virtual R", setupEnvironment.virtualDOFRotate)
+		logmanager.set("target distance R", D_rot)
+		logmanager.set("target width R", W_rot[self.index])
+		logmanager.set("TARGET_DISTANCE_ROTATE",D_rot)
+		logmanager.set("TARGET_WIDTH_ROTATE",W_rot[self.index])
+		logmanager.set("ID combined", self.ID)
+		logmanager.set("ID R", self.ID)
 		logmanager.set("REPETITION",N)
 		logmanager.set("TRIAL", self.trial)
-		if(setupEnvironment.useAutoDetect==False):
-			logmanager.set("CLICKS", self.trial)
-			logmanager.set("SUCCESSFUL_CLICKS", self.succesful_clicks)
-		logmanager.set("SUCCESS",self.goal)
-		logmanager.set("HIT_TYPE", hit_type)
-		logmanager.set("MOVEMENT_TIME", self.MT)
-		logmanager.set("ERROR_ROTATE", self.getErrorRotate())
-
-		logmanager.set("OVERSHOOTS_ROTATE",self.overshoots)
-		logmanager.set("PEAK_SPEED_ROTATE", self.peak_speed)
-		if(self.peak_acceleration > 0):
-			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", self.first_reversal_acceleration/self.peak_acceleration)
+		#logmanager.set("BUTTON CLICKS", self.clicks)
+		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
+		if self.goal:
+			logmanager.set("Hit", 1)
 		else:
-			logmanager.set("MOVEMENT_CONTINUITY_ROTATE", "#DIV0")
-		logmanager.set("FIRST_REVERSAL_POINT", self.first_reversal_point)
-		logmanager.set("REVERSAL_POINTS", len(self.reversal_points))
+			logmanager.set("Hit", 0)
+		logmanager.set("OVERSHOOTS R", self.overshoots_r)
+		logmanager.set("PEAK ACCELERATION R", self.peak_acceleration_r)
+		if (self.peak_acceleration_r > 0):
+			logmanager.set("MOVEMENT CONTINUITY R", self.first_reversal_acceleration_r / self.peak_acceleration_r)
+		else:
+			logmanager.set("MOVEMENT CONTINUITY R", "#DIV0")
+		logmanager.set("PEAK SPEED R", self.peak_speed_r)
+		logmanager.set("HIT TYPE", hit_type)
+		logmanager.set("MT", self.MT)
+		logmanager.set("ERROR R ", self.getErrorRotate())
+		logmanager.set("FIRST REVERSAL R", self.first_reversal_point_r)
+		logmanager.set("REVERSAL POINTS R", len(self.reversal_points_r))
 
 		self.trial=self.trial+1
 

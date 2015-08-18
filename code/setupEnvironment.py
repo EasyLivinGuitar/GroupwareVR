@@ -24,8 +24,9 @@ Then start the scene with the according start.sh
 '''Settings'''
 
 '''disable translation on this axis'''
-disableZ = False
-disableY = False
+disableZ = True
+disableY = True
+disableX = True #should only be used for rotation
 
 '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 virtualDOFRotate = 3
@@ -260,6 +261,10 @@ class PencilContainer(avango.script.Script):
 		else:
 			yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
 
+		if disableX:
+			x = 0
+		else:
+			x = self.getTransfromValue().get_translate().x - offsetTracking.get_translate().x
 
 		if disableY:
 			y = 0
@@ -275,13 +280,12 @@ class PencilContainer(avango.script.Script):
 			z = self.getTransfromValue().get_translate().z - offsetTracking.get_translate().z
 
 		translation = avango.gua.make_trans_mat(
-			self.getTransfromValue().get_translate().x - offsetTracking.get_translate().x,
+			x,
 			y,
 			z
 		)
 
 		self.pencil.Transform.value = translation * yRot * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())		
-
 
 class FieldManager(avango.script.Script):
 	timer= avango.SFFloat()
@@ -504,14 +508,14 @@ class DisksContainer():
 		return self.node.Transform.value.get_rotate_scale_corrected()
 
 	def highlightRed(self):
-		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.0, 1.0, 0.6))
+		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.2, 0.0, 0.9, 0.6))
 		self.disk2.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.0, 0.0, 0.6))
-		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
-		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
+		self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
+		self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
 
 		if virtualDOFRotate==3:
-			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.3, 1.0, 0.0, 0.6))
-			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.5, 0.5, 0.6))
+			self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.9, 0.0, 0.6))
+			self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
 
 	def setColor(self):
 		self.disk1.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 0.0, 1.0, 0.6))
