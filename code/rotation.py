@@ -163,10 +163,12 @@ class trackingManager(avango.script.Script):
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 			if(setupEnvironment.useAutoDetect==False):
 				self.succesful_clicks=self.succesful_clicks+1
+			setupEnvironment.playSound("hit_rotate")
 		else:
 			# print("MISS:" + str(self.getErrorRotate())+"°")
 			self.goal=False
 			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+			setupEnvironment.playSound("miss")
 
 	def nextSettingStep(self):
 		# print(self.index)
@@ -201,7 +203,7 @@ class trackingManager(avango.script.Script):
 						distance = 0
 
 				self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
-				self.taskNum = (self.taskNum+1) % 4
+				self.taskNum = (self.taskNum+1) % 2
 
 				self.disks.setDisksTransMats(targetDiameter[self.index])
 
