@@ -603,7 +603,7 @@ def start():
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes
-	PContainer = setupEnvironment.PencilContainer()
+	PContainer = setupEnvironment.PencilContainer().create(setup_environment)
 	trackManager.pcNode = PContainer.getNode()
 	trackManager.PContainer = PContainer
 

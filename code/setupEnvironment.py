@@ -372,10 +372,12 @@ class PencilContainer(avango.script.Script):
 		pencil = None
 		inputMat = avango.gua.SFMatrix4()
 		loader = avango.gua.nodes.TriMeshLoader()
-		setup = setupEnvironment()
 
 		def __init__(self):
 			self.super(PencilContainer).__init__()
+
+		def create(self, setup):
+			self.setup = setup
 			self.pencil = self.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 			self.pencil.Transform.value = avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
 			#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
@@ -391,6 +393,7 @@ class PencilContainer(avango.script.Script):
 			self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
 			#connect pencil
 			self.setup.everyObject.Children.value.append(self.pencil)
+			return self
 
 
 		@field_has_changed(inputMat)
