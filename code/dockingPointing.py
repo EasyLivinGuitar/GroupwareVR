@@ -580,12 +580,13 @@ def start():
 	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aim.Transform.value = avango.gua.make_trans_mat(-D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
+	trackManager.aim.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aim)
 
 	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
-	trackManager.aimShadow.Material.EnableBackFaceCulling = False
+	trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes
