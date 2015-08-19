@@ -15,7 +15,9 @@ FRAMES_FOR_SPEED=4
 FRAMES_FOR_AUTODETECT=3
 THRESHHOLD=40
 
-r = setupEnvironment.r
+setup_environment = setupEnvironment.setupEnvironment()
+
+r = setup_environment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
 
@@ -28,8 +30,8 @@ ID=[4, 5, 6] #fitt's law
 W_rot=[]
 
 for i in range(0, len(ID)):
-	if setupEnvironment.randomTargets:
-		D_rot=[ setupEnvironment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
+	if setup_environment.randomTargets:
+		D_rot=[ setup_environment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
 		W_rot=[D_rot[0]/(2**ID[0]-1), D_rot[0]/(2**ID[1]-1), D_rot[0]/(2**ID[2]-1)] #in degrees, Fitt's Law umgeformt nach W_rot
 	else:
 		D_rot=100
@@ -108,12 +110,12 @@ class trackingManager(avango.script.Script):
 		self.endTime = 0
 		self.backAndForth = False
 		self.backAndForthAgain = False;
-		self.disks = setupEnvironment.DisksContainer()
+		self.disks = setupEnvironment.DisksContainer(setup_environment)
 		self.pcNode = None
 		self.taskNum = 0
 
 	def __del__(self):
-		if setupEnvironment.logResults:
+		if setup_environment.logResults:
 			self.result_file.close()
 
 	@field_has_changed(Button)
@@ -121,7 +123,7 @@ class trackingManager(avango.script.Script):
 		if self.Button.value==True:
 			if(self.endedTests==False):
 				self.select()
-				if setupEnvironment.logResults:	
+				if setup_environment.logResults:	
 					self.logData()				
 
 				self.nextSettingStep()
@@ -140,7 +142,7 @@ class trackingManager(avango.script.Script):
 
 		if not self.endedTests:
 			#highlight rotation if near target
-			if setupEnvironment.showWhenInTarget:	
+			if setup_environment.showWhenInTarget:	
 				#highlight rotation if near target
 				if self.getErrorRotate() < W_rot[self.index]/2:
 					self.disks.highlightRed()
@@ -153,22 +155,22 @@ class trackingManager(avango.script.Script):
 			self.setOvershoots()
 			self.autoDetect()
 
-		if setupEnvironment.saveReplay:	
+		if setup_environment.saveReplay:	
 			self.logReplay()#save replay, todo
 
 	def select(self):
 		if self.getErrorRotate() < W_rot[self.index]/2:
 			# print("HIT:" + str(self.getErrorRotate())+"°")
 			self.goal=True
-			setupEnvironment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-			if(setupEnvironment.useAutoDetect==False):
+			setup_environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+			if(setup_environment.useAutoDetect==False):
 				self.succesful_clicks=self.succesful_clicks+1
-			setupEnvironment.playSound("hit_rotate")
+			setup_environment.playSound("hit_rotate")
 		else:
 			# print("MISS:" + str(self.getErrorRotate())+"°")
 			self.goal=False
-			setupEnvironment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
-			setupEnvironment.playSound("miss")
+			setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+			setup_environment.playSound("miss")
 
 	def nextSettingStep(self):
 		# print(self.index)
@@ -183,8 +185,8 @@ class trackingManager(avango.script.Script):
 		if(self.index < len(W_rot)):
 
 			#move target			
-			if setupEnvironment.randomTargets:#select from random targets?
-				if setupEnvironment.taskDOFRotate==3:
+			if setup_environment.randomTargets:#select from random targets?
+				if setup_environment.taskDOFRotate==3:
 					self.disks.setRotation(self.getRandomRotation3D())
 				else:
 					self.disks.setRotation(self.getRandomRotation2D())
@@ -192,7 +194,7 @@ class trackingManager(avango.script.Script):
 			else:
 				if self.taskNum==0 or self.taskNum==2:
 					distance = D_rot
-					if setupEnvironment.taskDOFRotate == 3:
+					if setup_environment.taskDOFRotate == 3:
 						rotateAroundX = 1
 					else:
 						rotateAroundX = 0
@@ -214,11 +216,11 @@ class trackingManager(avango.script.Script):
 
 			self.setID(self.index)
 		else: #trial over
-			setupEnvironment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
+			setup_environment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
 
 
 	def getErrorRotate(self):
-		return setupEnvironment.getRotationError1D(
+		return setup_environment.getRotationError1D(
 			self.pcNode.Transform.value.get_rotate_scale_corrected(),
 			self.disks.getRotate()
 		)
@@ -253,7 +255,7 @@ class trackingManager(avango.script.Script):
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
-				div=setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div=setup_environment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 
 				time=self.timer.value - self.start_time
 				self.current_speed=div/time
@@ -324,7 +326,7 @@ class trackingManager(avango.script.Script):
 		return settings[index]
 	
 	def getPath(self):
-		path="results/rotation_"+str(setupEnvironment.taskDOFRotate)+"DOF/"
+		path="results/rotation_"+str(setup_environment.taskDOFRotate)+"DOF/"
 
 		#create dir if not existent
 		if not os.path.exists(path):
@@ -347,7 +349,7 @@ class trackingManager(avango.script.Script):
 			self.resetValues()
 
 	def logReplay(self):
-		if setupEnvironment.taskDOFRotate==3:
+		if setup_environment.taskDOFRotate==3:
 			path="results/results_rotation_3D/"
 		else:
 			path="results/results_rotation_2D/"
@@ -376,7 +378,7 @@ class trackingManager(avango.script.Script):
 		else:
 			self.goal= False
 
-		if(setupEnvironment.useAutoDetect):
+		if(setup_environment.useAutoDetect):
 			hit_type ="Auto"
 		else:
 			hit_type ="Manual"
@@ -386,11 +388,11 @@ class trackingManager(avango.script.Script):
 
 		logmanager.set("USER_ID", self.userID)
 		logmanager.set("GROUP", self.group)
-		if(setupEnvironment.space3D):
+		if(setup_environment.space3D):
 			logmanager.set("DOF real R", 3)
 		else:
 			logmanager.set("DOF real R", 1)
-		logmanager.set("DOF virtual R", setupEnvironment.virtualDOFRotate)
+		logmanager.set("DOF virtual R", setup_environment.virtualDOFRotate)
 		logmanager.set("target distance R", D_rot)
 		logmanager.set("target width R", W_rot[self.index])
 		logmanager.set("TARGET_DISTANCE_ROTATE",D_rot)
@@ -452,8 +454,8 @@ def start():
 	trackManager.userID=input("USER_ID: ")
 	trackManager.group=input("GROUP: ")
 
-	setupEnvironment.getWindow().on_key_press(trackManager.handle_key)
-	setupEnvironment.setup(graph)
+	setup_environment.getWindow().on_key_press(trackManager.handle_key)
+	setup_environment.setup(graph)
 
 	#loadMeshes
 	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
@@ -472,7 +474,7 @@ def start():
 	trackManager.timer.connect_from(timer.Time)
 
 
-	setupEnvironment.launch(globals())
+	setup_environment.launch(globals())
 
 
 if __name__ == '__main__':
