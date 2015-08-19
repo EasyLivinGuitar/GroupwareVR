@@ -222,7 +222,7 @@ class trackingManager(avango.script.Script):
 		if setup_environment.saveReplay:	
 			self.logReplay()
 
-		# self.PContainer.inputMat.connect_from(self.PContainer.pointer_device_sensor.Matrix)
+		setup_environment.cam.Transform.connect_from(setup_environment.head_device_sensor.Matrix)
 
 	def select(self):
 		if(self.index < len(ID)):

@@ -129,7 +129,7 @@ class setupEnvironment(avango.script.Script):
 
 		avango.gua.register_window("window", self.window)
 
-		cam = avango.gua.nodes.CameraNode(
+		self.cam = avango.gua.nodes.CameraNode(
 			LeftScreenPath="/screen",
 			RightScreenPath="/screen",
 			SceneGraph="scenegraph",
@@ -137,14 +137,13 @@ class setupEnvironment(avango.script.Script):
 			EyeDistance = 0.064,
 			EnableStereo = True,
 			OutputWindowName="window",
-			Transform = avango.gua.make_trans_mat(0.0, 0.0, 3.5),
-			BlackList = ["invisible"]
+			Transform = avango.gua.make_trans_mat(0.0, 0.0, 3.5)
 		)
 		screen = avango.gua.nodes.ScreenNode(
 			Name="screen",
 			Width=1.445,
 			Height=0.81,
-			Children=[cam]
+			Children=[self.cam]
 		)
 
 		#Sieht netter aus
@@ -171,16 +170,16 @@ class setupEnvironment(avango.script.Script):
 			]
 		)
 
-		cam.PipelineDescription.value = pipeline_description
-		cam.PipelineDescription.value.EnableABuffer.value=True
+		self.cam.PipelineDescription.value = pipeline_description
+		self.cam.PipelineDescription.value.EnableABuffer.value=True
 
 		#Setup headtracking
-		head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-		head_device_sensor.TransmitterOffset.value = self.offsetTracking
+		self.head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+		self.head_device_sensor.TransmitterOffset.value = self.offsetTracking
 
-		head_device_sensor.Station.value = "glasses"
+		self.head_device_sensor.Station.value = "glasses"
 
-		cam.Transform.connect_from(head_device_sensor.Matrix)
+		self.cam.Transform.connect_from(self.head_device_sensor.Matrix)
 
 
 		graph.Root.value.Children.value=[light, screen]
@@ -188,7 +187,7 @@ class setupEnvironment(avango.script.Script):
 		self.soundtraverser.RootNode.value = graph.Root.value
 		self.soundtraverser.Traverse.value = True
 
-		self.soundRenderer.ListenerPosition.connect_from(cam.Transform)
+		self.soundRenderer.ListenerPosition.connect_from(self.cam.Transform)
 
 		self.balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
 		self.balloonSound.Loop.value = False
