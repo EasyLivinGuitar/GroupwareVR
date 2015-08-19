@@ -133,12 +133,14 @@ class trackingManager(avango.script.Script):
 	ID= 0
 	TP= 0
 
+	PContainer = None
+
 	def __init__(self):
 		self.super(trackingManager).__init__()
 		self.isInside = False;
 		self.startTime = 0
 		self.taskNum = 0
-		self.disks = setupEnvironment.DisksContainer()
+		self.disks = setupEnvironment.DisksContainer(setup_environment)
 		self.aim = None
 		self.aimShadow = None
 		self.index = 0
@@ -219,6 +221,8 @@ class trackingManager(avango.script.Script):
 
 		if setup_environment.saveReplay:	
 			self.logReplay()
+
+		# self.PContainer.inputMat.connect_from(self.PContainer.pointer_device_sensor.Matrix)
 
 	def select(self):
 		if(self.index < len(ID)):
@@ -599,7 +603,9 @@ def start():
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes
-	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
+	PContainer = setupEnvironment.PencilContainer()
+	trackManager.pcNode = PContainer.getNode()
+	trackManager.PContainer = PContainer
 
 	if (not DISABLEROTATION):
 		trackManager.disks.setupDisks(trackManager.pcNode)
