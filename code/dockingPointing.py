@@ -20,7 +20,7 @@ r = setup_environment.r #circle radius
 D_rot=100 #in degrees
 D_trans= 0.3 #in meter
 ID=[3, 4, 5] #fitt's law
-N=5 #number of tests per ID
+N=15 #number of tests per ID
 W_rot=[]
 W_trans=[]
 targetDiameter =[]
@@ -183,7 +183,7 @@ class trackingManager(avango.script.Script):
 				if setup_environment.showWhenInTarget:	
 					#highlight rotation if near target
 					if setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
-						highlightT = True
+						highlightR = True
 						self.disks.highlightRed()
 					else:
 						self.disks.setColor()
@@ -198,9 +198,11 @@ class trackingManager(avango.script.Script):
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
 
 			if highlightT or highlightR:
-				setup_environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.0))
+				setup_environment.setBackgroundColor(avango.gua.Color(0.2, 0.2, 0.1))
 			if (highlightT and highlightR) or (DISABLEROTATION and hightlightT):
-				setup_environment.setBackgroundColor(avango.gua.Color(1, 1, 0.0))
+				setup_environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.1))
+			if (not highlightT) and (not highlightR):
+				setup_environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
 			
 			self.aim.Material.EnableBackfaceCulling = False
 			self.aim.Material.EnableBackFaceCulling = False
@@ -300,7 +302,7 @@ class trackingManager(avango.script.Script):
 
 			self.setID(self.index)
 		else: #trial over
-			setup_environment.setBackgroundColor(avango.gua.Color(0,0,1))
+			setup_environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
 		
 	def getErrorRotate(self):
 		if not DISABLEROTATION:
