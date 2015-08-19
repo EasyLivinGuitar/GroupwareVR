@@ -13,9 +13,7 @@ from avango.script import field_has_changed
 
 DISABLEROTATION = False
 
-
 setup_environment = setupEnvironment.setupEnvironment()
-
 r = setup_environment.r #circle radius
 
 #fitt's law parameter
@@ -168,6 +166,8 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(timer)
 	def updateTimer(self):
 		if not self.endedTests:
+			highlightR = False
+
 			#position disks
 			if not DISABLEROTATION:
 				if setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] :
@@ -181,16 +181,25 @@ class trackingManager(avango.script.Script):
 				if setup_environment.showWhenInTarget:	
 					#highlight rotation if near target
 					if setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
+						highlightT = True
 						self.disks.highlightRed()
 					else:
 						self.disks.setColor()
 			
 			#highlight translation
-			if setup_environment.showWhenInTarget:	
+			highlightT = False
+			if setup_environment.showWhenInTarget:
 				if self.getErrorTranslate() < W_trans[self.index]/2:
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
+					highlightT = True
 				else:
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
+
+			# if highlightT or highlightR:
+			# 	setup_environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.0))
+			# if (highlightT and highlightR) or (DISABLEROTATION and hightlightT):
+			# 	setup_environment.setBackgroundColor(avango.gua.Color(1, 1, 0.0))
+			
 			self.aim.Material.EnableBackfaceCulling = False
 			self.aim.Material.EnableBackFaceCulling = False
 			self.aim.Material.BackfaceCulling = False
@@ -217,7 +226,7 @@ class trackingManager(avango.script.Script):
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
 				#hit
 				self.goal= True
-				setup_environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+				setup_environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 10.18)
 				if DISABLEROTATION:
 					setup_environment.playSound("balloon")
 				else:
@@ -225,7 +234,7 @@ class trackingManager(avango.script.Script):
 			else:
 				#miss
 				self.goal= False
-				setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+				setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 10.18)
 				setup_environment.playSound("miss")
 
 	def nextSettingStep(self):

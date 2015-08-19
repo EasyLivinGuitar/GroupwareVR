@@ -92,13 +92,14 @@ class setupEnvironment(avango.script.Script):
 		Transform = centerPosition
 	)
 
-	timer = avango.nodes.TimeSensor()
+	timeSensor = avango.nodes.TimeSensor()
 	timerField = avango.SFFloat()
-	time = 0
 
 	def __init__(self):
 		self.super(setupEnvironment).__init__()
-		self.timerField.connect_from(self.timer.Time)
+		self.timeTillBlack = 1
+		self.timerField.connect_from(self.timeSensor.Time)
+		print("init!!!")
 
 
 	'''Get the degrees of freedom on the translation'''
@@ -218,8 +219,10 @@ class setupEnvironment(avango.script.Script):
 
 	@field_has_changed(timerField)
 	def update(self):
-		if(self.timerField.value >= self.time):
-			self.res_pass.BackgroundColor.value=avango.gua.Color(0, 0, 0)
+		#print("Update: " +str(self.timeTillBlack))
+		if self.timerField.value >= self.timeTillBlack:
+			#print("back to black: "+str(self.timerField.value) + " >= " + str(self.timeTillBlack))
+			self.res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
 
 	def getWindow(self):
 		return self.window
@@ -233,10 +236,13 @@ class setupEnvironment(avango.script.Script):
 			
 		self.viewer.run()
 
-	def setBackgroundColor(self, color, time):
-		self.time=self.timer.Time.value+time
-		
+
+	def setBackgroundColor(self, color, time=0):
+		print("Set: "+str(self.timeTillBlack))
+		if time > 0:
+			self.timeTillBlack = self.timeSensor.Time.value + time #aktuelle Zeit plus Zeit
 		self.res_pass.BackgroundColor.value=color
+
 
 	def playSound(self, sound):
 		if (sound == "balloon"):
@@ -361,8 +367,6 @@ class setupEnvironment(avango.script.Script):
 		aim_z=target2.get_translate()[2]
 		
 		return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
-
-setup = setupEnvironment()
 
 class PencilContainer(avango.script.Script):
 		pencil = None
