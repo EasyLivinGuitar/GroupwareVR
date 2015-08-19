@@ -237,7 +237,6 @@ class setupEnvironment(avango.script.Script):
 
 
 	def setBackgroundColor(self, color, time=0):
-		print("Set: "+str(self.timeTillBlack))
 		if time > 0:
 			self.timeTillBlack = self.timeSensor.Time.value + time #aktuelle Zeit plus Zeit
 			self.permanentBG = False
@@ -307,7 +306,6 @@ class setupEnvironment(avango.script.Script):
 		a.normalize()
 		
 		aEuler = get_euler_angles(a)
-		print("P:"+str(a)+" => "+str(aEuler))
 		
 
 		b = bMat.get_rotate_scale_corrected()
@@ -318,7 +316,6 @@ class setupEnvironment(avango.script.Script):
 		b.z =   0
 		
 		bEuler = get_euler_angles(b)
-		print("T:"+str(b)+" => "+str(bEuler))
 
 		error =[
 			(aEuler[0]-bEuler[0])*180/math.pi, #Y
