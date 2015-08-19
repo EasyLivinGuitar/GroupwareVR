@@ -97,9 +97,9 @@ class setupEnvironment(avango.script.Script):
 
 	def __init__(self):
 		self.super(setupEnvironment).__init__()
-		self.timeTillBlack = 1
+		self.timeTillBlack = 0
+		self.permanentBG = False
 		self.timerField.connect_from(self.timeSensor.Time)
-		print("init!!!")
 
 
 	'''Get the degrees of freedom on the translation'''
@@ -190,20 +190,20 @@ class setupEnvironment(avango.script.Script):
 
 		self.soundRenderer.ListenerPosition.connect_from(cam.Transform)
 
-		# balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
-		# balloonSound.Loop.value = False
-		# balloonSound.Play.value = True
-		# graph.Root.value.Children.value.extend([balloonSound])
+		self.balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
+		self.balloonSound.Loop.value = False
+		self.balloonSound.Play.value = True
+		graph.Root.value.Children.value.extend([self.balloonSound])
 
 		self.hitRotateSound.URL.value = "data/sounds/hit_rotate.wav"
 		self.hitRotateSound.Loop.value = False
 		self.hitRotateSound.Play.value = True
 		graph.Root.value.Children.value.extend([self.hitRotateSound])
 
-		# levelUpSound.URL.value = "data/sounds/level_up.wav"
-		# levelUpSound.Loop.value = False
-		# levelUpSound.Play.value = True
-		# graph.Root.value.Children.value.extend([levelUpSound])
+		self.levelUpSound.URL.value = "data/sounds/level_up.wav"
+		self.levelUpSound.Loop.value = False
+		self.levelUpSound.Play.value = True
+		graph.Root.value.Children.value.extend([self.levelUpSound])
 
 		self.missSound.URL.value = "data/sounds/miss.ogg"
 		self.missSound.Loop.value = False
@@ -220,7 +220,7 @@ class setupEnvironment(avango.script.Script):
 	@field_has_changed(timerField)
 	def update(self):
 		#print("Update: " +str(self.timeTillBlack))
-		if self.timerField.value >= self.timeTillBlack:
+		if (not self.permanentBG) and (self.timerField.value >= self.timeTillBlack):
 			#print("back to black: "+str(self.timerField.value) + " >= " + str(self.timeTillBlack))
 			self.res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
 
@@ -241,6 +241,9 @@ class setupEnvironment(avango.script.Script):
 		print("Set: "+str(self.timeTillBlack))
 		if time > 0:
 			self.timeTillBlack = self.timeSensor.Time.value + time #aktuelle Zeit plus Zeit
+			self.permanentBG = False
+		else:
+			self.permanentBG = True
 		self.res_pass.BackgroundColor.value=color
 
 

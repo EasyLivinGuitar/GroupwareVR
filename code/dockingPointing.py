@@ -230,7 +230,7 @@ class trackingManager(avango.script.Script):
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
 				#hit
 				self.goal= True
-				setup_environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 10.18)
+				setup_environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
 				if DISABLEROTATION:
 					setup_environment.playSound("balloon")
 				else:
@@ -238,7 +238,7 @@ class trackingManager(avango.script.Script):
 			else:
 				#miss
 				self.goal= False
-				setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 10.18)
+				setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 				setup_environment.playSound("miss")
 
 	def nextSettingStep(self):
