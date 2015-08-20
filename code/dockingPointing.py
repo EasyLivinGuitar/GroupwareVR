@@ -20,7 +20,6 @@ r = setup_environment.r #circle radius
 D_rot=100 #in degrees
 D_trans= 0.3 #in meter
 ID=[3, 4, 5] #fitt's law
-N=15 #number of tests per ID
 W_rot=[]
 W_trans=[]
 targetDiameter =[]
@@ -173,7 +172,7 @@ class trackingManager(avango.script.Script):
 
 			#position disks
 			if not DISABLEROTATION:
-				if setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] :
+				if setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] :
 					#attach disks to pointer
 					self.disks.setTranslate( avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate()) )
 				else:
@@ -183,7 +182,7 @@ class trackingManager(avango.script.Script):
 				#highlight rotation if near target
 				if setup_environment.showWhenInTarget:	
 					#highlight rotation if near target
-					if setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
+					if setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
 						highlightR = True
 						self.disks.highlightRed()
 					else:
@@ -252,7 +251,7 @@ class trackingManager(avango.script.Script):
 				setup_environment.playSound("miss")
 
 	def nextSettingStep(self):
-		if(self.counter%N == N-1):
+		if(self.counter%setup_environment.N == setup_environment.N-1):
 			setup_environment.playSound("levelUp")
 			self.index = self.index+1
 
@@ -297,10 +296,8 @@ class trackingManager(avango.script.Script):
 						else:
 							rotateAroundX = 0
 					else:
-						distance = D_rot
 						rotateAroundX = 0
-						if self.taskNum==3:
-							distance = 0
+						distance = 0
 
 					self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
 					self.taskNum = (self.taskNum+1) % 2
@@ -315,14 +312,14 @@ class trackingManager(avango.script.Script):
 		
 	def getErrorRotate(self):
 		if not DISABLEROTATION:
-			return setup_environment.getRotationError1D(
+			return setupEnvironment.getRotationError1D(
 				self.pcNode.Transform.value.get_rotate_scale_corrected(),
 				self.disks.getRotate()
 			)
 		return 0
 
 	def getErrorTranslate(self):
-		return setup_environment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
+		return setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
 
 	def getPath(self):
 		path="results/"+taskString+"_"+str(setup_environment.taskDOFRotate)+"DOF/"
@@ -421,7 +418,7 @@ class trackingManager(avango.script.Script):
 		else:
 			logmanager.set("ID T", self.ID/2)
 			logmanager.set("ID R ", self.ID/2)
-		logmanager.set("REPETITION", N)
+		logmanager.set("REPETITION", setup_environment.N)
 		logmanager.set("TRIAL", self.trial)
 		logmanager.set("BUTTON CLICKS", self.clicks)
 		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
@@ -462,7 +459,7 @@ class trackingManager(avango.script.Script):
 			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2 = self.pcNode.Transform.value.get_rotate()
 				self.end_time = self.timer.value
-				div = setup_environment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div = setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 				time = self.end_time-self.start_time
 				self.current_speed_rotate = div / time
 
@@ -602,8 +599,7 @@ def start():
 
 	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aim.Transform.value = (
-		setup_environment.aimPosition
-		*avango.gua.make_trans_mat(-D_trans/2, 0, 0)
+		avango.gua.make_trans_mat(-D_trans/2, 0, 0)
 		*avango.gua.make_scale_mat(W_trans[0])
 	)
 	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
@@ -611,7 +607,7 @@ def start():
 	setup_environment.everyObject.Children.value.append(trackManager.aim)
 
 	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	trackManager.aimShadow.Transform.value = setup_environment.aimPosition*avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
+	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 	trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)
@@ -621,8 +617,10 @@ def start():
 	trackManager.pcNode = PContainer.getNode()
 	trackManager.PContainer = PContainer
 
-	if (not DISABLEROTATION):
+	if not DISABLEROTATION:
 		trackManager.disks.setupDisks(trackManager.pcNode)
+		trackManager.disks.setDisksTransMats(targetDiameter[0])
+		trackManager.disks.setRotation( avango.gua.make_rot_mat(D_rot, 0, 1, 0) )
 		trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 	#listen to button

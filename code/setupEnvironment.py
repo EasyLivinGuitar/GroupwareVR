@@ -24,8 +24,10 @@ Then start the scene with the according start.sh
 
 '''Settings'''
 class setupEnvironment(avango.script.Script):
+
+	#task config
 	'''disable translation on this axis'''
-	disableAxis = [0,0,0]#x,y,z
+	disableAxis = [0,1,0]#x,y,z
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotate = 1
@@ -33,18 +35,26 @@ class setupEnvironment(avango.script.Script):
 	'''should the task swich between rotation aims using 3  or 1 DOF?'''
 	taskDOFRotate = 1
 
+	if virtualDOFRotate == 1:
+		taskDOFRotate = 1
+
 	'''is the task above the table or is it on the table?'''
-	space3D = True
+	space3D = False
+
+	N=8
+
+
+
+	#setup
 
 	''' difference from screen center to center of tracking'''
-	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.50)
+	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
 
-
-	'''get the offsets of the aim.'''
-	aimPosition = avango.gua.make_trans_mat(0.0, 0, 0.30)
+	'''get the offsets of the pointer.'''
+	offsetPointer = avango.gua.make_trans_mat(0.0, 0, 0.30)
 
 	'''get the position of the center where the pointer and the aim is located.'''
-	displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.0)
+	displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
 	logResults = True
 	saveReplay = False
@@ -62,8 +72,6 @@ class setupEnvironment(avango.script.Script):
 
 	'''highlight if inside the target'''
 	showWhenInTarget = True
-
-
 
 	res_pass = avango.gua.nodes.ResolvePassDescription()
 
@@ -264,193 +272,193 @@ class setupEnvironment(avango.script.Script):
 
 
 
-	## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
-	# @param MATRIX The rotation matrix to be converted.
-	def get_euler_angles(self, q):
-	  sqx = q.x * q.x
-	  sqy = q.y * q.y
-	  sqz = q.z * q.z
-	  sqw = q.w * q.w
+## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
+# @param MATRIX The rotation matrix to be converted.
+def get_euler_angles(q):
+  sqx = q.x * q.x
+  sqy = q.y * q.y
+  sqz = q.z * q.z
+  sqw = q.w * q.w
 
-	  unit = sqx + sqy + sqz + sqw # if normalised is one, otherwise is correction factor
-	  test = (q.x * q.y) + (q.z * q.w)
+  unit = sqx + sqy + sqz + sqw # if normalised is one, otherwise is correction factor
+  test = (q.x * q.y) + (q.z * q.w)
 
-	  if test > 1:
-	    yaw = 0.0
-	    roll = 0.0
-	    pitch = 0.0
+  if test > 1:
+    yaw = 0.0
+    roll = 0.0
+    pitch = 0.0
 
-	  if test > (0.49999 * unit): # singularity at north pole
-	    yaw = 2.0 * math.atan2(q.x,q.w)
-	    roll = math.pi/2.0
-	    pitch = 0.0
-	  elif test < (-0.49999 * unit): # singularity at south pole
-	    yaw = -2.0 * math.atan2(q.x,q.w)
-	    roll = math.pi/-2.0
-	    pitch = 0.0
-	  else:
-	    yaw = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * sqy - 2.0 * sqz)
-	    roll = math.asin(2.0 * test)
-	    pitch = math.atan2(2.0 * q.x * q.w - 2.0 * q.y * q.z, 1.0 - 2.0 * sqx - 2.0 * sqz)
+  if test > (0.49999 * unit): # singularity at north pole
+    yaw = 2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/2.0
+    pitch = 0.0
+  elif test < (-0.49999 * unit): # singularity at south pole
+    yaw = -2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/-2.0
+    pitch = 0.0
+  else:
+    yaw = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * sqy - 2.0 * sqz)
+    roll = math.asin(2.0 * test)
+    pitch = math.atan2(2.0 * q.x * q.w - 2.0 * q.y * q.z, 1.0 - 2.0 * sqx - 2.0 * sqz)
 
-	  if yaw < 0.0:
-	    yaw += 2.0 * math.pi
+  if yaw < 0.0:
+    yaw += 2.0 * math.pi
 
-	  if pitch < 0:
-	    pitch += 2 * math.pi
+  if pitch < 0:
+    pitch += 2 * math.pi
 
-	  if roll < 0:
-	    roll += 2 * math.pi
+  if roll < 0:
+    roll += 2 * math.pi
 
-	  return yaw, pitch, roll 
+  return yaw, pitch, roll 
 
-	def getRotationError3D(self, aMat,bMat):
-		#quaternion to euler has an error with the z axis
-		a = aMat.get_rotate_scale_corrected()
-		a.normalize()
-		
-		aEuler = get_euler_angles(a)
-		
+def getRotationError3D(aMat,bMat):
+	#quaternion to euler has an error with the z axis
+	a = aMat.get_rotate_scale_corrected()
+	a.normalize()
+	
+	aEuler = get_euler_angles(a)
+	
 
-		b = bMat.get_rotate_scale_corrected()
-		b.normalize()
+	b = bMat.get_rotate_scale_corrected()
+	b.normalize()
 
-		#hack to make the error fit
-		b.y = b.z
-		b.z =   0
-		
-		bEuler = get_euler_angles(b)
+	#hack to make the error fit
+	b.y = b.z
+	b.z =   0
+	
+	bEuler = get_euler_angles(b)
 
-		error =[
-			(aEuler[0]-bEuler[0])*180/math.pi, #Y
-			(aEuler[1]-bEuler[1])*180/math.pi, #?
-			(aEuler[2]-bEuler[2])*180/math.pi, #?
-			0 #gesamt
-		]
-		error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
-		
-		'''
-		print("P: "+str(a))
-		print("T: "+str(b))
-		error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
-		error *=180/math.pi
-		'''
-		return error
-
+	error =[
+		(aEuler[0]-bEuler[0])*180/math.pi, #Y
+		(aEuler[1]-bEuler[1])*180/math.pi, #?
+		(aEuler[2]-bEuler[2])*180/math.pi, #?
+		0 #gesamt
+	]
+	error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+	
 	'''
-	get rotation error between two rotations
+	print("P: "+str(a))
+	print("T: "+str(b))
+	error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
+	error *=180/math.pi
 	'''
-	def getRotationError1D(self, rotA, rotB):
-		matA = avango.gua.make_rot_mat(rotA)
-		matB = avango.gua.make_rot_mat(rotB)
+	return error
 
-		diffRotMat = avango.gua.make_inverse_mat(matA)*matB
-		return diffRotMat.get_rotate_scale_corrected().get_angle()
+'''
+get rotation error between two rotations
+'''
+def getRotationError1D(rotA, rotB):
+	matA = avango.gua.make_rot_mat(rotA)
+	matB = avango.gua.make_rot_mat(rotB)
+
+	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
+	return diffRotMat.get_rotate_scale_corrected().get_angle()
 
 
-	def getDistance2D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
+def getDistance2D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
 
-		aim_x=target2.get_translate()[0]
-		aim_y=target2.get_translate()[1]
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
 
-		trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-		trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-		
-		return math.sqrt(trans_aim_x_square+trans_aim_y_square)
+	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
+	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
+	
+	return math.sqrt(trans_aim_x_square+trans_aim_y_square)
 
-	def getDistance3D(self, target1, target2):
-		trans_x=target1.get_translate()[0]
-		trans_y=target1.get_translate()[1]
-		trans_z=target1.get_translate()[2]
+def getDistance3D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
+	trans_z=target1.get_translate()[2]
 
-		aim_x=target2.get_translate()[0]
-		aim_y=target2.get_translate()[1]
-		aim_z=target2.get_translate()[2]
-		
-		return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
+	aim_z=target2.get_translate()[2]
+	
+	return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
 
 class PencilContainer(avango.script.Script):
-		pencil = None
-		inputMat = avango.gua.SFMatrix4()
-		loader = avango.gua.nodes.TriMeshLoader()
+	pencil = None
+	inputMat = avango.gua.SFMatrix4()
+	loader = avango.gua.nodes.TriMeshLoader()
 
-		def __init__(self):
-			self.super(PencilContainer).__init__()
+	def __init__(self):
+		self.super(PencilContainer).__init__()
 
-		def create(self, setup):
-			self.setup = setup
-			self.pencil = self.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
-			self.pencil.Transform.value = avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
-			#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
-			#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
-			#pencil.Material.value.set_uniform("Emissivity", 1.0)
-			
-			#listen to tracked position of pointer
-			self.pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
-			self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
+	def create(self, setup):
+		self.setup = setup
+		self.pencil = self.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
+		self.pencil.Transform.value = setup.offsetPointer*avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
+		#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
+		#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
+		#pencil.Material.value.set_uniform("Emissivity", 1.0)
+		
+		#listen to tracked position of pointer
+		self.pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
+		self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
 
-			self.pointer_device_sensor.Station.value = "pointer"
+		self.pointer_device_sensor.Station.value = "pointer"
 
-			self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
-			#connect pencil
-			self.setup.everyObject.Children.value.append(self.pencil)
-			return self
+		self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
+		#connect pencil
+		self.setup.everyObject.Children.value.append(self.pencil)
+		return self
 
 
-		@field_has_changed(inputMat)
-		def pointermat_changed(self):
-			#get input
-			self.pencil.Transform.value = self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
-			#then reduce
-			self.reducePencilMat()
-			#print(self.inputMat.value)
+	@field_has_changed(inputMat)
+	def pointermat_changed(self):
+		#get input
+		self.pencil.Transform.value = self.setup.offsetPointer*self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
+		#then reduce
+		self.reducePencilMat()
+		#print(self.inputMat.value)
 
-		def getNode(self):
-			return self.pencil
+	def getNode(self):
+		return self.pencil
 
-		def getTransfromValue(self):
-			return self.pencil.Transform.value
+	def getTransfromValue(self):
+		return self.pencil.Transform.value
 
-		'''reduce a transform matrix according to the constrainst '''
-		def reducePencilMat(self):
-			if self.setup.virtualDOFRotate==1:
-				#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
-				#get angle between rotation and y axis
-				q = self.pencil.Transform.value.get_rotate_scale_corrected()
-				q.z = 0 #tried to fix to remove roll
-				q.x = 0 #tried to fix to remove roll
-				q.normalize()
-				yRot = avango.gua.make_rot_mat(self.get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+	'''reduce a transform matrix according to the constrainst '''
+	def reducePencilMat(self):
+		if self.setup.virtualDOFRotate==1:
+			#erase 2dof at table, unstable operation, calling this twice destroys the rotation information
+			#get angle between rotation and y axis
+			q = self.pencil.Transform.value.get_rotate_scale_corrected()
+			q.z = 0 #tried to fix to remove roll
+			q.x = 0 #tried to fix to remove roll
+			q.normalize()
+			yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+		else:
+			yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
+
+		if self.setup.disableAxis[0]:
+			x = 0
+		else:
+			x = self.getTransfromValue().get_translate().x - self.setup.offsetTracking.get_translate().x
+
+		if self.setup.disableAxis[1]:
+			y = 0
+		else:
+			if self.setup.space3D:# on table?
+				y = self.getTransfromValue().get_translate().y
 			else:
-				yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
+				y = self.getTransfromValue().get_translate().y-self.setup.offsetTracking.get_translate().y
 
-			if self.setup.disableAxis[0]:
-				x = 0
-			else:
-				x = self.getTransfromValue().get_translate().x - self.setup.offsetTracking.get_translate().x
+		if self.setup.disableAxis[2]:
+			z = 0
+		else:
+			z = self.getTransfromValue().get_translate().z - self.setup.offsetTracking.get_translate().z
 
-			if self.setup.disableAxis[1]:
-				y = 0
-			else:
-				if self.setup.space3D:# on table?
-					y = self.getTransfromValue().get_translate().y
-				else:
-					y = self.getTransfromValue().get_translate().y-self.setup.offsetTracking.get_translate().y
+		translation = avango.gua.make_trans_mat(
+			x,
+			y,
+			z
+		)
 
-			if self.setup.disableAxis[2]:
-				z = 0
-			else:
-				z = self.getTransfromValue().get_translate().z - self.setup.offsetTracking.get_translate().z
-
-			translation = avango.gua.make_trans_mat(
-				x,
-				y,
-				z
-			)
-
-			self.pencil.Transform.value = translation * yRot * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())		
+		self.pencil.Transform.value = translation * yRot * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())		
 
 class DisksContainer():
 		
