@@ -145,6 +145,7 @@ class trackingManager(avango.script.Script):
 		self.aimShadow = None
 		self.index = 0
 		self.pcNode = None
+		self.points = 0
 
 	def __del__(self):
 		if setup_environment.logResults:
@@ -197,10 +198,14 @@ class trackingManager(avango.script.Script):
 				else:
 					self.aim.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
 
-			if highlightT or highlightR:
-				setup_environment.setBackgroundColor(avango.gua.Color(0.2, 0.2, 0.1))
-			if (highlightT and highlightR) or (DISABLEROTATION and hightlightT):
-				setup_environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.1))
+			if highlightT:
+				setup_environment.setBackgroundColor(avango.gua.Color(0.1, 0.2, 0.2))
+			if highlightR:
+				setup_environment.setBackgroundColor(avango.gua.Color(0.2, 0.1, 0.0))
+
+			if (highlightT and highlightR) or (DISABLEROTATION and highlightT):
+				setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
+
 			if (not highlightT) and (not highlightR):
 				setup_environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
 			
@@ -237,6 +242,9 @@ class trackingManager(avango.script.Script):
 					setup_environment.playSound("balloon")
 				else:
 					setup_environment.playSound("hit_rotate")
+				if(self.startedTests):
+					self.setMT(self.lastTime, self.timer.value)
+					self.points = self.points + (self.ID / self.MT)
 			else:
 				#miss
 				self.goal= False
@@ -295,7 +303,7 @@ class trackingManager(avango.script.Script):
 							distance = 0
 
 					self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
-					self.taskNum = (self.taskNum+1) % 4
+					self.taskNum = (self.taskNum+1) % 2
 
 					self.disks.setDisksTransMats(targetDiameter[self.index])
 					
@@ -303,6 +311,7 @@ class trackingManager(avango.script.Script):
 			self.setID(self.index)
 		else: #trial over
 			setup_environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
+			print("Your Score: " + str(self.points))
 		
 	def getErrorRotate(self):
 		if not DISABLEROTATION:
@@ -386,7 +395,6 @@ class trackingManager(avango.script.Script):
 			if(self.goal):
 				self.succesful_clicks= self.succesful_clicks+1
 
-		self.setMT(self.lastTime, self.timer.value)
 		logmanager.set("USER ID", self.userID)
 		logmanager.set("USER GROUP", self.group)
 
@@ -593,13 +601,17 @@ def start():
 	setup_environment.setup(graph)
 
 	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	trackManager.aim.Transform.value = avango.gua.make_trans_mat(-D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
+	trackManager.aim.Transform.value = (
+		setup_environment.aimPosition
+		*avango.gua.make_trans_mat(-D_trans/2, 0, 0)
+		*avango.gua.make_scale_mat(W_trans[0])
+	)
 	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
 	trackManager.aim.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aim)
 
 	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
+	trackManager.aimShadow.Transform.value = setup_environment.aimPosition*avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 	trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)

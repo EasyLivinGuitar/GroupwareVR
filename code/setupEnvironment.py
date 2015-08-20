@@ -37,10 +37,14 @@ class setupEnvironment(avango.script.Script):
 	space3D = True
 
 	''' difference from screen center to center of tracking'''
-	offsetTracking =  avango.gua.make_trans_mat(0.0, -0.34, 0.50)
+	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.50)
+
+
+	'''get the offsets of the aim.'''
+	aimPosition = avango.gua.make_trans_mat(0.0, 0, 0.30)
 
 	'''get the position of the center where the pointer and the aim is located.'''
-	centerPosition =  avango.gua.make_trans_mat(0.0, 0, 0)
+	displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.0)
 
 	logResults = True
 	saveReplay = False
@@ -89,7 +93,7 @@ class setupEnvironment(avango.script.Script):
 
 	everyObject = avango.gua.nodes.TransformNode(
 		Children = [], 
-		Transform = centerPosition
+		Transform = displayPosition
 	)
 
 	timeSensor = avango.nodes.TimeSensor()
