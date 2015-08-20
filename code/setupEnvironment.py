@@ -28,10 +28,10 @@ class setupEnvironment(avango.script.Script):
 	disableAxis = [0,0,0]#x,y,z
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
-	virtualDOFRotate = 3
+	virtualDOFRotate = 1
 
 	'''should the task swich between rotation aims using 3  or 1 DOF?'''
-	taskDOFRotate = 3
+	taskDOFRotate = 1
 
 	'''is the task above the table or is it on the table?'''
 	space3D = True
@@ -422,7 +422,7 @@ class PencilContainer(avango.script.Script):
 				q.z = 0 #tried to fix to remove roll
 				q.x = 0 #tried to fix to remove roll
 				q.normalize()
-				yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
+				yRot = avango.gua.make_rot_mat(self.get_euler_angles(q)[0]*180.0/math.pi,0,1,0)#get euler y rotation, has also roll in it
 			else:
 				yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
 
