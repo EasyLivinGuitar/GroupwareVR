@@ -25,7 +25,7 @@ Then start the scene with the according start.sh
 '''Settings'''
 class setupEnvironment(avango.script.Script):
 	'''disable translation on this axis'''
-	disableAxis = [0,0,0]#x,y,z
+	disableAxis = [0,1,0]#x,y,z
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotate = 3
@@ -34,17 +34,16 @@ class setupEnvironment(avango.script.Script):
 	taskDOFRotate = 3
 
 	'''is the task above the table or is it on the table?'''
-	space3D = True
+	space3D = False
 
 	''' difference from screen center to center of tracking'''
 	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
 
-
-	'''get the offsets of the aim.'''
-	aimPosition = avango.gua.make_trans_mat(0.0, 0, -0.20)
+	'''get the offsets of the pointer.'''
+	offsetPointer = avango.gua.make_trans_mat(0.0, 0, 0.30)
 
 	'''get the position of the center where the pointer and the aim is located.'''
-	displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.0)
+	displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
 	logResults = True
 	saveReplay = False
@@ -382,7 +381,7 @@ class PencilContainer(avango.script.Script):
 		def create(self, setup):
 			self.setup = setup
 			self.pencil = self.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
-			self.pencil.Transform.value = avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
+			self.pencil.Transform.value = setup.offsetPointer*avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
 			#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 			#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
 			#pencil.Material.value.set_uniform("Emissivity", 1.0)
@@ -402,7 +401,7 @@ class PencilContainer(avango.script.Script):
 		@field_has_changed(inputMat)
 		def pointermat_changed(self):
 			#get input
-			self.pencil.Transform.value = self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
+			self.pencil.Transform.value = self.setup.offsetPointer*self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
 			#then reduce
 			self.reducePencilMat()
 			#print(self.inputMat.value)

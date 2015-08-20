@@ -20,7 +20,7 @@ r = setup_environment.r #circle radius
 D_rot=100 #in degrees
 D_trans= 0.3 #in meter
 ID=[3, 4, 5] #fitt's law
-N=15 #number of tests per ID
+N=7 #number of tests per ID
 W_rot=[]
 W_trans=[]
 targetDiameter =[]
@@ -602,8 +602,7 @@ def start():
 
 	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aim.Transform.value = (
-		setup_environment.aimPosition
-		*avango.gua.make_trans_mat(-D_trans/2, 0, 0)
+		avango.gua.make_trans_mat(-D_trans/2, 0, 0)
 		*avango.gua.make_scale_mat(W_trans[0])
 	)
 	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
@@ -611,7 +610,7 @@ def start():
 	setup_environment.everyObject.Children.value.append(trackManager.aim)
 
 	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	trackManager.aimShadow.Transform.value = setup_environment.aimPosition*avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
+	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 	trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
 	setup_environment.everyObject.Children.value.append(trackManager.aimShadow)
