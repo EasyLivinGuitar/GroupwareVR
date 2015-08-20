@@ -24,7 +24,6 @@ rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
 
-N=15 #number of tests per ID
 ID=[4, 5, 6] #fitt's law
 
 W_rot=[]
@@ -146,8 +145,10 @@ class trackingManager(avango.script.Script):
 				#highlight rotation if near target
 				if self.getErrorRotate() < W_rot[self.index]/2:
 					self.disks.highlightRed()
+					setup_environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
 				else:
-					self.disks.setColor()
+					self.disks.setColor()	
+					setup_environment.setBackgroundColor(avango.gua.Color(0, 0, 0))	
 
 		if self.startedTests and self.endedTests==False:
 			self.setSpeed()
@@ -174,7 +175,7 @@ class trackingManager(avango.script.Script):
 
 	def nextSettingStep(self):
 		# print(self.index)
-		if(self.counter%N == N-1):
+		if(self.counter%setup_environment.N == setup_environment.N-1):
 			self.index=self.index+1
 
 		if(self.index==len(W_rot)):
@@ -199,10 +200,8 @@ class trackingManager(avango.script.Script):
 					else:
 						rotateAroundX = 0
 				else:
-					distance = D_rot
 					rotateAroundX = 0
-					if self.taskNum==3:
-						distance = 0
+					distance = 0
 
 				self.disks.setRotation( avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0) )
 				self.taskNum = (self.taskNum+1) % 2
@@ -220,7 +219,7 @@ class trackingManager(avango.script.Script):
 
 
 	def getErrorRotate(self):
-		return setup_environment.getRotationError1D(
+		return setupEnvironment.getRotationError1D(
 			self.pcNode.Transform.value.get_rotate_scale_corrected(),
 			self.disks.getRotate()
 		)
@@ -255,7 +254,7 @@ class trackingManager(avango.script.Script):
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
-				div=setup_environment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div = setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 
 				time=self.timer.value - self.start_time
 				self.current_speed=div/time
@@ -399,7 +398,7 @@ class trackingManager(avango.script.Script):
 		logmanager.set("TARGET_WIDTH_ROTATE",W_rot[self.index])
 		logmanager.set("ID combined", self.ID)
 		logmanager.set("ID R", self.ID)
-		logmanager.set("REPETITION",N)
+		logmanager.set("REPETITION",setup_environment.N)
 		logmanager.set("TRIAL", self.trial)
 		#logmanager.set("BUTTON CLICKS", self.clicks)
 		logmanager.set("SUCCESSFUL CLICKS", self.succesful_clicks)
@@ -458,7 +457,7 @@ def start():
 	setup_environment.setup(graph)
 
 	#loadMeshes
-	trackManager.pcNode = setupEnvironment.PencilContainer().getNode()
+	trackManager.pcNode = setupEnvironment.PencilContainer().create(setup_environment).getNode()
 
 	trackManager.disks.setupDisks(trackManager.pcNode)
 	trackManager.disks.setDisksTransMats(targetDiameter[0])
