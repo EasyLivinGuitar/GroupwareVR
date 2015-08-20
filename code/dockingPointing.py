@@ -621,8 +621,10 @@ def start():
 	trackManager.pcNode = PContainer.getNode()
 	trackManager.PContainer = PContainer
 
-	if (not DISABLEROTATION):
+	if not DISABLEROTATION:
 		trackManager.disks.setupDisks(trackManager.pcNode)
+		trackManager.disks.setDisksTransMats(targetDiameter[0])
+		trackManager.disks.setRotation( avango.gua.make_rot_mat(D_rot, 0, 1, 0) )
 		trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 	#listen to button
