@@ -25,21 +25,27 @@ Then start the scene with the according start.sh
 '''Settings'''
 class setupEnvironment(avango.script.Script):
 
+	testConfigNo = 9
+
 	#task config
 	'''disable translation on this axis'''
-	disableAxis = [1,1,1]#x,y,z
+	disableAxisList = [[0,0,0],[0,1,1],[0,1,1],[0,1,0],[0,1,0],[1,1,1],[1,1,1],[1,1,1],[0,0,0],[0,1,0]]#x,y,z
+	disableAxis = disableAxisList[testConfigNo]
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
-	virtualDOFRotate = 1
+	virtualDOFRotateList = [3,3,3,3,3,3,1,1,3,1]
+	virtualDOFRotate = virtualDOFRotateList[testConfigNo]
 
 	'''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
-	taskDOFRotate = 0
+	taskDOFRotateList = [0,0,0,0,0,3,1,1,3,1]
+	taskDOFRotate = taskDOFRotateList[testConfigNo]
 
 	if virtualDOFRotate == 1 and taskDOFRotate>1:
 		taskDOFRotate = 1
 
 	'''is the task above the table or is it on the table?'''
-	space3D = True
+	space3DList = [True, False, True, False, True, True, False, True, True, False]
+	space3D = space3DList[testConfigNo]
 
 	N=8
 
@@ -114,7 +120,7 @@ class setupEnvironment(avango.script.Script):
 
 	'''Get the degrees of freedom on the translation'''
 	def getDOFTranslate(self):
-		return 3-disableAxis[0]-disableAxis[1]-disableAxis[2]
+		return 3-self.disableAxis[0]-self.disableAxis[1]-self.disableAxis[2]
 
 	def print_graph(root_node):
 		stack = [ ( root_node, 0) ]
