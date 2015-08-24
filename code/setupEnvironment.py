@@ -27,7 +27,7 @@ class setupEnvironment(avango.script.Script):
 
 	#task config
 	'''disable translation on this axis'''
-	disableAxis = [0,1,0]#x,y,z
+	disableAxis = [1,1,1]#x,y,z
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotate = 1
@@ -39,7 +39,7 @@ class setupEnvironment(avango.script.Script):
 		taskDOFRotate = 1
 
 	'''is the task above the table or is it on the table?'''
-	space3D = False
+	space3D = True
 
 	N=8
 
