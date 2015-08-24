@@ -32,18 +32,16 @@ class setupEnvironment(avango.script.Script):
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotate = 1
 
-	'''should the task swich between rotation aims using 3  or 1 DOF?'''
-	taskDOFRotate = 1
+	'''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
+	taskDOFRotate = 0
 
-	if virtualDOFRotate == 1:
+	if virtualDOFRotate == 1 and taskDOFRotate>1:
 		taskDOFRotate = 1
 
 	'''is the task above the table or is it on the table?'''
 	space3D = False
 
 	N=8
-
-
 
 	#setup
 
@@ -116,11 +114,7 @@ class setupEnvironment(avango.script.Script):
 
 	'''Get the degrees of freedom on the translation'''
 	def getDOFTranslate(self):
-		if self.disableAxis[1] and self.disableAxis[2]:
-			return 1;
-		if self.disableAxis[1] or self.disableAxis[2]:
-			return 2
-		return 3
+		return 3-disableAxis[0]-disableAxis[1]-disableAxis[2]
 
 	def print_graph(root_node):
 		stack = [ ( root_node, 0) ]
