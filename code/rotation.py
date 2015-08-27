@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironment
+import core
 import logManager
 import math
 import os.path
@@ -15,7 +15,7 @@ FRAMES_FOR_SPEED=4
 FRAMES_FOR_AUTODETECT=3
 THRESHHOLD=40
 
-environment = setupEnvironment.setupEnvironment()
+environment = core.setupEnvironment()
 
 r = environment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
@@ -30,10 +30,10 @@ W_rot=[]
 for i in range(0, len(ID)):
 	if environment.randomTargets:
 		D_rot=[environment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
-		W_rot=[setupEnvironment.IDtoW(ID[0], D_rot[0]), setupEnvironment.IDtoW(ID[1], D_rot[1]), setupEnvironment.IDtoW(ID[2], D_rot[2])] #in degrees, Fitt's Law umgeformt nach W_rot
+		W_rot=[core.IDtoW(ID[0], D_rot[0]), core.IDtoW(ID[1], D_rot[1]), core.IDtoW(ID[2], D_rot[2])] #in degrees, Fitt's Law umgeformt nach W_rot
 	else:
 		D_rot=100
-		W_rot.append(setupEnvironment.IDtoW(ID[i], D_rot))
+		W_rot.append(core.IDtoW(ID[i], D_rot))
 
 targetDiameter = [
 	2*r*math.tan(W_rot[0]/2*math.pi/180),
@@ -109,7 +109,7 @@ class trackingManager(avango.script.Script):
 		self.endTime = 0
 		self.backAndForth = False
 		self.backAndForthAgain = False;
-		self.disks = setupEnvironment.DisksContainer(environment)
+		self.disks = core.DisksContainer(environment)
 		self.pcNode = None
 		self.taskNum = 0
 
@@ -221,7 +221,7 @@ class trackingManager(avango.script.Script):
 			self.setID(self.index)
 
 	def getErrorRotate(self):
-		return setupEnvironment.getRotationError1D(
+		return core.getRotationError1D(
 			self.pcNode.Transform.value.get_rotate_scale_corrected(),
 			self.disks.getRotate()
 		)
@@ -256,7 +256,7 @@ class trackingManager(avango.script.Script):
 		else: 
 			if(self.frame_counter % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2=self.pcNode.Transform.value.get_rotate()
-				div = setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div = core.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 
 				time=self.timer.value - self.start_time
 				self.current_speed=div/time
@@ -458,7 +458,7 @@ def start():
 	environment.setup(graph)
 
 	#loadMeshes
-	trackManager.pcNode = setupEnvironment.PencilContainer().create(environment).getNode()
+	trackManager.pcNode = core.PencilContainer().create(environment).getNode()
 
 	trackManager.disks.setupDisks(trackManager.pcNode)
 	trackManager.disks.setDisksTransMats(targetDiameter[0])

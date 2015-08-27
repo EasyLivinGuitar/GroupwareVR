@@ -3,7 +3,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import random
-import setupEnvironment
+import core
 import logManager
 import math
 import os.path
@@ -11,7 +11,7 @@ import os.path
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-environment = setupEnvironment.setupEnvironment()
+environment = core.setupEnvironment()
 r = environment.r #circle radius
 
 #fitt's law parameter
@@ -24,13 +24,13 @@ targetDiameter =[]
 ID = environment.ID
 
 for i in range(0, len(ID)):
-	W_rot.append(setupEnvironment.IDtoW(ID[i], D_rot)) #in degrees, Fitt's Law umgeformt nach W
+	W_rot.append(core.IDtoW(ID[i], D_rot)) #in degrees, Fitt's Law umgeformt nach W
 
 	#halbiere ID wenn es noch einen Rotations-Anteil gibt
 	if environment.taskDOFRotate==0:
-		W_trans.append(setupEnvironment.IDtoW(ID[i], D_trans)) #in degrees, Fitt's Law umgeformt nach W
+		W_trans.append(core.IDtoW(ID[i], D_trans)) #in degrees, Fitt's Law umgeformt nach W
 	else:
-		W_trans.append(setupEnvironment.IDtoW(ID[i]/2, D_trans)) #in degrees, Fitt's Law umgeformt nach W
+		W_trans.append(core.IDtoW(ID[i]/2, D_trans)) #in degrees, Fitt's Law umgeformt nach W
 		targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 THRESHHOLD_TRANSLATE = 0.3
@@ -137,7 +137,7 @@ class trackingManager(avango.script.Script):
 		self.isInside = False;
 		self.startTime = 0
 		self.taskNum = 0
-		self.disks = setupEnvironment.DisksContainer(environment)
+		self.disks = core.DisksContainer(environment)
 		self.aim = None
 		self.aimShadow = None
 		self.index = 0
@@ -170,7 +170,7 @@ class trackingManager(avango.script.Script):
 
 			#position disks
 			if environment.taskDOFRotate > 0:
-				if setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] :
+				if core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] :
 					#attach disks to pointer
 					self.disks.setTranslate( avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate()) )
 				else:
@@ -180,7 +180,7 @@ class trackingManager(avango.script.Script):
 				#highlight rotation if near target
 				if environment.showWhenInTarget:	
 					#highlight rotation if near target
-					if setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
+					if core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index] and self.getErrorRotate() < W_rot[self.index]/2:
 						highlightR = True
 						self.disks.highlightRed()
 					else:
@@ -310,14 +310,14 @@ class trackingManager(avango.script.Script):
 		
 	def getErrorRotate(self):
 		if environment.taskDOFRotate>0:
-			return setupEnvironment.getRotationError1D(
+			return core.getRotationError1D(
 				self.pcNode.Transform.value.get_rotate_scale_corrected(),
 				self.disks.getRotate()
 			)
 		return 0
 
 	def getErrorTranslate(self):
-		return setupEnvironment.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
+		return core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
 
 	def getPath(self):
 		path="results/"+taskString+"_"+str(environment.taskDOFRotate)+"DOF/"
@@ -456,7 +456,7 @@ class trackingManager(avango.script.Script):
 			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
 				self.PencilRotation2 = self.pcNode.Transform.value.get_rotate()
 				self.end_time = self.timer.value
-				div = setupEnvironment.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
+				div = core.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
 				time = self.end_time-self.start_time
 				self.current_speed_rotate = div / time
 
@@ -610,7 +610,7 @@ def start():
 	environment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes
-	PContainer = setupEnvironment.PencilContainer().create(environment)
+	PContainer = core.PencilContainer().create(environment)
 	trackManager.pcNode = PContainer.getNode()
 	trackManager.PContainer = PContainer
 
