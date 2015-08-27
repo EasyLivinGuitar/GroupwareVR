@@ -263,6 +263,8 @@ class trackingManager(avango.script.Script):
 
 		if(self.index==len(ID)):
 			self.endedTests = True
+			environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
+			print("Your Score: " + str(self.points))
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
@@ -304,9 +306,7 @@ class trackingManager(avango.script.Script):
 					
 
 			self.setID(self.index)
-		else: #trial over
-			environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
-			print("Your Score: " + str(self.points))
+
 		
 	def getErrorRotate(self):
 		if environment.taskDOFRotate>0:

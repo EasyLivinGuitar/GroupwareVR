@@ -26,7 +26,7 @@ Then start the scene with the according start.sh
 class setupEnvironment(avango.script.Script):
 
 	#here you can canfigure the number of the test
-	testConfigNo = 9
+	testConfigNo = 5
 
 	#task config
 	'''disable translation on this axis'''

@@ -97,6 +97,7 @@ class trackingManager(avango.script.Script):
 	ID=0
 	TP=0
 	overshoots_r=0
+	points = 0
 
 	overshootInside=False
 	goal=False
@@ -166,6 +167,9 @@ class trackingManager(avango.script.Script):
 			if(environment.useAutoDetect==False):
 				self.succesful_clicks=self.succesful_clicks+1
 			environment.playSound("hit_rotate")
+			if(self.startedTests):
+				self.setMT(self.lastTime, self.timer.value)
+				self.points = self.points + (self.ID / self.MT)
 		else:
 			# print("MISS:" + str(self.getErrorRotate())+"°")
 			self.goal=False
@@ -178,7 +182,9 @@ class trackingManager(avango.script.Script):
 			self.index=self.index+1
 
 		if(self.index==len(W_rot)):
-			self.endedTests=True
+			self.endedTests = True
+			environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
+			print("Your Score: " + str(self.points))
 
 		#print("P:"+str( pencilRot )+"")
 		#print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
@@ -213,9 +219,6 @@ class trackingManager(avango.script.Script):
 				self.startedTests=True
 
 			self.setID(self.index)
-		else: #trial over
-			environment.setBackgroundColor(avango.gua.Color(0,0,1), 1)
-
 
 	def getErrorRotate(self):
 		return setupEnvironment.getRotationError1D(
@@ -368,7 +371,6 @@ class trackingManager(avango.script.Script):
 
 	def logSetter(self):
 		self.setID(self.index)
-		self.setMT(self.lastTime, self.timer.value)
 		self.setTP(self.index)
 
 		if self.getErrorRotate() < W_rot[self.index]/2:
