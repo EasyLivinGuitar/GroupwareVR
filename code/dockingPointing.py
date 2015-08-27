@@ -17,21 +17,21 @@ r = environment.r #circle radius
 #fitt's law parameter
 D_rot=100 #in degrees
 D_trans= 0.3 #in meter
-ID=[3, 4, 5] #fitt's law
 W_rot=[]
 W_trans=[]
 targetDiameter =[]
+
+ID = environment.ID
+
 for i in range(0, len(ID)):
-	W_rot.append(D_rot/(2**(ID[i]/2)-1)) #in degrees, Fitt's Law umgeformt nach W
+	W_rot.append(setupEnvironment.IDtoW(ID[i], D_rot)) #in degrees, Fitt's Law umgeformt nach W
 
 	#halbiere ID wenn es noch einen Rotations-Anteil gibt
 	if environment.taskDOFRotate==0:
-		divisor = 1
+		W_trans.append(setupEnvironment.IDtoW(ID[i], D_trans)) #in degrees, Fitt's Law umgeformt nach W
 	else:
-		divisor = 2
+		W_trans.append(setupEnvironment.IDtoW(ID[i]/2, D_trans)) #in degrees, Fitt's Law umgeformt nach W
 		targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
-	W_trans.append(D_trans/(2**(ID[i]/divisor)-1)) #in degrees, Fitt's Law umgeformt nach W
-
 
 THRESHHOLD_TRANSLATE = 0.3
 FRAMES_FOR_AUTODETECT_TRANSLATE = 3
@@ -574,7 +574,7 @@ class trackingManager(avango.script.Script):
 
 	def setTP(self, index):
 		if(self.MT>0 and self.current_index<len(ID)):
-			self.TP=ID[index]/self.MT
+			self.TP = ID[index]/self.MT
 
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:

@@ -25,6 +25,7 @@ Then start the scene with the according start.sh
 '''Settings'''
 class setupEnvironment(avango.script.Script):
 
+	#here you can canfigure the number of the test
 	testConfigNo = 9
 
 	#task config
@@ -47,9 +48,11 @@ class setupEnvironment(avango.script.Script):
 	space3DList = [True, False, True, False, True, True, False, True, True, False]
 	space3D = space3DList[testConfigNo]
 
+	#the amount of trials per ID
 	N=8
 
 	#setup
+	ID =[4, 5, 6] #fitt's law
 
 	''' difference from screen center to center of tracking'''
 	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -270,10 +273,14 @@ class setupEnvironment(avango.script.Script):
 					if sound == "levelUp":
 				 		self.levelUpSound.Play.value = True
 
-
+##
+# @param ID the index of difficulty
+# @param A the amplitude
+def IDtoW(ID, A):
+	return (2*A) / (2**ID)
 
 ## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
-# @param MATRIX The rotation matrix to be converted.
+# @param q The rotation quat to be converted.
 def get_euler_angles(q):
   sqx = q.x * q.x
   sqy = q.y * q.y
