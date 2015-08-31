@@ -26,7 +26,7 @@ Then start the scene with the according start.sh
 class setupEnvironment(avango.script.Script):
 
 	#here you can canfigure the number of the test
-	testConfigNo = 5
+	testConfigNo = 8
 
 	#task config
 	'''disable translation on this axis'''
@@ -64,7 +64,7 @@ class setupEnvironment(avango.script.Script):
 	displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
 	logResults = True
-	saveReplay = False
+	saveReplay = True
 
 	'''if false needs a button press or next step, if true then autodetects'''
 	useAutoDetect =  False

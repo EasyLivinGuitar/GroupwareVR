@@ -7,6 +7,7 @@ import core
 import logManager
 import math
 import os.path
+import glob
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -333,13 +334,13 @@ class trackingManager(avango.script.Script):
 		
 		#fint out which file number
 		if self.created_logfile == False: #create File 
-			self.num_logfiles = len([f for f in os.listdir(path)
-				if os.path.isfile(os.path.join(path, f))])
+			self.num_files = len(glob.glob1(path,"*.csv"))
+			#if os.path.isfile(os.path.join(path, f)):
 			self.created_logfile = True
 
 		if(self.startedTests and self.endedTests == False):
 			self.logSetter()
-			logmanager.writeToFile(path+taskString+"_trial"+str(self.num_logfiles)+".csv")
+			logmanager.writeToFile(path+taskString+"_trial"+str(self.num_files)+".csv")
 			self.resetValues()
 
 	def logReplay(self):
@@ -347,11 +348,11 @@ class trackingManager(avango.script.Script):
 
 		if(self.endedTests== False):
 			if self.created_replayfile == False: #create File 
-				self.num_files = len([f for f in os.listdir(path)
-					if os.path.isfile(os.path.join(path, f))])
+				self.num_files = len(glob.glob1(path,"*.csv"))
+				#if os.path.isfile(os.path.join(path, f)):
 				self.created_replayfile = True
 			else: #write permanent values
-				self.result_file = open(path+taskString+"_trial"+str(self.num_logfiles)+".replay", "a+")
+				self.result_file = open(path+taskString+"_trial"+str(self.num_files)+".replay", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
