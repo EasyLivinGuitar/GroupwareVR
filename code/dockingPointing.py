@@ -321,7 +321,7 @@ class trackingManager(avango.script.Script):
 		return core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
 
 	def getPath(self):
-		path="results/"+taskString+"_"+str(environment.taskDOFRotate)+"DOF/"
+		path="results/"+taskString+" T"+str(environment.getDOFTranslateReal())+"_"+str(environment.getDOFTranslateVirtual())+" R"+str(environment.taskDOFRotate)+"/"
 
 		#create dir if not existent
 		if not os.path.exists(path):
@@ -400,7 +400,7 @@ class trackingManager(avango.script.Script):
 		else:
 			logmanager.set("DOF real T", 2)
 			logmanager.set("DOF real R", 1)
-		logmanager.set("DOF virtual T", environment.getDOFTranslate())
+		logmanager.set("DOF virtual T", environment.getDOFTranslateVirtual())
 		logmanager.set("DOF virtual R", environment.virtualDOFRotate)
 		logmanager.set("task R DOF", environment.taskDOFRotate)
 		logmanager.set("movement direction", self.aim.Transform.value.get_translate()-self.aimShadow.Transform.value.get_translate())

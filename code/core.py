@@ -26,7 +26,7 @@ Then start the scene with the according start.sh
 class setupEnvironment(avango.script.Script):
 
 	#here you can canfigure the number of the test
-	testConfigNo = 8
+	testConfigNo = 5
 
 	#task config
 	'''disable translation on this axis'''
@@ -121,9 +121,16 @@ class setupEnvironment(avango.script.Script):
 		self.timerField.connect_from(self.timeSensor.Time)
 
 
-	'''Get the degrees of freedom on the translation'''
-	def getDOFTranslate(self):
+	'''Get the degrees of freedom on the translation virtually'''
+	def getDOFTranslateVirtual(self):
 		return 3-self.disableAxis[0]-self.disableAxis[1]-self.disableAxis[2]
+	
+	def getDOFTranslateReal(self):
+		if self.space3D:
+			return 3
+		else: 
+			return 1
+
 
 	def print_graph(root_node):
 		stack = [ ( root_node, 0) ]

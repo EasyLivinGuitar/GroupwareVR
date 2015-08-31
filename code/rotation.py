@@ -7,6 +7,7 @@ import core
 import logManager
 import math
 import os.path
+import glob
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -26,6 +27,8 @@ rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 
 ID = environment.ID
 W_rot=[]
+
+taskString = "rotation"
 
 for i in range(0, len(ID)):
 	if environment.randomTargets:
@@ -327,7 +330,7 @@ class trackingManager(avango.script.Script):
 		return settings[index]
 	
 	def getPath(self):
-		path="results/rotation_"+str(environment.taskDOFRotate)+"DOF/"
+		path="results/"+taskString+" T"+str(environment.getDOFTranslateReal())+"_"+str(environment.getDOFTranslateVirtual())+" R"+str(environment.taskDOFRotate)+"/"
 
 		#create dir if not existent
 		if not os.path.exists(path):
@@ -340,33 +343,31 @@ class trackingManager(avango.script.Script):
 		
 		#fint out which file number
 		if self.created_logfile == False: #create File 
-			self.num_logfiles = len([f for f in os.listdir(path)
-				if os.path.isfile(os.path.join(path, f))])
+			self.num_files = len(glob.glob1(path,"*.csv"))
+			#if os.path.isfile(os.path.join(path, f)):
 			self.created_logfile = True
 
 		if(self.startedTests and self.endedTests== False):
 			self.logSetter()
-			logmanager.writeToFile(path+"rotation_trial"+str(self.num_logfiles)+".csv")
+			logmanager.writeToFile(path+taskString+"_trial"+str(self.num_files)+".csv")
 			self.resetValues()
 
 	def logReplay(self):
-		if environment.taskDOFRotate==3:
-			path="results/results_rotation_3D/"
-		else:
-			path="results/results_rotation_2D/"
-		if(self.endedTests==False):
-			if self.created_file==False: #create File 
-				self.num_files=len([f for f in os.listdir(path)
-					if os.path.isfile(os.path.join(path, f))])
-				self.created_file=True
+		path = self.getPath()
+
+		if(self.endedTests== False):
+			if self.created_replayfile == False: #create File 
+				self.num_files = len(glob.glob1(path,"*.csv"))
+				#if os.path.isfile(os.path.join(path, f)):
+				self.created_replayfile = True
 			else: #write permanent values
-				self.result_file=open(path+"rotation2D_trial"+str(self.num_files)+".replay", "a+")
+				self.result_file = open(path+taskString+"_trial"+str(self.num_files)+".replay", "a+")
 				
-				# self.result_file.write(
-				# 	"TimeStamp: "+str(self.timer.value)+"\n"+
-				# 	"Error: "+str(self.getErrorRotate())+"\n"+
-				# 	"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n"+
-				# 	"Aimpos: \n"+str(self.disks.Transform.value)+"\n\n")
+				self.result_file.write(
+					"TimeStamp: "+str(self.timer.value)+"\n"+
+					"ErrorRotate: "+str(self.getErrorRotate())+"\n"+
+					"Pointerpos: \n"+str(self.pcNode.Transform.value)+"\n\n"
+				)
 				self.result_file.close()	 
 
 	def logSetter(self):
