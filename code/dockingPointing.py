@@ -26,12 +26,10 @@ ID = environment.ID
 for i in range(0, len(ID)):
 	W_rot.append(core.IDtoW(ID[i], environment.D_rot)) #in degrees, Fitt's Law umgeformt nach W
 
-	#halbiere ID wenn es noch einen Rotations-Anteil gibt
-	if environment.taskDOFRotate ==0:
-		W_trans.append(core.IDtoW(ID[i], environment.D_trans)) #in degrees, Fitt's Law umgeformt nach W
-	else:
-		W_trans.append(core.IDtoW(ID[i]/2, environment.D_trans)) #in degrees, Fitt's Law umgeformt nach W
-		targetDiameter.append(2*environment.r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+	W_trans.append(core.IDtoW(ID[i], environment.D_trans)) #in degrees, Fitt's Law umgeformt nach W
+	#add ID wenn es noch einen Rotations-Anteil gibt
+	if environment.taskDOFRotate !=0:
+		targetDiameter.append(2*environment.r*math.tan(W_rot[i]*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 THRESHHOLD_TRANSLATE = 0.3
 FRAMES_FOR_AUTODETECT_TRANSLATE = 3
@@ -238,7 +236,7 @@ class trackingManager(avango.script.Script):
 					environment.playSound("hit_rotate")
 				if(self.startedTests):
 					self.setMT(self.lastTime, self.timer.value)
-					self.points = self.points + (self.ID / self.MT)
+					self.points = self.points + (self.ID+self.ID / self.MT)
 			else:
 				#miss
 				self.goal = False
@@ -405,13 +403,13 @@ class trackingManager(avango.script.Script):
 		logmanager.set("target width T", W_trans[self.index])
 		logmanager.set("target distance R", environment.D_rot)
 		logmanager.set("target width R", W_rot[self.index])
-		logmanager.set("ID combined", self.ID)
+		logmanager.set("ID combined", self.ID+self.ID)#add and rot
 		if environment.taskDOFRotate ==0:
 			logmanager.set("ID T", self.ID)
 			logmanager.set("ID R", 0)
 		else:
-			logmanager.set("ID T", self.ID/2)
-			logmanager.set("ID R ", self.ID/2)
+			logmanager.set("ID T", self.ID)
+			logmanager.set("ID R ", self.ID)
 		logmanager.set("repetition", environment.N)
 		logmanager.set("trial", self.trial)
 		logmanager.set("Button clicks", self.clicks)

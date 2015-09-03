@@ -504,6 +504,7 @@ class DisksContainer():
 			self.disk4 = None
 			self.disk5 = None
 			self.disk6 = None
+			self.human = None
 			self.node = None
 			self.setup = setEnv
 
@@ -533,6 +534,11 @@ class DisksContainer():
 				self.disk5 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 				self.node.Children.value.append(self.disk5)
 
+			if self.setup.showHuman:
+				self.human = self.setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+				#self.human.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 0.5))
+				#self.human.Material.value.EnableBackfaceCulling.value = False
+				self.node.Children.value.append(self.human)
 
 			self.setup.everyObject.Children.value.append(self.node)
 			return self.node
@@ -548,7 +554,10 @@ class DisksContainer():
 			if self.setup.virtualDOFRotate==3:
 				self.disk5.Transform.value = avango.gua.make_rot_mat(-90,1,0,0)*avango.gua.make_trans_mat(0, 0, -self.setup.r)*avango.gua.make_scale_mat(diam)
 				self.disk4.Transform.value = avango.gua.make_rot_mat(90,1,0,0) *avango.gua.make_trans_mat(0, 0, -self.setup.r)*avango.gua.make_scale_mat(diam)
-
+			if self.setup.showHuman:
+				self.human.Transform.value = (
+					avango.gua.make_scale_mat(0.012)
+				)
 		def setRotation(self, rotMat):
 			self.node.Transform.value = avango.gua.make_trans_mat( self.node.Transform.value.get_translate() ) * rotMat *avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
 			
