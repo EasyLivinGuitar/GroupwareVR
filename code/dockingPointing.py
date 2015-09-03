@@ -387,7 +387,7 @@ class trackingManager(avango.script.Script):
 			if(self.goal):
 				self.succesful_clicks = self.succesful_clicks+1
 
-		logmanager.set("User Id", environment.userID)
+		logmanager.set("User Id", environment.userId)
 		logmanager.set("Group", environment.group)
 
 		if(environment.space3D):

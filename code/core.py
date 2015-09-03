@@ -76,6 +76,9 @@ class setupEnvironment(avango.script.Script):
 	'''highlight if inside the target'''
 	showWhenInTarget = True
 
+	'''show human'''
+	showHuman = True
+
 	res_pass = avango.gua.nodes.ResolvePassDescription()
 
 	viewer = avango.gua.nodes.Viewer()
@@ -403,21 +406,26 @@ def getDistance3D(target1, target2):
 	return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
 
 class PencilContainer(avango.script.Script):
-	pencil = None
+	pointer_device_sensor = None
 	inputMat = avango.gua.SFMatrix4()
-	loader = avango.gua.nodes.TriMeshLoader()
 
 	def __init__(self):
 		self.super(PencilContainer).__init__()
 
 	def create(self, setup):
 		self.setup = setup
-		self.pencil = self.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
+
+		#create cross
+		self.pencil = setup.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj", avango.gua.LoaderFlags.DEFAULTS |  avango.gua.LoaderFlags.LOAD_MATERIALS)
 		self.pencil.Transform.value = setup.offsetPointer*avango.gua.make_scale_mat(self.setup.r/self.setup.r_model)
 		#pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
 		#pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
 		#pencil.Material.value.set_uniform("Emissivity", 1.0)
-		
+		self.setup.everyObject.Children.value.append(self.pencil)
+		if setup.showHuman:
+			self.human = setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj", avango.gua.LoaderFlags.DEFAULTS)
+			self.setup.everyObject.Children.value.append(self.human)
+
 		#listen to tracked position of pointer
 		self.pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService = avango.daemon.DeviceService())
 		self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
@@ -426,17 +434,21 @@ class PencilContainer(avango.script.Script):
 		#connect pencil->inputMat
 		self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
 		
-		self.setup.everyObject.Children.value.append(self.pencil)
 		return self
-
 
 	@field_has_changed(inputMat)
 	def pointermat_changed(self):
 		#get input
-		self.pencil.Transform.value = self.setup.offsetPointer*self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
+		self.pencil.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(self.pencil.Transform.value.get_scale())
 		#then reduce
 		self.reducePencilMat()
-		#print(self.inputMat.value)
+		#apply to human
+		if self.setup.showHuman:
+			self.human.Transform.value = (
+				 avango.gua.make_trans_mat(self.pencil.Transform.value.get_translate())
+				*avango.gua.make_rot_mat(self.pencil.Transform.value.get_rotate_scale_corrected())
+				*avango.gua.make_scale_mat(0.012)
+			)
 
 	def getNode(self):
 		return self.pencil
