@@ -12,27 +12,26 @@ import glob
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
 
-environment = core.setupEnvironment()
-r = environment.r #circle radius
+print("Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
+environment = core.setupEnvironment().pseudoConst(int(input("Config Number: ")))
 
 #fitt's law parameter
-D_rot=100 #in degrees
-D_trans= 0.3 #in meter
-W_rot=[]
-W_trans=[]
+
+W_rot =[]
+W_trans =[]
 targetDiameter =[]
 
 ID = environment.ID
 
 for i in range(0, len(ID)):
-	W_rot.append(core.IDtoW(ID[i], D_rot)) #in degrees, Fitt's Law umgeformt nach W
+	W_rot.append(core.IDtoW(ID[i], environment.D_rot)) #in degrees, Fitt's Law umgeformt nach W
 
 	#halbiere ID wenn es noch einen Rotations-Anteil gibt
-	if environment.taskDOFRotate==0:
-		W_trans.append(core.IDtoW(ID[i], D_trans)) #in degrees, Fitt's Law umgeformt nach W
+	if environment.taskDOFRotate ==0:
+		W_trans.append(core.IDtoW(ID[i], environment.D_trans)) #in degrees, Fitt's Law umgeformt nach W
 	else:
-		W_trans.append(core.IDtoW(ID[i]/2, D_trans)) #in degrees, Fitt's Law umgeformt nach W
-		targetDiameter.append(2*r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
+		W_trans.append(core.IDtoW(ID[i]/2, environment.D_trans)) #in degrees, Fitt's Law umgeformt nach W
+		targetDiameter.append(2*environment.r*math.tan(W_rot[i]/2*math.pi/180))#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 THRESHHOLD_TRANSLATE = 0.3
 FRAMES_FOR_AUTODETECT_TRANSLATE = 3
@@ -56,7 +55,7 @@ class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
 	timer = avango.SFFloat()
 	
-	time2= 0
+	time2 = 0
 
 	startedTests = False
 	endedTests = False
@@ -64,12 +63,10 @@ class trackingManager(avango.script.Script):
 	created_logfile = False
 	created_replayfile = False
 
-	current_index= 0
+	current_index = 0
 	counter = 0
 
 	#Logging
-	userID = 0
-	group = 0
 	trial = 1
 	clicks = 0
 
@@ -106,7 +103,7 @@ class trackingManager(avango.script.Script):
 	reversal_points_t = []
 	reversal_points_r = []
 
-	succesful_clicks= 0
+	succesful_clicks = 0
 
 	frame_counter = 0
 	frame_counter2 = 0
@@ -120,16 +117,14 @@ class trackingManager(avango.script.Script):
 	inside = False
 
 	# Logging
-	userID = 0
-	group = 0
 	trial = 0
 	hits = 0
 	goal = False
 	error = 0
 	last_error = 0
-	MT= 0
-	ID= 0
-	TP= 0
+	MT = 0
+	ID = 0
+	TP = 0
 
 	PContainer = None
 
@@ -152,7 +147,7 @@ class trackingManager(avango.script.Script):
 	@field_has_changed(Button)
 	def button_pressed(self):
 		if self.Button.value == True:
-			if(self.endedTests== False):
+			if(self.endedTests == False):
 				self.select()
 				if environment.logResults:	
 					self.logData()
@@ -201,7 +196,7 @@ class trackingManager(avango.script.Script):
 			if highlightR:
 				environment.setBackgroundColor(avango.gua.Color(0.2, 0.1, 0.0))
 
-			if (highlightT and highlightR) or (environment.taskDOFRotate==0 and highlightT):
+			if (highlightT and highlightR) or (environment.taskDOFRotate ==0 and highlightT):
 				environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
 
 			if (not highlightT) and (not highlightR):
@@ -212,10 +207,10 @@ class trackingManager(avango.script.Script):
 			self.aim.Material.BackfaceCulling = False
 
 		#set logging vars
-		if self.startedTests and self.endedTests== False:
+		if self.startedTests and self.endedTests == False:
 			self.setSpeedTranslate()
 			self.setSpeedRotate()
-			self.frame_counter_speed= self.frame_counter_speed+1
+			self.frame_counter_speed = self.frame_counter_speed+1
 			self.setAccelerationTranslate()
 			self.setAccelerationRotate()
 			self.frame_counter_acceleration = self.frame_counter_acceleration+1
@@ -227,16 +222,17 @@ class trackingManager(avango.script.Script):
 		if environment.saveReplay:	
 			self.logReplay()
 
-		environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
+		#hack to prevent failingfield connection
+		#environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
 	def select(self):
 		if(self.index < len(ID)):
 			#auswerten
 			if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
 				#hit
-				self.goal= True
+				self.goal = True
 				environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-				if environment.taskDOFRotate==0:
+				if environment.taskDOFRotate ==0:
 					environment.playSound("balloon")
 				else:
 					environment.playSound("hit_rotate")
@@ -245,7 +241,7 @@ class trackingManager(avango.script.Script):
 					self.points = self.points + (self.ID / self.MT)
 			else:
 				#miss
-				self.goal= False
+				self.goal = False
 				environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
 				environment.playSound("miss")
 
@@ -262,7 +258,7 @@ class trackingManager(avango.script.Script):
 		
 
 
-		if(self.index==len(ID)):
+		if(self.index ==len(ID)):
 			self.endedTests = True
 			environment.setBackgroundColor(avango.gua.Color(0,0,0.5))
 			print("Your Score: " + str(self.points))
@@ -290,8 +286,8 @@ class trackingManager(avango.script.Script):
 				self.aimShadow.Transform.value = avango.gua.make_trans_mat(self.aimShadow.Transform.value.get_translate())* avango.gua.make_scale_mat(W_trans[self.index])	
 				
 				if environment.taskDOFRotate>0:
-					if self.taskNum==0 or self.taskNum==2:
-						distance = D_rot
+					if self.taskNum ==0 or self.taskNum ==2:
+						distance = environment.D_rot
 						if environment.taskDOFRotate == 3:
 							rotateAroundX = 1
 						else:
@@ -321,7 +317,7 @@ class trackingManager(avango.script.Script):
 		return core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
 
 	def getPath(self):
-		path="results/"+taskString+" T"+str(environment.getDOFTranslateReal())+"_"+str(environment.getDOFTranslateVirtual())+" R"+str(environment.taskDOFRotate)+"/"
+		path ="results/"+taskString+" T"+str(environment.getDOFTranslateReal())+"_"+str(environment.getDOFTranslateVirtual())+" R"+str(environment.taskDOFRotate)+"/"
 
 		#create dir if not existent
 		if not os.path.exists(path):
@@ -346,7 +342,7 @@ class trackingManager(avango.script.Script):
 	def logReplay(self):
 		path = self.getPath()
 
-		if(self.endedTests== False):
+		if(self.endedTests == False):
 			if self.created_replayfile == False: #create File 
 				self.num_files = len(glob.glob1(path,"*.csv"))
 				#if os.path.isfile(os.path.join(path, f)):
@@ -379,9 +375,9 @@ class trackingManager(avango.script.Script):
 
 	def logSetter(self):
 		if self.getErrorRotate() < W_rot[self.index]/2 and self.getErrorTranslate() < W_trans[self.index]/2:
-			self.goal= True
+			self.goal = True
 		else:
-			self.goal= False
+			self.goal = False
 
 		if(environment.useAutoDetect):
 			hit_type ="Auto"
@@ -389,10 +385,10 @@ class trackingManager(avango.script.Script):
 			hit_type ="Manual"
 			self.clicks = self.clicks+1
 			if(self.goal):
-				self.succesful_clicks= self.succesful_clicks+1
+				self.succesful_clicks = self.succesful_clicks+1
 
-		logmanager.set("User Id", self.userID)
-		logmanager.set("Group", self.group)
+		logmanager.set("User Id", environment.userID)
+		logmanager.set("Group", environment.group)
 
 		if(environment.space3D):
 			logmanager.set("DOF real T", 3)
@@ -405,12 +401,12 @@ class trackingManager(avango.script.Script):
 		logmanager.set("task R DOF", environment.taskDOFRotate)
 		logmanager.set("movement direction", self.aim.Transform.value.get_translate()-self.aimShadow.Transform.value.get_translate())
 
-		logmanager.set("target distance T", D_trans)
+		logmanager.set("target distance T", environment.D_trans)
 		logmanager.set("target width T", W_trans[self.index])
-		logmanager.set("target distance R", D_rot)
+		logmanager.set("target distance R", environment.D_rot)
 		logmanager.set("target width R", W_rot[self.index])
 		logmanager.set("ID combined", self.ID)
-		if environment.taskDOFRotate==0:
+		if environment.taskDOFRotate ==0:
 			logmanager.set("ID T", self.ID)
 			logmanager.set("ID R", 0)
 		else:
@@ -451,7 +447,7 @@ class trackingManager(avango.script.Script):
 
 	def setSpeedRotate(self):
 		if(self.frame_counter_speed % 5 == 0):
-			self.PencilRotation1= self.pcNode.Transform.value.get_rotate()
+			self.PencilRotation1 = self.pcNode.Transform.value.get_rotate()
 			self.start_time = self.timer.value
 		else: 
 			if(self.frame_counter_speed % 5 == FRAMES_FOR_SPEED-1):
@@ -546,12 +542,12 @@ class trackingManager(avango.script.Script):
 					self.first_rotate = False
 
 				if(self.local_peak_speed_r > THRESHHOLD_ROTATE):
-					self.speededup= True
+					self.speededup = True
 					self.local_peak_speed_r = 0
 				
 				if(self.speededup):
 					self.reversal_points_r.append(self.pcNode.Transform.value.get_rotate().get_angle())
-					self.speededup= False
+					self.speededup = False
 
 	def resetValues(self):
 		self.overshoots_t = 0
@@ -570,7 +566,7 @@ class trackingManager(avango.script.Script):
 			self.ID = ID[index]
 
 	def setMT(self, start, end):
-		self.MT=end-start
+		self.MT =end-start
 		self.lastTime = self.timer.value
 
 	def setTP(self, index):
@@ -580,8 +576,8 @@ class trackingManager(avango.script.Script):
 	def handle_key(self, key, scancode, action, mods):
 		if action == 1:
 			#32 is space 335 is num_enter
-			if key==32 or key==335:
-				if(self.endedTests== False):
+			if key ==32 or key ==335:
+				if(self.endedTests == False):
 					self.Button.value = True
 				else:
 					print("Test ended")
@@ -589,15 +585,13 @@ class trackingManager(avango.script.Script):
 
 def start():
 	trackManager = trackingManager()
-	trackManager.userID = input("USER ID: ")
-	trackManager.group = input("GROUP: ")
 
 	environment.getWindow().on_key_press(trackManager.handle_key)
 	environment.setup(graph)
 
 	trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
 	trackManager.aim.Transform.value = (
-		avango.gua.make_trans_mat(-D_trans/2, 0, 0)
+		avango.gua.make_trans_mat(-environment.D_trans/2, 0, 0)
 		*avango.gua.make_scale_mat(W_trans[0])
 	)
 	trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
@@ -605,7 +599,7 @@ def start():
 	environment.everyObject.Children.value.append(trackManager.aim)
 
 	trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
+	trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(environment.D_trans/2, 0, 0)*avango.gua.make_scale_mat(W_trans[0])
 	trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
 	trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
 	environment.everyObject.Children.value.append(trackManager.aimShadow)
@@ -618,7 +612,7 @@ def start():
 	if environment.taskDOFRotate>0:
 		trackManager.disks.setupDisks(trackManager.pcNode)
 		trackManager.disks.setDisksTransMats(targetDiameter[0])
-		trackManager.disks.setRotation( avango.gua.make_rot_mat(D_rot, 0, 1, 0) )
+		trackManager.disks.setRotation( avango.gua.make_rot_mat(environment.D_rot, 0, 1, 0) )
 		trackManager.disks.setDisksTransMats(targetDiameter[0])
 
 	#listen to button

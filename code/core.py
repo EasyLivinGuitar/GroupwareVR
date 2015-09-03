@@ -25,28 +25,21 @@ Then start the scene with the according start.sh
 '''Settings'''
 class setupEnvironment(avango.script.Script):
 
-	#here you can canfigure the number of the test
-	testConfigNo = 5
+	userId = 0
+	group = 0
 
 	#task config
 	'''disable translation on this axis'''
 	disableAxisList = [[0,0,0],[0,1,1],[0,1,1],[0,1,0],[0,1,0],[1,1,1],[1,1,1],[1,1,1],[0,0,0],[0,1,0]]#x,y,z
-	disableAxis = disableAxisList[testConfigNo]
 
 	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotateList = [3,3,3,3,3,3,1,1,3,1]
-	virtualDOFRotate = virtualDOFRotateList[testConfigNo]
 
 	'''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
 	taskDOFRotateList = [0,0,0,0,0,3,1,1,3,1]
-	taskDOFRotate = taskDOFRotateList[testConfigNo]
-
-	if virtualDOFRotate == 1 and taskDOFRotate>1:
-		taskDOFRotate = 1
 
 	'''is the task above the table or is it on the table?'''
 	space3DList = [True, False, True, False, True, True, False, True, True, False]
-	space3D = space3DList[testConfigNo]
 
 	#the amount of trials per ID
 	N=8
@@ -62,6 +55,9 @@ class setupEnvironment(avango.script.Script):
 
 	'''get the position of the center where the pointer and the aim is located.'''
 	displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
+
+	D_rot=100 #in degrees
+	D_trans= 0.3 #in meter
 
 	logResults = True
 	saveReplay = True
@@ -116,10 +112,22 @@ class setupEnvironment(avango.script.Script):
 
 	def __init__(self):
 		self.super(setupEnvironment).__init__()
+
+	def pseudoConst(self, testConfigNo):
 		self.timeTillBlack = 0
 		self.permanentBG = False
+		#connect time with the timerField
 		self.timerField.connect_from(self.timeSensor.Time)
 
+		self.disableAxis = self.disableAxisList[testConfigNo]
+		self.virtualDOFRotate = self.virtualDOFRotateList[testConfigNo]
+		self.space3D = self.space3DList[testConfigNo]
+		self.taskDOFRotate = self.taskDOFRotateList[testConfigNo]
+
+		if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
+			self.taskDOFRotate = 1
+
+		return self
 
 	'''Get the degrees of freedom on the translation virtually'''
 	def getDOFTranslateVirtual(self):
@@ -201,16 +209,18 @@ class setupEnvironment(avango.script.Script):
 
 		self.head_device_sensor.Station.value = "glasses"
 
-		self.cam.Transform.connect_from(self.head_device_sensor.Matrix)
+		self.cam.Transform.connect_from(self.head_device_sensor.Matrix)#headTracking->camera
 
 
 		graph.Root.value.Children.value=[light, screen]
 
+		#connect camera with soundrenderer
 		self.soundtraverser.RootNode.value = graph.Root.value
 		self.soundtraverser.Traverse.value = True
 
 		self.soundRenderer.ListenerPosition.connect_from(self.cam.Transform)
 
+		#setup sounds
 		self.balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
 		self.balloonSound.Loop.value = False
 		self.balloonSound.Play.value = True
@@ -236,7 +246,6 @@ class setupEnvironment(avango.script.Script):
 		self.viewer.Windows.value = [self.window]
 
 		graph.Root.value.Children.value.append(self.everyObject)
-
 
 	@field_has_changed(timerField)
 	def update(self):
@@ -414,9 +423,9 @@ class PencilContainer(avango.script.Script):
 		self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
 
 		self.pointer_device_sensor.Station.value = "pointer"
-
+		#connect pencil->inputMat
 		self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
-		#connect pencil
+		
 		self.setup.everyObject.Children.value.append(self.pencil)
 		return self
 

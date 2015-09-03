@@ -16,9 +16,9 @@ FRAMES_FOR_SPEED=4
 FRAMES_FOR_AUTODETECT=3
 THRESHHOLD=40
 
-environment = core.setupEnvironment()
+print("Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
+environment = core.setupEnvironment().pseudoConst(int(input("Config Number: ")))
 
-r = environment.r
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
 
@@ -32,16 +32,16 @@ taskString = "rotation"
 
 for i in range(0, len(ID)):
 	if environment.randomTargets:
-		D_rot=[environment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
-		W_rot=[core.IDtoW(ID[0], D_rot[0]), core.IDtoW(ID[1], D_rot[1]), core.IDtoW(ID[2], D_rot[2])] #in degrees, Fitt's Law umgeformt nach W_rot
+		environment.D_rot=[environment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate()) ] #in degrees
+		W_rot=[core.IDtoW(ID[0], environment.D_rot[0]), core.IDtoW(ID[1], environment.D_rot[1]), core.IDtoW(ID[2], environment.D_rot[2])] #in degrees, Fitt's Law umgeformt nach W_rot
 	else:
-		D_rot=100
-		W_rot.append(core.IDtoW(ID[i], D_rot))
+		environment.D_rot=100
+		W_rot.append(core.IDtoW(ID[i], environment.D_rot))
 
 targetDiameter = [
-	2*r*math.tan(W_rot[0]/2*math.pi/180),
-	2*r*math.tan(W_rot[1]/2*math.pi/180),
-	2*r*math.tan(W_rot[2]/2*math.pi/180)
+	2*environment.r*math.tan(W_rot[0]/2*math.pi/180),
+	2*environment.r*math.tan(W_rot[1]/2*math.pi/180),
+	2*environment.r*math.tan(W_rot[2]/2*math.pi/180)
 ]#größe (Druchmesser) der Gegenkathete auf dem kreisumfang
 
 # print(targetDiameter)
@@ -92,8 +92,6 @@ class trackingManager(avango.script.Script):
 	local_peak_speed_r = 0
 
 	#Logging
-	userID=0
-	group=0
 	trial=1
 	succesful_clicks=0
 	MT=0
@@ -202,7 +200,7 @@ class trackingManager(avango.script.Script):
 
 			else:
 				if self.taskNum==0 or self.taskNum==2:
-					distance = D_rot
+					distance = environment.D_rot
 					if environment.taskDOFRotate == 3:
 						rotateAroundX = 1
 					else:
@@ -387,16 +385,16 @@ class trackingManager(avango.script.Script):
 			if(self.goal):
 				self.succesful_clicks= self.succesful_clicks+1
 
-		logmanager.set("USER_ID", self.userID)
-		logmanager.set("GROUP", self.group)
+		logmanager.set("User Id", environment.userId)
+		logmanager.set("Group", environment.group)
 		if(environment.space3D):
 			logmanager.set("DOF real R", 3)
 		else:
 			logmanager.set("DOF real R", 1)
 		logmanager.set("DOF virtual R", environment.virtualDOFRotate)
-		logmanager.set("target distance R", D_rot)
+		logmanager.set("target distance R", environment.D_rot)
 		logmanager.set("target width R", W_rot[self.index])
-		logmanager.set("TARGET_DISTANCE_ROTATE",D_rot)
+		logmanager.set("TARGET_DISTANCE_ROTATE",environment.D_rot)
 		logmanager.set("TARGET_WIDTH_ROTATE",W_rot[self.index])
 		logmanager.set("ID combined", self.ID)
 		logmanager.set("ID R", self.ID)
@@ -452,8 +450,6 @@ class trackingManager(avango.script.Script):
 
 def start():
 	trackManager = trackingManager()
-	trackManager.userID=input("USER_ID: ")
-	trackManager.group=input("GROUP: ")
 
 	environment.getWindow().on_key_press(trackManager.handle_key)
 	environment.setup(graph)
