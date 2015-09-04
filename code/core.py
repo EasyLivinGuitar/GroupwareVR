@@ -5,6 +5,8 @@ import avango.script
 import avango.sound
 import avango.sound.openal
 import math
+import os.path
+import glob
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -116,7 +118,7 @@ class setupEnvironment(avango.script.Script):
 	def __init__(self):
 		self.super(setupEnvironment).__init__()
 
-	def pseudoConst(self, testConfigNo):
+	def create(self, testConfigNo):
 		self.timeTillBlack = 0
 		self.permanentBG = False
 		#connect time with the timerField
@@ -130,6 +132,17 @@ class setupEnvironment(avango.script.Script):
 		if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
 			self.taskDOFRotate = 1
 
+		if self.taskDOFRotate == 0:
+			self.taskString = "pointing"
+		else:
+			if self.getDOFTranslateVirtual() > 1:
+				self.taskString = "docking"
+			else:
+				self.taskString = "rotation"
+
+		self.created_logfile = False
+
+
 		return self
 
 	'''Get the degrees of freedom on the translation virtually'''
@@ -141,7 +154,6 @@ class setupEnvironment(avango.script.Script):
 			return 3
 		else: 
 			return 1
-
 
 	def print_graph(root_node):
 		stack = [ ( root_node, 0) ]
@@ -259,6 +271,26 @@ class setupEnvironment(avango.script.Script):
 
 	def getWindow(self):
 		return self.window
+
+	def getPath(self):
+		path ="results/"+self.taskString+" T"+str(self.getDOFTranslateReal())+"_"+str(self.getDOFTranslateVirtual())+" R"+str(self.taskDOFRotate)+"/"
+
+		#create dir if not existent
+		if not os.path.exists(path):
+			os.makedirs(path)
+
+		return path
+
+	def logData(self, logmanager):
+		path = self.getPath()
+		
+		#fint out which file number
+		if self.created_logfile == False: #create File 
+			self.num_files = len(glob.glob1(path,"*.csv"))
+			#if os.path.isfile(os.path.join(path, f)):
+			self.created_logfile = True
+
+		logmanager.writeToFile(path+self.taskString+"_trial"+str(self.num_files)+".csv")
 
 	def launch(self, otherlocals):
 		print("Launch")
@@ -424,6 +456,8 @@ class PencilContainer(avango.script.Script):
 		self.setup.everyObject.Children.value.append(self.pencil)
 		if setup.showHuman:
 			self.human = setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj", avango.gua.LoaderFlags.DEFAULTS)
+			self.human.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 0.3))
+			self.human.Material.value.EnableBackfaceCulling.value = False
 			self.setup.everyObject.Children.value.append(self.human)
 
 		#listen to tracked position of pointer
@@ -536,8 +570,8 @@ class DisksContainer():
 
 			if self.setup.showHuman:
 				self.human = self.setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
-				#self.human.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 0.5))
-				#self.human.Material.value.EnableBackfaceCulling.value = False
+				self.human.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 0.3))
+				self.human.Material.value.EnableBackfaceCulling.value = False
 				self.node.Children.value.append(self.human)
 
 			self.setup.everyObject.Children.value.append(self.node)

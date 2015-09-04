@@ -6,7 +6,6 @@ import random
 import core
 import logManager
 import math
-import os.path
 import glob
 
 from examples_common.GuaVE import GuaVE
@@ -17,7 +16,7 @@ FRAMES_FOR_AUTODETECT=3
 THRESHHOLD=40
 
 print("Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
-environment = core.setupEnvironment().pseudoConst(int(input("Config Number: ")))
+environment = core.setupEnvironment().create(int(input("Config Number: ")))
 
 rotation2D=[avango.gua.make_rot_mat(20, 1, 0.8, 0),
 			avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
@@ -27,8 +26,6 @@ rotation3D=[avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
 
 ID = environment.ID
 W_rot=[]
-
-taskString = "rotation"
 
 for i in range(0, len(ID)):
 	if environment.randomTargets:
@@ -63,7 +60,6 @@ class trackingManager(avango.script.Script):
 	startedTests = False
 	endedTests = False
 
-	created_logfile = False
 	created_replayfile = False
 	flagPrinted = False
 
@@ -123,8 +119,10 @@ class trackingManager(avango.script.Script):
 		if self.Button.value==True:
 			if(self.endedTests==False):
 				self.select()
-				if environment.logResults:	
-					self.logData()				
+				if environment.logResults and self.startedTests and not self.endedTests:
+					self.logSetter()
+					environment.logData(logmanager)
+					self.resetValues()				
 
 				self.nextSettingStep()
 			else:
@@ -327,31 +325,8 @@ class trackingManager(avango.script.Script):
 
 		return settings[index]
 	
-	def getPath(self):
-		path="results/"+taskString+" T"+str(environment.getDOFTranslateReal())+"_"+str(environment.getDOFTranslateVirtual())+" R"+str(environment.taskDOFRotate)+"/"
-
-		#create dir if not existent
-		if not os.path.exists(path):
-			os.makedirs(path)
-
-		return path
-
-	def logData(self):
-		path = self.getPath()
-		
-		#fint out which file number
-		if self.created_logfile == False: #create File 
-			self.num_files = len(glob.glob1(path,"*.csv"))
-			#if os.path.isfile(os.path.join(path, f)):
-			self.created_logfile = True
-
-		if(self.startedTests and self.endedTests== False):
-			self.logSetter()
-			logmanager.writeToFile(path+taskString+"_trial"+str(self.num_files)+".csv")
-			self.resetValues()
-
 	def logReplay(self):
-		path = self.getPath()
+		path = environment.getPath()
 
 		if(self.endedTests== False):
 			if self.created_replayfile == False: #create File 
@@ -359,7 +334,7 @@ class trackingManager(avango.script.Script):
 				#if os.path.isfile(os.path.join(path, f)):
 				self.created_replayfile = True
 			else: #write permanent values
-				self.result_file = open(path+taskString+"_trial"+str(self.num_files)+".replay", "a+")
+				self.result_file = open(path+environment.taskString+"_trial"+str(self.num_files)+".replay", "a+")
 				
 				self.result_file.write(
 					"TimeStamp: "+str(self.timer.value)+"\n"+
