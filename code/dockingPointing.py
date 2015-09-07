@@ -4,6 +4,8 @@ import avango.gua
 import avango.script
 import random
 import core
+import disksContainer
+import pencilContainer
 import logManager
 import math
 import glob
@@ -126,7 +128,7 @@ class trackingManager(avango.script.Script):
 		self.isInside = False;
 		self.startTime = 0
 		self.taskNum = 0
-		self.disks = core.DisksContainer(environment)
+		self.disks = disksContainer.DisksContainer(environment)
 		self.aim = None
 		self.aimShadow = None
 		self.index = 0
@@ -250,8 +252,6 @@ class trackingManager(avango.script.Script):
 			self.startedTests = True
 		else:
 			self.counter = self.counter+1
-		
-
 
 		if(self.index ==len(ID)):
 			self.endedTests = True
@@ -295,7 +295,12 @@ class trackingManager(avango.script.Script):
 					self.taskNum = (self.taskNum+1) % 2
 
 					self.disks.setDisksTransMats(targetDiameter[self.index])
-					
+			
+			if environment.AnimationPrototype:
+				self.PContainer.moveToGoal(
+					self.aim.Transform.value.get_translate(),
+					avango.gua.make_rot_mat(avango.gua.Quat())
+				)
 
 			self.setID(self.index)
 
@@ -578,7 +583,7 @@ def start():
 	environment.everyObject.Children.value.append(trackManager.aimShadow)
 
 	#loadMeshes
-	PContainer = core.PencilContainer().create(environment)
+	PContainer = pencilContainer.PencilContainer().create(environment)
 	trackManager.pcNode = PContainer.getNode()
 	trackManager.PContainer = PContainer
 
