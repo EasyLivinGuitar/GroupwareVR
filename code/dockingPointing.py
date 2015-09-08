@@ -299,7 +299,7 @@ class trackingManager(avango.script.Script):
 			if environment.AnimationPrototype:
 				self.PContainer.moveToGoal(
 					self.aim.Transform.value.get_translate(),
-					avango.gua.make_rot_mat(avango.gua.Quat())
+					self.disks.getRotate()
 				)
 
 			self.setID(self.index)

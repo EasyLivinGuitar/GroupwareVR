@@ -23,6 +23,119 @@ How to setup a new test case:
 Then start the scene with the according start.sh
 '''
 
+##
+# @param ID the index of difficulty
+# @param A the amplitude
+def IDtoW(ID, A):
+	return (2*A) / (2**ID)
+
+## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
+# @param q The rotation quat to be converted.
+def get_euler_angles(q):
+  sqx = q.x * q.x
+  sqy = q.y * q.y
+  sqz = q.z * q.z
+  sqw = q.w * q.w
+
+  unit = sqx + sqy + sqz + sqw # if normalised is one, otherwise is correction factor
+  test = (q.x * q.y) + (q.z * q.w)
+
+  if test > 1:
+    yaw = 0.0
+    roll = 0.0
+    pitch = 0.0
+
+  if test > (0.49999 * unit): # singularity at north pole
+    yaw = 2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/2.0
+    pitch = 0.0
+  elif test < (-0.49999 * unit): # singularity at south pole
+    yaw = -2.0 * math.atan2(q.x,q.w)
+    roll = math.pi/-2.0
+    pitch = 0.0
+  else:
+    yaw = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * sqy - 2.0 * sqz)
+    roll = math.asin(2.0 * test)
+    pitch = math.atan2(2.0 * q.x * q.w - 2.0 * q.y * q.z, 1.0 - 2.0 * sqx - 2.0 * sqz)
+
+  if yaw < 0.0:
+    yaw += 2.0 * math.pi
+
+  if pitch < 0:
+    pitch += 2 * math.pi
+
+  if roll < 0:
+    roll += 2 * math.pi
+
+  return yaw, pitch, roll 
+
+def getRotationError3D(aMat,bMat):
+	#quaternion to euler has an error with the z axis
+	a = aMat.get_rotate_scale_corrected()
+	a.normalize()
+	
+	aEuler = get_euler_angles(a)
+	
+
+	b = bMat.get_rotate_scale_corrected()
+	b.normalize()
+
+	#hack to make the error fit
+	b.y = b.z
+	b.z =   0
+	
+	bEuler = get_euler_angles(b)
+
+	error =[
+		(aEuler[0]-bEuler[0])*180/math.pi, #Y
+		(aEuler[1]-bEuler[1])*180/math.pi, #?
+		(aEuler[2]-bEuler[2])*180/math.pi, #?
+		0 #gesamt
+	]
+	error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
+	
+	'''
+	print("P: "+str(a))
+	print("T: "+str(b))
+	error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
+	error *=180/math.pi
+	'''
+	return error
+
+'''
+get rotation error between two rotations
+'''
+def getRotationError1D(rotA, rotB):
+	matA = avango.gua.make_rot_mat(rotA)
+	matB = avango.gua.make_rot_mat(rotB)
+
+	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
+	return diffRotMat.get_rotate_scale_corrected().get_angle()
+
+
+def getDistance2D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
+
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
+
+	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
+	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
+	
+	return math.sqrt(trans_aim_x_square+trans_aim_y_square)
+
+def getDistance3D(target1, target2):
+	trans_x=target1.get_translate()[0]
+	trans_y=target1.get_translate()[1]
+	trans_z=target1.get_translate()[2]
+
+	aim_x=target2.get_translate()[0]
+	aim_y=target2.get_translate()[1]
+	aim_z=target2.get_translate()[2]
+	
+	return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
+
 
 '''Settings'''
 class setupEnvironment(avango.script.Script):
@@ -44,10 +157,10 @@ class setupEnvironment(avango.script.Script):
 	space3DList = [True, False, True, False, True, True, False, True, True, False]
 
 	#the amount of trials per ID
-	N=8
+	N = 8
 
 	#setup
-	ID =[4, 5, 6] #fitt's law
+	ID = [4, 5, 6] #fitt's law
 
 	''' difference from screen center to center of tracking'''
 	offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -58,8 +171,8 @@ class setupEnvironment(avango.script.Script):
 	'''get the position of the center where the pointer and the aim is located.'''
 	displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
-	D_rot=100 #in degrees
-	D_trans= 0.3 #in meter
+	D_rot = 100 #in degrees
+	D_trans = 0.3 #in meter
 
 	logResults = True
 	saveReplay = True
@@ -75,7 +188,7 @@ class setupEnvironment(avango.script.Script):
 	r_model=0.10
 
 	'''radius of spikes displayed'''
-	r = 0.20
+	r = 0.02
 
 	'''highlight if inside the target'''
 	showWhenInTarget = True
@@ -90,9 +203,9 @@ class setupEnvironment(avango.script.Script):
 	resolution = avango.gua.Vec2ui(1920, 1080)
 	#screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
 	window = avango.gua.nodes.GlfwWindow(
-			Size=resolution,
-			LeftResolution=resolution,
-			RightResolution=resolution,
+			Size = resolution,
+			LeftResolution = resolution,
+			RightResolution = resolution,
 			StereoMode = avango.gua.StereoMode.CHECKERBOARD
 	)
 
@@ -325,116 +438,3 @@ class setupEnvironment(avango.script.Script):
 				else:
 					if sound == "levelUp":
 				 		self.levelUpSound.Play.value = True
-
-##
-# @param ID the index of difficulty
-# @param A the amplitude
-def IDtoW(ID, A):
-	return (2*A) / (2**ID)
-
-## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
-# @param q The rotation quat to be converted.
-def get_euler_angles(q):
-  sqx = q.x * q.x
-  sqy = q.y * q.y
-  sqz = q.z * q.z
-  sqw = q.w * q.w
-
-  unit = sqx + sqy + sqz + sqw # if normalised is one, otherwise is correction factor
-  test = (q.x * q.y) + (q.z * q.w)
-
-  if test > 1:
-    yaw = 0.0
-    roll = 0.0
-    pitch = 0.0
-
-  if test > (0.49999 * unit): # singularity at north pole
-    yaw = 2.0 * math.atan2(q.x,q.w)
-    roll = math.pi/2.0
-    pitch = 0.0
-  elif test < (-0.49999 * unit): # singularity at south pole
-    yaw = -2.0 * math.atan2(q.x,q.w)
-    roll = math.pi/-2.0
-    pitch = 0.0
-  else:
-    yaw = math.atan2(2.0 * q.y * q.w - 2.0 * q.x * q.z, 1.0 - 2.0 * sqy - 2.0 * sqz)
-    roll = math.asin(2.0 * test)
-    pitch = math.atan2(2.0 * q.x * q.w - 2.0 * q.y * q.z, 1.0 - 2.0 * sqx - 2.0 * sqz)
-
-  if yaw < 0.0:
-    yaw += 2.0 * math.pi
-
-  if pitch < 0:
-    pitch += 2 * math.pi
-
-  if roll < 0:
-    roll += 2 * math.pi
-
-  return yaw, pitch, roll 
-
-def getRotationError3D(aMat,bMat):
-	#quaternion to euler has an error with the z axis
-	a = aMat.get_rotate_scale_corrected()
-	a.normalize()
-	
-	aEuler = get_euler_angles(a)
-	
-
-	b = bMat.get_rotate_scale_corrected()
-	b.normalize()
-
-	#hack to make the error fit
-	b.y = b.z
-	b.z =   0
-	
-	bEuler = get_euler_angles(b)
-
-	error =[
-		(aEuler[0]-bEuler[0])*180/math.pi, #Y
-		(aEuler[1]-bEuler[1])*180/math.pi, #?
-		(aEuler[2]-bEuler[2])*180/math.pi, #?
-		0 #gesamt
-	]
-	error[3]=math.sqrt(error[0]*error[0]+error[1]*error[1]+error[2]*error[2])
-	
-	'''
-	print("P: "+str(a))
-	print("T: "+str(b))
-	error = math.acos(2*(a.x*b.x+a.y*b.y+a.z*b.z+a.w*b.w)**2-1)
-	error *=180/math.pi
-	'''
-	return error
-
-'''
-get rotation error between two rotations
-'''
-def getRotationError1D(rotA, rotB):
-	matA = avango.gua.make_rot_mat(rotA)
-	matB = avango.gua.make_rot_mat(rotB)
-
-	diffRotMat = avango.gua.make_inverse_mat(matA)*matB
-	return diffRotMat.get_rotate_scale_corrected().get_angle()
-
-
-def getDistance2D(target1, target2):
-	trans_x=target1.get_translate()[0]
-	trans_y=target1.get_translate()[1]
-
-	aim_x=target2.get_translate()[0]
-	aim_y=target2.get_translate()[1]
-
-	trans_aim_x_square=(trans_x - aim_x)*(trans_x - aim_x)
-	trans_aim_y_square=(trans_y - aim_y)*(trans_y - aim_y)
-	
-	return math.sqrt(trans_aim_x_square+trans_aim_y_square)
-
-def getDistance3D(target1, target2):
-	trans_x=target1.get_translate()[0]
-	trans_y=target1.get_translate()[1]
-	trans_z=target1.get_translate()[2]
-
-	aim_x=target2.get_translate()[0]
-	aim_y=target2.get_translate()[1]
-	aim_z=target2.get_translate()[2]
-	
-	return math.sqrt((trans_x - aim_x)**2+(trans_y - aim_y)**2+(trans_z - aim_z)**2)
