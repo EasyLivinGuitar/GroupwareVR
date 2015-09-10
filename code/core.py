@@ -1,3 +1,4 @@
+# coding=utf-8
 import avango
 import avango.daemon
 import avango.gua
@@ -146,6 +147,13 @@ def getDistance3D(target1, target2):
 
     return math.sqrt((trans_x - aim_x) ** 2 + (trans_y - aim_y) ** 2 + (trans_z - aim_z) ** 2)
 
+def print_graph(root_node):
+    stack = [(root_node, 0)]
+    while stack:
+        node, level = stack.pop()
+        print("│   " * level + "├── {0} <{1}>".format(node.Name.value, node.__class__.__name__))
+        stack.extend([(child, level + 1) for child in reversed(node.Children.value)])
+
 
 '''Settings'''
 
@@ -282,12 +290,6 @@ class setupEnvironment(avango.script.Script):
         else:
             return 1
 
-    def print_graph(root_node):
-        stack = [(root_node, 0)]
-        while stack:
-            node, level = stack.pop()
-            print("│   " * level + "├── {0} <{1}>".format(node.Name.value, node.__class__.__name__))
-            stack.extend([(child, level + 1) for child in reversed(node.Children.value)])
 
     def setup(self, graph):
         light = avango.gua.nodes.LightNode(
@@ -412,7 +414,7 @@ class setupEnvironment(avango.script.Script):
         path = self.getPath()
 
         # fint out which file number
-        if self.created_logfile == False:  # create File
+        if not self.created_logfile:  # create File
             self.num_files = len(glob.glob1(path, "*.csv"))
             # if os.path.isfile(os.path.join(path, f)):
             self.created_logfile = True
@@ -437,10 +439,10 @@ class setupEnvironment(avango.script.Script):
         self.res_pass.BackgroundColor.value = color
 
     def playSound(self, sound):
-        if (sound == "balloon"):
+        if sound == "balloon":
             self.balloonSound.Play.value = True
         else:
-            if (sound == "miss"):
+            if sound == "miss":
                 self.missSound.Play.value = True
             else:
                 if sound == "hit_rotate":

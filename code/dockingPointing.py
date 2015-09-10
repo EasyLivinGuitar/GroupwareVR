@@ -1,3 +1,7 @@
+# coding=utf-8
+import math
+import glob
+
 import avango
 import avango.daemon
 import avango.gua
@@ -6,13 +10,10 @@ import core
 import DisksContainer
 import PencilContainer
 import LogManager
-import math
-import glob
-
 from avango.script import field_has_changed
 
 print(
-"Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
+    "Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
 environment = core.setupEnvironment().create(int(input("Config Number: ")))
 
 # fitt's law parameter
@@ -70,8 +71,8 @@ class trackingManager(avango.script.Script):
     TP = 0
     overshoots_r = 0
     overshoots_t = 0
-    overshootInside_translate = False;
-    overshootInside_rotate = False;
+    overshootInside_translate = False
+    overshootInside_rotate = False
 
     frame_counter_speed = 0
     frame_counter_acceleration = 0
@@ -112,20 +113,15 @@ class trackingManager(avango.script.Script):
     inside = False
 
     # Logging
-    trial = 0
     hits = 0
-    goal = False
     error = 0
     last_error = 0
-    MT = 0
-    ID = 0
-    TP = 0
 
     PContainer = None
 
     def __init__(self):
         self.super(trackingManager).__init__()
-        self.isInside = False;
+        self.isInside = False
         self.startTime = 0
         self.taskNum = 0
         self.disks = DisksContainer.DisksContainer(environment)
@@ -141,8 +137,8 @@ class trackingManager(avango.script.Script):
 
     @field_has_changed(Button)
     def button_pressed(self):
-        if self.Button.value == True:
-            if (self.endedTests == False):
+        if self.Button.value:
+            if not self.endedTests:
                 self.select()
                 if environment.logResults and self.startedTests and not self.endedTests:
                     self.logSetter()
@@ -172,10 +168,10 @@ class trackingManager(avango.script.Script):
                 # highlight rotation if near target
                 if environment.showWhenInTarget:
                     # highlight rotation if near target
-                    if (core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]\
-                            and
-                        self.getErrorRotate() < W_rot[self.index] / 2
-                    ):
+                    if (core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]
+                        and
+                                self.getErrorRotate() < W_rot[self.index] / 2
+                        ):
                         highlightR = True
                         self.disks.highlightRed()
                     else:
@@ -221,11 +217,11 @@ class trackingManager(avango.script.Script):
         if environment.saveReplay:
             self.logReplay()
 
-        # hack to prevent failing field connection
-        # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
+            # hack to prevent failing field connection
+            # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        if (self.index < len(ID)):
+        if self.index < len(ID):
             # auswerten
             if self.getErrorRotate() < W_rot[self.index] / 2 and self.getErrorTranslate() < W_trans[self.index] / 2:
                 # hit
@@ -247,7 +243,7 @@ class trackingManager(avango.script.Script):
     def nextSettingStep(self):
         if self.counter % environment.N == environment.N - 1:
             environment.playSound("levelUp")
-            self.index = self.index + 1
+            self.index += 1
 
         if not self.startedTests:
             self.lastTime = self.timer.value
@@ -339,11 +335,11 @@ class trackingManager(avango.script.Script):
                 self.result_file.close()
 
     def checkTranslateOvershoots(self):
-        if (self.getErrorTranslate() < self.aim.Transform.value.get_scale().x / 2):
+        if self.getErrorTranslate() < self.aim.Transform.value.get_scale().x / 2:
             self.overshootInside_translate = True
         else:
-            if (self.overshootInside_translate):  #
-                self.overshoots_t = self.overshoots_t + 1
+            if self.overshootInside_translate:  #
+                self.overshoots_t += 1
                 self.overshootInside_translate = False
 
     def checkRotateOvershoots(self):
@@ -351,7 +347,7 @@ class trackingManager(avango.script.Script):
             self.overshootInside_rotate = True
         else:
             if self.overshootInside_rotate:
-                self.overshoots_r = self.overshoots_r + 1
+                self.overshoots_r += 1
                 self.overshootInside_rotate = False
 
     def logSetter(self):
@@ -380,7 +376,8 @@ class trackingManager(avango.script.Script):
         logmanager.set("DOF virtual T", environment.getDOFTranslateVirtual())
         logmanager.set("DOF virtual R", environment.virtualDOFRotate)
         logmanager.set("task R DOF", environment.taskDOFRotate)
-        logmanager.set("movement direction", self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate())
+        logmanager.set("movement direction",
+                       self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate())
 
         logmanager.set("target distance T", environment.D_trans)
         logmanager.set("target width T", W_trans[self.index])
@@ -424,7 +421,7 @@ class trackingManager(avango.script.Script):
         logmanager.set("reversal points R", len(self.reversal_points_r))
         logmanager.set("reversal points T", len(self.reversal_points_t))
 
-        self.trial = self.trial + 1
+        self.trial += 1
 
     def setSpeedRotate(self):
         if self.frame_counter_speed % 5 == 0:
@@ -499,9 +496,9 @@ class trackingManager(avango.script.Script):
                     self.peak_acceleration_r = self.current_acceleration_rotate
 
     def checkReversalTranslate(self):
-        if math.fabs(self.current_speed_translate) < THRESHHOLD_TRANSLATE and self.peak_speed_t > THRESHHOLD_TRANSLATE:
+        if math.fabs(self.current_speed_translate) < THRESHHOLD_TRANSLATE < self.peak_speed_t:
             if self.low_speed_counter_translate < FRAMES_FOR_AUTODETECT_TRANSLATE - 1:
-                self.low_speed_counter_translate = self.low_speed_counter_translate + 1
+                self.low_speed_counter_translate += 1
             else:
                 self.low_speed_counter_translate = 0
                 if self.first_translate:
@@ -511,9 +508,9 @@ class trackingManager(avango.script.Script):
                 self.reversal_points_t.append(self.pcNode.Transform.value.get_translate().x)
 
     def checkReversalRotate(self):
-        if math.fabs(self.current_speed_rotate) < THRESHHOLD_ROTATE and self.peak_speed_r > THRESHHOLD_ROTATE:
+        if math.fabs(self.current_speed_rotate) < THRESHHOLD_ROTATE < self.peak_speed_r:
             if self.low_speed_counter_rotate < FRAMES_FOR_AUTODETECT_ROTATE - 1:
-                self.low_speed_counter_rotate = self.low_speed_counter_rotate + 1
+                self.low_speed_counter_rotate += 1
             else:
                 self.low_speed_counter_rotate = 0
                 if self.first_rotate:

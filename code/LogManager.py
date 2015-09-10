@@ -1,4 +1,4 @@
-class LogManager():
+class LogManager:
     header_printed = False
 
     def __init__(self):
@@ -20,13 +20,13 @@ class LogManager():
         mt = self.dictionary[self.findIndexOf("MT")][1]
         id_combined = self.dictionary[self.findIndexOf("ID combined")][1]
 
-        if (mt > 0):
+        if mt > 0:
             self.dictionary.append(("TP", id_combined / mt))
         else:
             self.dictionary.append(("TP", "ERROR"))
 
         # print header only once
-        if (self.header_printed == False):
+        if not self.header_printed:
             header = ""
             for item in self.dictionary:
                 header = header + str(item[0]) + ", "
@@ -38,5 +38,5 @@ class LogManager():
             data = data + str(item[1]) + ", "
 
         logFile.write(data + "\n")
-        logFile.close
+        logFile.close()
         self.dictionary = []
