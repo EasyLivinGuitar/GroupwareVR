@@ -8,7 +8,7 @@ import avango.sound.openal
 
 class DisksContainer:
 
-        def __init__(self, setEnv):
+        def __init__(self, setenv):
             self.disk1 = None
             self.disk2 = None
             self.disk3 = None
@@ -17,7 +17,7 @@ class DisksContainer:
             self.disk6 = None
             self.human = None
             self.node = None
-            self.setup = setEnv
+            self.setup = setenv
 
         '''for attaching the disk to the pointer, the pointer is needed'''
         def setupDisks(self, pencilNode):
@@ -70,7 +70,7 @@ class DisksContainer:
                     avango.gua.make_scale_mat(0.007)
                 )
         def setRotation(self, rotMat):
-            self.node.Transform.value = avango.gua.make_trans_mat( self.node.Transform.value.get_translate() ) * rotMat *avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
+            self.node.Transform.value = avango.gua.make_trans_mat(self.node.Transform.value.get_translate()) * rotMat *avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
 
         def setTranslate(self, transl):
             self.node.Transform.value = transl * avango.gua.make_rot_mat(self.node.Transform.value.get_rotate_scale_corrected())*avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
@@ -84,7 +84,7 @@ class DisksContainer:
             self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
             self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
 
-            if self.setup.virtualDOFRotate==3:
+            if self.setup.virtualDOFRotate == 3:
                 self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.4, 0.9, 0.0, 0.6))
                 self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.7, 0.4, 0.4, 0.6))
 
@@ -94,6 +94,6 @@ class DisksContainer:
             self.disk3.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
             self.disk6.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))
 
-            if self.setup.virtualDOFRotate==3:
+            if self.setup.virtualDOFRotate == 3:
                 self.disk4.Material.value.set_uniform("Color", avango.gua.Vec4(0.0, 1.0, 0.0, 0.6))
                 self.disk5.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.6))

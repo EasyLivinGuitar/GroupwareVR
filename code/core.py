@@ -147,6 +147,7 @@ def getDistance3D(target1, target2):
 
     return math.sqrt((trans_x - aim_x) ** 2 + (trans_y - aim_y) ** 2 + (trans_z - aim_z) ** 2)
 
+
 def print_graph(root_node):
     stack = [(root_node, 0)]
     while stack:
@@ -202,7 +203,12 @@ class setupEnvironment(avango.script.Script):
 
     randomTargets = False
 
-    AnimationPrototype = True
+    ''' show a preview of the motion first'''
+    AnimationPreview = True
+    AnimationTime = 0.5
+
+    '''you can fixate the cursor during the animation preview'''
+    enableCursorDuringAnimation = True
 
     '''radius of spikes from center in the model file'''
     r_model = 0.10

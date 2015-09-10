@@ -8,7 +8,7 @@ import avango.gua
 import avango.script
 import core
 import DisksContainer
-import PencilContainer
+import Cursor
 import LogManager
 from avango.script import field_has_changed
 
@@ -296,8 +296,8 @@ class trackingManager(avango.script.Script):
 
                     self.disks.setDisksTransMats(targetDiameter[self.index])
 
-            if environment.AnimationPrototype:
-                self.PContainer.moveToGoal(
+            if environment.AnimationPreview:
+                self.PContainer.animateTo(
                     self.aim.Transform.value.get_translate(),
                     self.disks.getRotate()
                 )
@@ -587,7 +587,7 @@ def start():
     environment.everyObject.Children.value.append(trackManager.aimShadow)
 
     # loadMeshes
-    PContainer = PencilContainer.PencilContainer().create(environment)
+    PContainer = Cursor.Cursor().create(environment)
     trackManager.pcNode = PContainer.getNode()
     trackManager.PContainer = PContainer
 

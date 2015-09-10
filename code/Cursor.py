@@ -5,35 +5,37 @@ import avango.script
 import avango.sound
 import avango.sound.openal
 import math
+import core
 
-from avango.script import field_has_changed
 
-
-class PencilContainer(avango.script.Script):
+class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
     pointer_device_sensor = None
     inputMat = avango.gua.SFMatrix4()
     animationTime = 0
 
     def __init__(self):
-        self.super(PencilContainer).__init__()
-        self.aimPos = None
-        self.aimRot = None
+        self.super(Cursor).__init__()
+        self.animEndPos = None
+        self.aimEndRot = None
         self.startPos = None
         self.startRot = None
         self.setup = None
+        self.human = None
+        self.cursor = None
 
     def create(self, setup):
         self.setup = setup
 
         # create cross
-        self.pencil = setup.loader.create_geometry_from_file("colored_cross", "data/objects/colored_cross.obj",
+        self.cursor = setup.loader.create_geometry_from_file("colored_cross",
+                                                             "data/objects/colored_cross.obj",
                                                              avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-        self.pencil.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
+        self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
         # pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
         # pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
         # pencil.Material.value.set_uniform("Emissivity", 1.0)
-        self.setup.everyObject.Children.value.append(self.pencil)
+        self.setup.everyObject.Children.value.append(self.cursor)
         if setup.showHuman:
             self.human = setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS)
@@ -54,46 +56,47 @@ class PencilContainer(avango.script.Script):
 
         return self
 
-    @field_has_changed(inputMat)
-    def pointermat_changed(self):
-        # not animation preview
-        if self.aimPos is None:
+    def evaluate(self):
+         # not animation preview
+        if self.setup.enableCursorDuringAnimation or self.animEndPos is None:
             # get input
-            self.pencil.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(
-                self.pencil.Transform.value.get_scale())
+            self.cursor.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(
+                self.cursor.Transform.value.get_scale())
             # then reduce
             self.reducePencilMat()
+
+        # not in animation
+        if self.animEndPos is None:
             # apply to human
             if self.setup.showHuman:
                 self.human.Transform.value = (
-                    avango.gua.make_trans_mat(self.pencil.Transform.value.get_translate())
-                    * avango.gua.make_rot_mat(self.pencil.Transform.value.get_rotate_scale_corrected())
+                    avango.gua.make_trans_mat(self.cursor.Transform.value.get_translate())
+                    * avango.gua.make_rot_mat(self.cursor.Transform.value.get_rotate_scale_corrected())
                     * avango.gua.make_scale_mat(0.007)
                 )
-
-    def evaluate(self):
-        # animate preview
-        if self.aimPos is not None:
-            percentile = (self.TimeIn.value - self.animationTime) / 1
+        else:
+            # animate the movement preview
+            percentile = (self.TimeIn.value - self.animationTime) / self.setup.AnimationTime
             self.human.Transform.value = (
                 avango.gua.make_trans_mat(
-                    self.startPos.lerp_to(self.aimPos, percentile)
+                    self.startPos.lerp_to(self.animEndPos, percentile)
                 )
                 * avango.gua.make_rot_mat(
-                    self.startRot.slerp_to(self.aimRot, percentile)
+                    self.startRot.slerp_to(self.aimEndRot, percentile)
                 )
                 * avango.gua.make_scale_mat(
                     self.human.Transform.value.get_scale()
                 )
             )
-            if self.TimeIn.value - self.animationTime > 1:
-                self.aimPos = None
+            if self.TimeIn.value - self.animationTime > self.setup.AnimationTime:
+                self.animEndPos = None
+                self.aimEndRot = None
 
     def getNode(self):
-        return self.pencil
+        return self.cursor
 
     def getTransfromValue(self):
-        return self.pencil.Transform.value
+        return self.cursor.Transform.value
 
     '''reduce a transform matrix according to the constrainst '''
 
@@ -101,11 +104,11 @@ class PencilContainer(avango.script.Script):
         if self.setup.virtualDOFRotate == 1:
             # erase 2dof at table, unstable operation, calling this twice destroys the rotation information
             # get angle between rotation and y axis
-            q = self.pencil.Transform.value.get_rotate_scale_corrected()
+            q = self.cursor.Transform.value.get_rotate_scale_corrected()
             q.z = 0  # tried to fix to remove roll
             q.x = 0  # tried to fix to remove roll
             q.normalize()
-            yRot = avango.gua.make_rot_mat(get_euler_angles(q)[0] * 180.0 / math.pi, 0, 1,
+            yRot = avango.gua.make_rot_mat(core.get_euler_angles(q)[0] * 180.0 / math.pi, 0, 1,
                                            0)  # get euler y rotation, has also roll in it
         else:
             yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
@@ -134,14 +137,14 @@ class PencilContainer(avango.script.Script):
             z
         )
 
-        self.pencil.Transform.value = translation * yRot * avango.gua.make_scale_mat(
-            self.pencil.Transform.value.get_scale())
+        self.cursor.Transform.value = translation * yRot * avango.gua.make_scale_mat(
+            self.cursor.Transform.value.get_scale())
 
     '''This method moves the cursor to the aim'''
 
-    def moveToGoal(self, aimPos, aimRot):
-        self.startPos = self.pencil.Transform.value.get_translate()
-        self.startRot = self.pencil.Transform.value.get_rotate_scale_corrected()
-        self.aimPos = aimPos
-        self.aimRot = aimRot
+    def animateTo(self, aimPos, aimRot):
+        self.startPos = self.cursor.Transform.value.get_translate()
+        self.startRot = self.cursor.Transform.value.get_rotate_scale_corrected()
+        self.animEndPos = aimPos
+        self.aimEndRot = aimRot
         self.animationTime = self.TimeIn.value  # aktuelle Zeit
