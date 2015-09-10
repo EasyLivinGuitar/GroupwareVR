@@ -4,7 +4,7 @@ import avango.gua
 import avango.script
 import random
 import core
-import logManager
+import LogManager
 import math
 import glob
 
@@ -46,7 +46,7 @@ targetDiameter = [
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
 pencil_transform = avango.gua.nodes.TransformNode()
 
-logmanager=logManager.logManager()
+logmanager=LogManager.LogManager()
 
 class trackingManager(avango.script.Script):
 	Button = avango.SFBool()
