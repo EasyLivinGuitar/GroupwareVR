@@ -13,7 +13,7 @@ import LogManager
 from avango.script import field_has_changed
 
 print(
-    "Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
+    "Welcome to the VR motor movement study application. To change the parameters and/or change the group and user id open the 'core.py'.")
 environment = core.setupEnvironment().create(int(input("Config Number: ")))
 
 # fitt's law parameter
@@ -223,6 +223,9 @@ class trackingManager(avango.script.Script):
     def select(self):
         if self.index < len(ID):
             # auswerten
+            if self.startedTests:
+                self.setMT(self.lastTime, self.timer.value)
+                self.points = self.points + (self.ID + self.ID / self.MT)
             if self.getErrorRotate() < W_rot[self.index] / 2 and self.getErrorTranslate() < W_trans[self.index] / 2:
                 # hit
                 self.goal = True
@@ -231,9 +234,6 @@ class trackingManager(avango.script.Script):
                     environment.playSound("balloon")
                 else:
                     environment.playSound("hit_rotate")
-                if self.startedTests:
-                    self.setMT(self.lastTime, self.timer.value)
-                    self.points = self.points + (self.ID + self.ID / self.MT)
             else:
                 # miss
                 self.goal = False
@@ -545,6 +545,7 @@ class trackingManager(avango.script.Script):
 
     def setMT(self, start, end):
         self.MT = end - start
+        print(self.MT)
         self.lastTime = self.timer.value
 
     def setTP(self, index):

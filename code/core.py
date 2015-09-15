@@ -274,12 +274,12 @@ class setupEnvironment(avango.script.Script):
             self.taskDOFRotate = 1
 
         if self.taskDOFRotate == 0:
-            self.taskString = "pointing"
+            self.taskString = str(testConfigNo)+"_pointing"
         else:
             if self.getDOFTranslateVirtual() > 1:
-                self.taskString = "docking"
+                self.taskString = str(testConfigNo)+"_docking"
             else:
-                self.taskString = "rotation"
+                self.taskString = str(testConfigNo)+"_rotation"
 
         self.created_logfile = False
 
@@ -407,8 +407,8 @@ class setupEnvironment(avango.script.Script):
         return self.window
 
     def getPath(self):
-        path = "results/" + self.taskString + " T" + str(self.getDOFTranslateReal()) + "_" + str(
-            self.getDOFTranslateVirtual()) + " R" + str(self.taskDOFRotate) + "/"
+        path = "results/" + self.taskString + "_T" + str(self.getDOFTranslateReal()) + "_" + str(
+            self.getDOFTranslateVirtual()) + "_R" + str(self.taskDOFRotate) + "/"
 
         # create dir if not existent
         if not os.path.exists(path):
