@@ -7,7 +7,7 @@ import avango.sound.openal
 import math
 import core
 
-
+'''The cursor and aim. Can ahve a human'''
 class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
     pointer_device_sensor = None
@@ -29,9 +29,11 @@ class Cursor(avango.script.Script):
 
         # create cross
         self.cursor = setup.loader.create_geometry_from_file("colored_cross",
-                                                             "data/objects/colored_cross.obj",
+                                                             "data/objects/phone.obj",
                                                              avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-        self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
+       # self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
+        self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.002)
+        self.cursor.Material.value.EnableBackfaceCulling.value = False
         # pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
         # pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
         # pencil.Material.value.set_uniform("Emissivity", 1.0)

@@ -117,7 +117,7 @@ class trackingManager(avango.script.Script):
     error = 0
     last_error = 0
 
-    PContainer = None
+    cursorContainer = None
 
     def __init__(self):
         self.super(trackingManager).__init__()
@@ -128,7 +128,7 @@ class trackingManager(avango.script.Script):
         self.aim = None
         self.aimShadow = None
         self.index = 0
-        self.pcNode = None
+        self.cursorNode = None
         self.points = 0
 
     def __del__(self):
@@ -158,9 +158,9 @@ class trackingManager(avango.script.Script):
 
             # position disks
             if environment.taskDOFRotate > 0:
-                if core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]:
+                if core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]:
                     # attach disks to pointer
-                    self.disks.setTranslate(avango.gua.make_trans_mat(self.pcNode.Transform.value.get_translate()))
+                    self.disks.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
                     # attach disks to aim
                     self.disks.setTranslate(avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()))
@@ -168,10 +168,9 @@ class trackingManager(avango.script.Script):
                 # highlight rotation if near target
                 if environment.showWhenInTarget:
                     # highlight rotation if near target
-                    if (core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]
-                        and
-                                self.getErrorRotate() < W_rot[self.index] / 2
-                        ):
+                    if (core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]
+                        and self.getErrorRotate() < W_rot[self.index] / 2
+                    ):
                         highlightR = True
                         self.disks.highlightRed()
                     else:
@@ -296,24 +295,24 @@ class trackingManager(avango.script.Script):
 
                     self.disks.setDisksTransMats(targetDiameter[self.index])
 
-            if environment.AnimationPreview:
-                self.PContainer.animateTo(
-                    self.aim.Transform.value.get_translate(),
-                    self.disks.getRotate()
-                )
+                    if environment.AnimationPreview:
+                        self.cursorContainer.animateTo(
+                            self.aim.Transform.value.get_translate(),
+                            self.disks.getRotate()
+                        )
 
             self.setID(self.index)
 
     def getErrorRotate(self):
         if environment.taskDOFRotate > 0:
             return core.getRotationError1D(
-                self.pcNode.Transform.value.get_rotate_scale_corrected(),
+                self.cursorNode.Transform.value.get_rotate_scale_corrected(),
                 self.disks.getRotate()
             )
         return 0
 
     def getErrorTranslate(self):
-        return core.getDistance3D(self.pcNode.Transform.value, self.aim.Transform.value)
+        return core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value)
 
     def logReplay(self):
         path = environment.getPath()
@@ -330,7 +329,7 @@ class trackingManager(avango.script.Script):
                 self.result_file.write(
                     "TimeStamp: " + str(self.timer.value) + "\n" +
                     "ErrorRotate: " + str(self.getErrorRotate()) + "\n" +
-                    "Pointerpos: \n" + str(self.pcNode.Transform.value) + "\n" +
+                    "Pointerpos: \n" + str(self.cursorNode.Transform.value) + "\n" +
                     "Aimpos: \n" + str(self.aim.Transform.value) + "\n\n")
                 self.result_file.close()
 
@@ -425,11 +424,11 @@ class trackingManager(avango.script.Script):
 
     def setSpeedRotate(self):
         if self.frame_counter_speed % 5 == 0:
-            self.PencilRotation1 = self.pcNode.Transform.value.get_rotate()
+            self.PencilRotation1 = self.cursorNode.Transform.value.get_rotate()
             self.start_time = self.timer.value
         else:
             if self.frame_counter_speed % 5 == FRAMES_FOR_SPEED - 1:
-                self.PencilRotation2 = self.pcNode.Transform.value.get_rotate()
+                self.PencilRotation2 = self.cursorNode.Transform.value.get_rotate()
                 self.end_time = self.timer.value
                 div = core.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
                 time = self.end_time - self.start_time
@@ -446,11 +445,11 @@ class trackingManager(avango.script.Script):
 
     def setSpeedTranslate(self):
         if self.frame_counter_speed % 5 == 0:
-            self.TransTranslation1 = self.pcNode.Transform.value.get_translate()
+            self.TransTranslation1 = self.cursorNode.Transform.value.get_translate()
             self.start_time = self.timer.value
         else:
             if self.frame_counter_speed % 5 == FRAMES_FOR_SPEED - 1:
-                self.TransTranslation2 = self.pcNode.Transform.value.get_translate()
+                self.TransTranslation2 = self.cursorNode.Transform.value.get_translate()
                 self.end_time = self.timer.value
                 div = self.TransTranslation2 - self.TransTranslation1
                 length = math.sqrt(div.x ** 2 + div.y ** 2 + div.z ** 2)
@@ -502,10 +501,10 @@ class trackingManager(avango.script.Script):
             else:
                 self.low_speed_counter_translate = 0
                 if self.first_translate:
-                    self.first_reversal_point_t = self.pcNode.Transform.value.get_translate().x
+                    self.first_reversal_point_t = self.cursorNode.Transform.value.get_translate().x
                     self.first_reversal_acceleration_t = self.current_acceleration_translate
                     self.first_translate = False
-                self.reversal_points_t.append(self.pcNode.Transform.value.get_translate().x)
+                self.reversal_points_t.append(self.cursorNode.Transform.value.get_translate().x)
 
     def checkReversalRotate(self):
         if math.fabs(self.current_speed_rotate) < THRESHHOLD_ROTATE < self.peak_speed_r:
@@ -514,7 +513,7 @@ class trackingManager(avango.script.Script):
             else:
                 self.low_speed_counter_rotate = 0
                 if self.first_rotate:
-                    self.first_reversal_point_r = self.pcNode.Transform.value.get_rotate().get_angle()
+                    self.first_reversal_point_r = self.cursorNode.Transform.value.get_rotate().get_angle()
                     self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
                     self.reversal_points_r.append(self.first_reversal_point_r)
                     self.first_rotate = False
@@ -524,7 +523,7 @@ class trackingManager(avango.script.Script):
                     self.local_peak_speed_r = 0
 
                 if self.speededup:
-                    self.reversal_points_r.append(self.pcNode.Transform.value.get_rotate().get_angle())
+                    self.reversal_points_r.append(self.cursorNode.Transform.value.get_rotate().get_angle())
                     self.speededup = False
 
     def resetValues(self):
@@ -568,8 +567,11 @@ def start():
     environment.getWindow().on_key_press(trackManager.handle_key)
     environment.setup(graph)
 
-    trackManager.aim = loader.create_geometry_from_file("pointer_object_abstract", "data/objects/modified_sphere.obj",
-                                                        avango.gua.LoaderFlags.NORMALIZE_SCALE)
+    trackManager.aim = loader.create_geometry_from_file(
+        "modified_sphere",
+        "data/objects/modified_sphere.obj",
+        avango.gua.LoaderFlags.NORMALIZE_SCALE
+    )
     trackManager.aim.Transform.value = (
         avango.gua.make_trans_mat(-environment.D_trans / 2, 0, 0)
         * avango.gua.make_scale_mat(W_trans[0])
@@ -578,22 +580,27 @@ def start():
     trackManager.aim.Material.value.EnableBackfaceCulling.value = False
     environment.everyObject.Children.value.append(trackManager.aim)
 
-    trackManager.aimShadow = loader.create_geometry_from_file("pointer_object_abstract",
-                                                              "data/objects/modified_sphere.obj",
-                                                              avango.gua.LoaderFlags.NORMALIZE_SCALE)
-    trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(environment.D_trans / 2, 0,
-                                                                       0) * avango.gua.make_scale_mat(W_trans[0])
+    trackManager.aimShadow = loader.create_geometry_from_file(
+        "modified_sphere",
+        "data/objects/modified_sphere.obj",
+        avango.gua.LoaderFlags.NORMALIZE_SCALE
+    )
+    trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
+        environment.D_trans / 2,
+        0,
+        0
+    ) * avango.gua.make_scale_mat(W_trans[0])
     trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
     trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
     environment.everyObject.Children.value.append(trackManager.aimShadow)
 
     # loadMeshes
-    PContainer = Cursor.Cursor().create(environment)
-    trackManager.pcNode = PContainer.getNode()
-    trackManager.PContainer = PContainer
+    cursor = Cursor.Cursor().create(environment)
+    trackManager.cursorContainer = cursor
+    trackManager.cursorNode = cursor.getNode()
 
     if environment.taskDOFRotate > 0:
-        trackManager.disks.setupDisks(trackManager.pcNode)
+        trackManager.disks.setupDisks(trackManager.cursorNode)
         trackManager.disks.setDisksTransMats(targetDiameter[0])
         trackManager.disks.setRotation(avango.gua.make_rot_mat(environment.D_rot, 0, 1, 0))
         trackManager.disks.setDisksTransMats(targetDiameter[0])
