@@ -14,7 +14,7 @@ from avango.script import field_has_changed
 
 print(
     "Welcome to the VR motor movement study application. To change the parameters and/or change the group and user id open the 'core.py'.")
-environment = core.setupEnvironment().create(int(input("Config Number: ")))
+environment = core.setupEnvironment().create()
 
 # fitt's law parameter
 
@@ -545,7 +545,6 @@ class trackingManager(avango.script.Script):
 
     def setMT(self, start, end):
         self.MT = end - start
-        print(self.MT)
         self.lastTime = self.timer.value
 
     def setTP(self, index):

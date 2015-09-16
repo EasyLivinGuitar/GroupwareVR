@@ -155,6 +155,18 @@ def print_graph(root_node):
         print("│   " * level + "├── {0} <{1}>".format(node.Name.value, node.__class__.__name__))
         stack.extend([(child, level + 1) for child in reversed(node.Children.value)])
 
+def printHelp():
+    print("Config Numbers (0 - 9):")
+    print("0 - 4 : Pointing")
+    print("5 - 7 : Rotation")
+    print("8 - 9 : Docking\n")
+
+    environment = setupEnvironment()
+
+    for i in range(0, len(environment.disableAxisList)):
+        print(str(i) + ": "+str(environment.disableAxisList[i]))
+
+
 
 '''Settings'''
 
@@ -259,11 +271,19 @@ class setupEnvironment(avango.script.Script):
     def __init__(self):
         self.super(setupEnvironment).__init__()
 
-    def create(self, testConfigNo):
+    def create(self):
         self.timeTillBlack = 0
         self.permanentBG = False
         # connect time with the timerField
         self.timerField.connect_from(self.timeSensor.Time)
+        testConfigNo=999
+
+        while testConfigNo>=len(self.disableAxisList):
+            testConfigNo=int(input("Config Number: "))
+           
+            if(testConfigNo>=len(self.disableAxisList)):
+                print("ERROR: Wrong Config Number")
+                printHelp()
 
         self.disableAxis = self.disableAxisList[testConfigNo]
         self.virtualDOFRotate = self.virtualDOFRotateList[testConfigNo]
