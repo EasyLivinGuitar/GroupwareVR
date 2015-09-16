@@ -4,11 +4,12 @@ import avango
 import avango.daemon
 import avango.gua
 import avango.script
-import random
+import DisksContainer
 import core
 import LogManager
 import math
 import glob
+import Cursor
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -112,13 +113,13 @@ class trackingManager(avango.script.Script):
         self.endTime = 0
         self.backAndForth = False
         self.backAndForthAgain = False
-        self.disks = core.DisksContainer(environment)
+        self.disks = DisksContainer.DisksContainer(environment)
         self.pcNode = None
         self.taskNum = 0
 
     def __del__(self):
         if environment.logResults:
-            self.result_file.close()
+            pass
 
     @field_has_changed(Button)
     def button_pressed(self):
@@ -312,22 +313,6 @@ class trackingManager(avango.script.Script):
         self.goal = False
         self.reversal_points_r = []
 
-    def getRandomRotation3D(self):
-        settings = [avango.gua.make_rot_mat(20, 1, 0.8, 0.3),
-                    avango.gua.make_rot_mat(90, 0.1, 0.2, 0.9)]
-
-        index = random.randint(0, len(settings) - 1)
-
-        return settings[index]
-
-    def getRandomRotation2D(self):
-        settings = [avango.gua.make_rot_mat(20, 1, 0.8, 0),
-                    avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
-
-        index = random.randint(0, len(settings) - 1)
-
-        return settings[index]
-
     def logReplay(self):
         path = environment.getPath()
 
@@ -440,7 +425,9 @@ def start():
     environment.setup(graph)
 
     # loadMeshes
-    trackManager.pcNode = core.PencilContainer().create(environment).getNode()
+    PContainer = Cursor.Cursor().create(environment)
+    trackManager.pcNode = PContainer.getNode()
+    trackManager.PContainer = PContainer
 
     trackManager.disks.setupDisks(trackManager.pcNode)
     trackManager.disks.setDisksTransMats(targetDiameter[0])
