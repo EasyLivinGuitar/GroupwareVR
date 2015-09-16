@@ -27,13 +27,19 @@ class Cursor(avango.script.Script):
     def create(self, setup):
         self.setup = setup
 
-        # create cross
-        self.cursor = setup.loader.create_geometry_from_file("colored_cross",
-                                                             "data/objects/phone.obj",
-                                                             avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+        if setup.usePhoneCursor:
+            # create cross
+            self.cursor = setup.loader.create_geometry_from_file("phone",
+                                                                 "data/objects/phone.obj",
+                                                                avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.002)
+        else:
+            self.cursor = setup.loader.create_geometry_from_file("colored_cross",
+                                                                 "data/objects/colored_cross.obj",
+                                                                avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
        # self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
-        self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.002)
-        self.cursor.Material.value.EnableBackfaceCulling.value = False
+
+        #self.cursor.Material.value.EnableBackfaceCulling.value = False
         # pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
         # pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.6, 0.6, 0.6, 1))
         # pencil.Material.value.set_uniform("Emissivity", 1.0)
@@ -79,17 +85,18 @@ class Cursor(avango.script.Script):
         else:
             # animate the movement preview
             percentile = (self.TimeIn.value - self.animationTime) / self.setup.AnimationTime
-            self.human.Transform.value = (
-                avango.gua.make_trans_mat(
-                    self.startPos.lerp_to(self.animEndPos, percentile)
+            if self.setup.showHuman:
+                self.human.Transform.value = (
+                    avango.gua.make_trans_mat(
+                        self.startPos.lerp_to(self.animEndPos, percentile)
+                    )
+                    * avango.gua.make_rot_mat(
+                        self.startRot.slerp_to(self.aimEndRot, percentile)
+                    )
+                    * avango.gua.make_scale_mat(
+                        self.human.Transform.value.get_scale()
+                    )
                 )
-                * avango.gua.make_rot_mat(
-                    self.startRot.slerp_to(self.aimEndRot, percentile)
-                )
-                * avango.gua.make_scale_mat(
-                    self.human.Transform.value.get_scale()
-                )
-            )
             if self.TimeIn.value - self.animationTime > self.setup.AnimationTime:
                 self.animEndPos = None
                 self.aimEndRot = None

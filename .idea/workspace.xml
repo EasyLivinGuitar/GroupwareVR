@@ -5,10 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="456b1fe1-5b5e-4d47-8263-e8fedf7ad4af" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/code/Cursor.py" afterPath="$PROJECT_DIR$/code/Cursor.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/code/DisksContainer.py" afterPath="$PROJECT_DIR$/code/DisksContainer.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/code/core.py" afterPath="$PROJECT_DIR$/code/core.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/code/dockingPointing.py" afterPath="$PROJECT_DIR$/code/dockingPointing.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/code/rotation.py" afterPath="$PROJECT_DIR$/code/rotation.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="GroupwareVR.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,8 +34,8 @@
       <file leaf-file-name="Cursor.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/Cursor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="44" column="73" selection-start-line="44" selection-start-column="73" selection-end-line="44" selection-end-column="73" />
+            <state vertical-scroll-proportion="-47.19355">
+              <caret line="87" column="30" selection-start-line="87" selection-start-column="26" selection-end-line="87" selection-end-column="30" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -41,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="core.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="core.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/core.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.654185">
-              <caret line="195" column="19" selection-start-line="195" selection-start-column="19" selection-end-line="195" selection-end-column="19" />
+            <state vertical-scroll-proportion="-15.096774">
+              <caret line="218" column="28" selection-start-line="218" selection-start-column="28" selection-end-line="218" selection-end-column="28" />
               <folding>
                 <element signature="e#15#28#0" expanded="true" />
               </folding>
@@ -66,8 +68,8 @@
       <file leaf-file-name="dockingPointing.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/dockingPointing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-8.548388">
-              <caret line="575" column="31" selection-start-line="575" selection-start-column="31" selection-end-line="575" selection-end-column="31" />
+            <state vertical-scroll-proportion="147.09677">
+              <caret line="39" column="23" selection-start-line="39" selection-start-column="23" selection-end-line="39" selection-end-column="23" />
               <folding>
                 <element signature="e#15#26#0" expanded="true" />
               </folding>
@@ -75,11 +77,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DisksContainer.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="DisksContainer.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/code/DisksContainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="40" column="44" selection-start-line="40" selection-start-column="44" selection-end-line="40" selection-end-column="44" />
+            <state vertical-scroll-proportion="0.41641337">
+              <caret line="31" column="27" selection-start-line="31" selection-start-column="27" selection-end-line="31" selection-end-column="27" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -90,8 +92,8 @@
       <file leaf-file-name="rotation.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/rotation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="14" column="43" selection-start-line="14" selection-start-column="43" selection-end-line="14" selection-end-column="43" />
+            <state vertical-scroll-proportion="-25.064516">
+              <caret line="163" column="32" selection-start-line="163" selection-start-column="32" selection-end-line="163" selection-end-column="32" />
               <folding>
                 <element signature="e#16#29#0" expanded="true" />
               </folding>
@@ -123,12 +125,12 @@
         <option value="$PROJECT_DIR$/code/LogManager.py" />
         <option value="$PROJECT_DIR$/code/setupEnvironmentWall.py" />
         <option value="$PROJECT_DIR$/code/replay.py" />
-        <option value="$PROJECT_DIR$/code/DisksContainer.py" />
         <option value="$PROJECT_DIR$/code/daemon.py" />
-        <option value="$PROJECT_DIR$/code/core.py" />
-        <option value="$PROJECT_DIR$/code/rotation.py" />
-        <option value="$PROJECT_DIR$/code/dockingPointing.py" />
         <option value="$PROJECT_DIR$/code/Cursor.py" />
+        <option value="$PROJECT_DIR$/code/dockingPointing.py" />
+        <option value="$PROJECT_DIR$/code/rotation.py" />
+        <option value="$PROJECT_DIR$/code/core.py" />
+        <option value="$PROJECT_DIR$/code/DisksContainer.py" />
       </list>
     </option>
   </component>
@@ -403,9 +405,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1919" y="707" width="2562" height="1393" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26025236" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17350158" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329653" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -549,50 +551,50 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/code/rotation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="14" column="43" selection-start-line="14" selection-start-column="43" selection-end-line="14" selection-end-column="43" />
+        <state vertical-scroll-proportion="-25.064516">
+          <caret line="163" column="32" selection-start-line="163" selection-start-column="32" selection-end-line="163" selection-end-column="32" />
           <folding>
             <element signature="e#16#29#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/code/DisksContainer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="40" column="44" selection-start-line="40" selection-start-column="44" selection-end-line="40" selection-end-column="44" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/code/Cursor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="44" column="73" selection-start-line="44" selection-start-column="73" selection-end-line="44" selection-end-column="73" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/code/dockingPointing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-8.548388">
-          <caret line="575" column="31" selection-start-line="575" selection-start-column="31" selection-end-line="575" selection-end-column="31" />
+        <state vertical-scroll-proportion="147.09677">
+          <caret line="39" column="23" selection-start-line="39" selection-start-column="23" selection-end-line="39" selection-end-column="23" />
           <folding>
             <element signature="e#15#26#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/code/Cursor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-47.19355">
+          <caret line="87" column="30" selection-start-line="87" selection-start-column="26" selection-end-line="87" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/code/core.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.654185">
-          <caret line="195" column="19" selection-start-line="195" selection-start-column="19" selection-end-line="195" selection-end-column="19" />
+        <state vertical-scroll-proportion="-15.096774">
+          <caret line="218" column="28" selection-start-line="218" selection-start-column="28" selection-end-line="218" selection-end-column="28" />
           <folding>
             <element signature="e#15#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/code/DisksContainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.41641337">
+          <caret line="31" column="27" selection-start-line="31" selection-start-column="27" selection-end-line="31" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>

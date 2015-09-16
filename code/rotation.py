@@ -10,6 +10,7 @@ import LogManager
 import math
 import glob
 import Cursor
+import random
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -20,7 +21,7 @@ THRESHHOLD = 40
 
 print(
     "Welcome to the VR motor movement study application. To change the parameters and/or cahnge the group and user id open the 'core.py'.")
-environment = core.setupEnvironment().create(int(input("Config Number: ")))
+environment = core.setupEnvironment().create()
 
 rotation2D = [avango.gua.make_rot_mat(20, 1, 0.8, 0),
               avango.gua.make_rot_mat(90, 0.1, 0.2, 0)]
@@ -34,9 +35,9 @@ W_rot = []
 for i in range(0, len(ID)):
     if environment.randomTargets:
         environment.D_rot = [
-            environment.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate())]  # in degrees
-        W_rot = [core.IDtoW(ID[0], environment.D_rot[0]), core.IDtoW(ID[1], environment.D_rot[1]),
-                 core.IDtoW(ID[2], environment.D_rot[2])]  # in degrees, Fitt's Law umgeformt nach W_rot
+           core.getRotationError1D(rotation2D[0].get_rotate(), rotation2D[1].get_rotate())]  # in degrees
+        W_rot = [core.IDtoW(ID[0], environment.D_rot[0]), core.IDtoW(ID[1], environment.D_rot[0]),
+                 core.IDtoW(ID[2], environment.D_rot[0])]  # in degrees, Fitt's Law umgeformt nach W_rot
     else:
         environment.D_rot = 100
         W_rot.append(core.IDtoW(ID[i], environment.D_rot))
@@ -154,6 +155,8 @@ class trackingManager(avango.script.Script):
                 else:
                     self.disks.setColor()
                     environment.setBackgroundColor(avango.gua.Color(0, 0, 0))
+            else:
+                self.disks.setColor()
 
         if self.startedTests and self.endedTests == False:
             self.setSpeed()
@@ -165,21 +168,27 @@ class trackingManager(avango.script.Script):
             self.logReplay()  # save replay, todo
 
     def select(self):
+        if self.startedTests:
+                self.setMT(self.lastTime, self.timer.value)
+                self.points = self.points + (self.ID / self.MT)
+
         if self.getErrorRotate() < W_rot[self.index] / 2:
             # print("HIT:" + str(self.getErrorRotate())+"°")
             self.goal = True
-            environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+
+            if environment.provideFeedback:
+                environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+                environment.playSound("hit_rotate")
             if not environment.useAutoDetect:
                 self.succesful_clicks += 1
-            environment.playSound("hit_rotate")
-            if self.startedTests:
-                self.setMT(self.lastTime, self.timer.value)
-                self.points = self.points + (self.ID / self.MT)
+
         else:
             # print("MISS:" + str(self.getErrorRotate())+"°")
             self.goal = False
-            environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
-            environment.playSound("miss")
+            if environment.provideFeedback:
+                environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+                environment.playSound("miss")
+
 
     def nextSettingStep(self):
         # print(self.index)
@@ -224,6 +233,9 @@ class trackingManager(avango.script.Script):
                 self.startedTests = True
 
             self.setID(self.index)
+
+    def getRandomRotation3D(self):
+        return avango.gua.make_rot_mat(120, random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
 
     def getErrorRotate(self):
         return core.getRotationError1D(

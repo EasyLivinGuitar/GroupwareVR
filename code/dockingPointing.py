@@ -10,6 +10,7 @@ import core
 import DisksContainer
 import Cursor
 import LogManager
+import random
 from avango.script import field_has_changed
 
 print(
@@ -228,16 +229,18 @@ class trackingManager(avango.script.Script):
             if self.getErrorRotate() < W_rot[self.index] / 2 and self.getErrorTranslate() < W_trans[self.index] / 2:
                 # hit
                 self.goal = True
-                environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-                if environment.taskDOFRotate == 0:
-                    environment.playSound("balloon")
-                else:
-                    environment.playSound("hit_rotate")
+                if(environment.provideFeedback):
+                    environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+                    if environment.taskDOFRotate == 0:
+                        environment.playSound("balloon")
+                    else:
+                        environment.playSound("hit_rotate")
             else:
                 # miss
                 self.goal = False
-                environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
-                environment.playSound("miss")
+                if(environment.provideFeedback):
+                    environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+                    environment.playSound("miss")
 
     def nextSettingStep(self):
         if self.counter % environment.N == environment.N - 1:
@@ -259,6 +262,16 @@ class trackingManager(avango.script.Script):
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
         if self.index < len(ID):
             # move target
+             # switches aim and shadow aim
+            temp = self.aimShadow.Transform.value
+            self.aimShadow.Transform.value = self.aim.Transform.value
+            self.aim.Transform.value = temp
+
+            self.aim.Transform.value = avango.gua.make_trans_mat(
+                self.aim.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
+            self.aimShadow.Transform.value = avango.gua.make_trans_mat(
+                self.aimShadow.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
+
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
                     if environment.taskDOFRotate == 3:
@@ -268,17 +281,6 @@ class trackingManager(avango.script.Script):
                         rotation = self.getRandomRotation2D()
                         self.disks.setRotation(rotation)
             else:
-
-                # switches aim and shadow aim
-                temp = self.aimShadow.Transform.value
-                self.aimShadow.Transform.value = self.aim.Transform.value
-                self.aim.Transform.value = temp
-
-                self.aim.Transform.value = avango.gua.make_trans_mat(
-                    self.aim.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
-                self.aimShadow.Transform.value = avango.gua.make_trans_mat(
-                    self.aimShadow.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
-
                 if environment.taskDOFRotate > 0:
                     if self.taskNum == 0 or self.taskNum == 2:
                         distance = environment.D_rot
@@ -292,7 +294,6 @@ class trackingManager(avango.script.Script):
 
                     self.disks.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                     self.taskNum = (self.taskNum + 1) % 2
-
                     self.disks.setDisksTransMats(targetDiameter[self.index])
 
                     if environment.AnimationPreview:
@@ -300,6 +301,7 @@ class trackingManager(avango.script.Script):
                             self.aim.Transform.value.get_translate(),
                             self.disks.getRotate()
                         )
+
 
             self.setID(self.index)
 
@@ -313,6 +315,9 @@ class trackingManager(avango.script.Script):
 
     def getErrorTranslate(self):
         return core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value)
+
+    def getRandomRotation3D(self):
+        return avango.gua.make_rot_mat(random.uniform(0.0, 100.0), random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
 
     def logReplay(self):
         path = environment.getPath()

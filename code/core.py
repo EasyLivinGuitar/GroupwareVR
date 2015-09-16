@@ -164,7 +164,7 @@ def printHelp():
     environment = setupEnvironment()
 
     for i in range(0, len(environment.disableAxisList)):
-        print(str(i) + ": "+str(environment.disableAxisList[i]))
+        print(str(i) + ": "+str(environment.disableAxisList[i]) + " DOF_R_virtual: "+str(environment.virtualDOFRotateList[i])+" DOF_R_task: "+str(environment.taskDOFRotateList[i]))
 
 
 
@@ -204,7 +204,7 @@ class setupEnvironment(avango.script.Script):
     '''get the position of the center where the pointer and the aim is located.'''
     displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
-    D_rot = 100  # in degrees
+    D_rot = 120  # in degrees
     D_trans = 0.3  # in meter
 
     logResults = True
@@ -213,10 +213,10 @@ class setupEnvironment(avango.script.Script):
     '''if false needs a button press or next step, if true then autodetects'''
     useAutoDetect = False
 
-    randomTargets = False
+    randomTargets = True
 
     ''' show a preview of the motion first'''
-    AnimationPreview = True
+    AnimationPreview = False
     AnimationTime = 0.5
 
     '''you can fixate the cursor during the animation preview'''
@@ -229,10 +229,16 @@ class setupEnvironment(avango.script.Script):
     r = 0.02
 
     '''highlight if inside the target'''
-    showWhenInTarget = True
+    showWhenInTarget = False
+
+    '''software provides feedback if user hits oder misses'''
+    provideFeedback = False
 
     '''show human'''
-    showHuman = True
+    showHuman = False
+
+    '''phone or colored cross setup?'''
+    usePhoneCursor = True
 
     res_pass = avango.gua.nodes.ResolvePassDescription()
 
