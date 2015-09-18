@@ -30,9 +30,9 @@ python3.4 ./code/daemon.py > /dev/null &
 # run program
 if [[ $* == *-d* ]]
 then
-cd "$DIR" && gdb --args python3.4 ./code/dockingPointing.py
+cd "$DIR" && gdb --args python3.4 ./code/tasks.py
 else
-cd "$DIR" && python3.4 ./code/dockingPointing.py
+cd "$DIR" && python3.4 ./code/tasks.py
 fi
 
 # kill daemon

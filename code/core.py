@@ -219,11 +219,14 @@ class setupEnvironment(avango.script.Script):
     randomTargets = True
 
     ''' show a preview of the motion first'''
-    AnimationPreview = False
-    AnimationTime = 0.5
+    AnimationPreview = True
+    AnimationTime = 0.5 # in s
 
     '''you can fixate the cursor during the animation preview'''
     enableCursorDuringAnimation = True
+
+    '''phone or colored cross setup?'''
+    usePhoneCursor = False
 
     '''radius of spikes from center in the model file'''
     r_model = 0.10
@@ -239,9 +242,6 @@ class setupEnvironment(avango.script.Script):
 
     '''show human'''
     showHuman = False
-
-    '''phone or colored cross setup?'''
-    usePhoneCursor = True
 
     res_pass = avango.gua.nodes.ResolvePassDescription()
 

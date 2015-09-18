@@ -292,12 +292,17 @@ class trackingManager(avango.script.Script):
                     self.taskNum = (self.taskNum + 1) % 2
                     self.disks.setDisksTransMats(targetDiameter[self.index])
 
-                    if environment.AnimationPreview:
-                        self.cursorContainer.animateTo(
-                            self.aim.Transform.value.get_translate(),
-                            self.disks.getRotate()
-                        )
-
+            if environment.AnimationPreview:
+                if self.aim is None:
+                    self.cursorContainer.animateTo(
+                        None,
+                        self.disks.getRotate()
+                    )
+                else:
+                    self.cursorContainer.animateTo(
+                        self.aim.Transform.value.get_translate(),
+                        self.disks.getRotate()
+                    )
 
             self.setID(self.index)
 
@@ -392,7 +397,7 @@ class trackingManager(avango.script.Script):
             logmanager.set("movement direction",
                        self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate())
         else:
-            logmanager.set("movement direction", "(0,0,0)")
+            logmanager.set("movement direction", "(0.0  0.0  0.0)")
 
         logmanager.set("target distance T", environment.D_trans)
         logmanager.set("target width T", W_trans[self.index])

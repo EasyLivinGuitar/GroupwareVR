@@ -12,12 +12,13 @@ class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
     pointer_device_sensor = None
     inputMat = avango.gua.SFMatrix4()
-    animationTime = 0
+    animationStartTime = 0
 
     def __init__(self):
         self.super(Cursor).__init__()
+        self.always_evaluate(True)
         self.animEndPos = None
-        self.aimEndRot = None
+        self.animEndRot = None
         self.startPos = None
         self.startRot = None
         self.setup = None
@@ -66,41 +67,57 @@ class Cursor(avango.script.Script):
         return self
 
     def evaluate(self):
-         # not animation preview
-        if self.setup.enableCursorDuringAnimation or self.animEndPos is None:
-            # get input
-            self.cursor.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(
-                self.cursor.Transform.value.get_scale())
-            # then reduce
-            self.reducePencilMat()
+        # get input
+        self.cursor.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(
+            self.cursor.Transform.value.get_scale())
+        # then reduce
+        self.reducePencilMat()
 
-        # not in animation
-        if self.animEndPos is None:
-            # apply to human
-            if self.setup.showHuman:
-                self.human.Transform.value = (
-                    avango.gua.make_trans_mat(self.cursor.Transform.value.get_translate())
-                    * avango.gua.make_rot_mat(self.cursor.Transform.value.get_rotate_scale_corrected())
-                    * avango.gua.make_scale_mat(0.007)
-                )
-        else:
+        # copy to human
+        if self.setup.showHuman:
+            self.human.Transform.value = (
+                avango.gua.make_trans_mat(self.cursor.Transform.value.get_translate())
+                * avango.gua.make_rot_mat(self.cursor.Transform.value.get_rotate_scale_corrected())
+                * avango.gua.make_scale_mat(0.007)
+            )
+
+        if (self.animEndPos is not None) or (self.animEndRot is not None):
+           # print("animate")
             # animate the movement preview
-            percentile = (self.TimeIn.value - self.animationTime) / self.setup.AnimationTime
+            percentile = (self.TimeIn.value - self.animationStartTime) / self.setup.AnimationTime
+            # if no end position give n use cursor position instead
+            if self.animEndPos is None:
+                translateMat = avango.gua.make_trans_mat(self.cursor.Transform.value.get_translate())
+            else:
+                translateMat = avango.gua.make_trans_mat(
+                    self.startPos.lerp_to(self.animEndPos, percentile)
+                )
             if self.setup.showHuman:
                 self.human.Transform.value = (
-                    avango.gua.make_trans_mat(
-                        self.startPos.lerp_to(self.animEndPos, percentile)
-                    )
+                    translateMat
                     * avango.gua.make_rot_mat(
-                        self.startRot.slerp_to(self.aimEndRot, percentile)
+                        self.startRot.slerp_to(self.animEndRot, percentile)
                     )
                     * avango.gua.make_scale_mat(
                         self.human.Transform.value.get_scale()
                     )
                 )
-            if self.TimeIn.value - self.animationTime > self.setup.AnimationTime:
-                self.animEndPos = None
-                self.aimEndRot = None
+            else:
+                self.cursor.Transform.value = (
+                    translateMat
+                    * avango.gua.make_rot_mat(
+                        self.startRot.slerp_to(self.animEndRot, percentile)
+                    )
+                    * avango.gua.make_scale_mat(
+                        self.cursor.Transform.value.get_scale()
+                    )
+                )
+
+        # animation over?
+        print(str(self.TimeIn.value)+"-"+str(self.animationStartTime)+"="+str(self.TimeIn.value - self.animationStartTime))
+        if self.TimeIn.value - self.animationStartTime > self.setup.AnimationTime:
+            self.animEndPos = None
+            self.animEndRot = None
 
     def getNode(self):
         return self.cursor
@@ -151,10 +168,9 @@ class Cursor(avango.script.Script):
             self.cursor.Transform.value.get_scale())
 
     '''This method moves the cursor to the aim'''
-
     def animateTo(self, aimPos, aimRot):
         self.startPos = self.cursor.Transform.value.get_translate()
         self.startRot = self.cursor.Transform.value.get_rotate_scale_corrected()
         self.animEndPos = aimPos
-        self.aimEndRot = aimRot
-        self.animationTime = self.TimeIn.value  # aktuelle Zeit
+        self.animEndRot = aimRot
+        self.animationStartTime = self.TimeIn.value  # aktuelle Zeit
