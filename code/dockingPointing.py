@@ -159,7 +159,7 @@ class trackingManager(avango.script.Script):
 
             # position disks
             if environment.taskDOFRotate > 0:
-                if core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]:
+                if environment.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]:
                     # attach disks to cursor
                     self.disks.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
@@ -195,10 +195,6 @@ class trackingManager(avango.script.Script):
 
             if (not highlightT) and (not highlightR):
                 environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
-
-            self.aim.Material.EnableBackfaceCulling = False
-            self.aim.Material.EnableBackFaceCulling = False
-            self.aim.Material.BackfaceCulling = False
 
         # set logging vars
         if self.startedTests and self.endedTests == False:
@@ -260,16 +256,17 @@ class trackingManager(avango.script.Script):
         # print("P:"+str( pencilRot )+"")
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
         if self.index < len(ID):
-            # move target
-            # switches aim and shadow aim
-            temp = self.aimShadow.Transform.value
-            self.aimShadow.Transform.value = self.aim.Transform.value
-            self.aim.Transform.value = temp
+            if environment.taskDOFTranslate > 0:
+                # move target
+                # switches aim and shadow aim
+                temp = self.aimShadow.Transform.value
+                self.aimShadow.Transform.value = self.aim.Transform.value
+                self.aim.Transform.value = temp
 
-            self.aim.Transform.value = avango.gua.make_trans_mat(
-                self.aim.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
-            self.aimShadow.Transform.value = avango.gua.make_trans_mat(
-                self.aimShadow.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
+                self.aim.Transform.value = avango.gua.make_trans_mat(
+                    self.aim.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
+                self.aimShadow.Transform.value = avango.gua.make_trans_mat(
+                    self.aimShadow.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
 
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
@@ -312,11 +309,18 @@ class trackingManager(avango.script.Script):
             )
         return 0
 
+    '''Get the translation error from the cursor to the aim in m'''
     def getErrorTranslate(self):
-        return core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value)
+        if environment.taskDOFTranslate > 0:
+            return core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value)
+        else:
+            return 0
 
     def getRandomRotation3D(self):
-        return avango.gua.make_rot_mat(random.uniform(0.0, 100.0), random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
+        return avango.gua.make_rot_mat(random.uniform(0.0, environment.D_rot), random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
+
+    def getRandomRotation2D(self):
+        return avango.gua.make_rot_mat(random.uniform(0.0, environment.D_rot), 0, random.randint(0, 1), 0)
 
     def logReplay(self):
         path = environment.getPath()
@@ -329,21 +333,26 @@ class trackingManager(avango.script.Script):
             else:  # write permanent values
                 self.result_file = open(path + environment.taskString + "_trial" + str(self.num_files) + ".replay",
                                         "a+")
+                if environment.taskDOFTranslate > 0:
+                    aimString =  "Aimpos: \n" + str(self.aim.Transform.value)
+                else:
+                    aimString =  "Aimpos: \nnone"
 
                 self.result_file.write(
                     "TimeStamp: " + str(self.timer.value) + "\n" +
                     "ErrorRotate: " + str(self.getErrorRotate()) + "\n" +
                     "Pointerpos: \n" + str(self.cursorNode.Transform.value) + "\n" +
-                    "Aimpos: \n" + str(self.aim.Transform.value) + "\n\n")
+                    aimString + "\n\n")
                 self.result_file.close()
 
     def checkTranslateOvershoots(self):
-        if self.getErrorTranslate() < self.aim.Transform.value.get_scale().x / 2:
-            self.overshootInside_translate = True
-        else:
-            if self.overshootInside_translate:  #
-                self.overshoots_t += 1
-                self.overshootInside_translate = False
+        if environment.taskDOFTranslate > 0:
+            if self.getErrorTranslate() < self.aim.Transform.value.get_scale().x / 2:
+                self.overshootInside_translate = True
+            else:
+                if self.overshootInside_translate:  #
+                    self.overshoots_t += 1
+                    self.overshootInside_translate = False
 
     def checkRotateOvershoots(self):
         if self.getErrorRotate() < W_rot[self.index] / 2:
@@ -379,8 +388,11 @@ class trackingManager(avango.script.Script):
         logmanager.set("DOF virtual T", environment.getDOFTranslateVirtual())
         logmanager.set("DOF virtual R", environment.virtualDOFRotate)
         logmanager.set("task R DOF", environment.taskDOFRotate)
-        logmanager.set("movement direction",
+        if environment.taskDOFTranslate > 0:
+            logmanager.set("movement direction",
                        self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate())
+        else:
+            logmanager.set("movement direction", "(0,0,0)")
 
         logmanager.set("target distance T", environment.D_trans)
         logmanager.set("target width T", W_trans[self.index])

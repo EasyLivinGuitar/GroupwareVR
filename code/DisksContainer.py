@@ -45,15 +45,12 @@ class DisksContainer:
                 self.disk6 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                 self.node.Children.value.append(self.disk6)
 
-
                 if self.setup.virtualDOFRotate==3:
                     self.disk4 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                     self.node.Children.value.append(self.disk4)
 
                     self.disk5 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                     self.node.Children.value.append(self.disk5)
-
-
 
             if self.setup.showHuman:
                 self.human = self.setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
@@ -67,9 +64,7 @@ class DisksContainer:
         '''setup the position of the disk inside the container'''
         def setDisksTransMats(self, diam):
             # print("scaling to"+str(diam))
-            if(self.setup.usePhoneCursor):
-                pass
-            else:
+            if not self.setup.usePhoneCursor:
                 self.disk1.Transform.value = avango.gua.make_trans_mat(0, 0, -self.setup.r)*avango.gua.make_scale_mat(diam)
                 self.disk3.Transform.value = avango.gua.make_rot_mat(90,0,1,0) *avango.gua.make_trans_mat(0, 0, -self.setup.r)*avango.gua.make_scale_mat(diam)
                 self.disk2.Transform.value = avango.gua.make_rot_mat(-90,0,1,0)*avango.gua.make_trans_mat(0, 0, -self.setup.r)*avango.gua.make_scale_mat(diam)

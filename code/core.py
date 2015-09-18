@@ -241,7 +241,7 @@ class setupEnvironment(avango.script.Script):
     showHuman = False
 
     '''phone or colored cross setup?'''
-    usePhoneCursor = False
+    usePhoneCursor = True
 
     res_pass = avango.gua.nodes.ResolvePassDescription()
 
