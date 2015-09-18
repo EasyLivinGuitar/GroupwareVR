@@ -33,6 +33,7 @@ class Cursor(avango.script.Script):
                                                                  "data/objects/phone.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
             self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.002)
+            self.cursor.Material.value.EnableBackfaceCulling.value = False
         else:
             self.cursor = setup.loader.create_geometry_from_file("colored_cross",
                                                                  "data/objects/colored_cross.obj",

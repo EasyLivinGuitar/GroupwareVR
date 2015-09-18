@@ -1,9 +1,7 @@
 # Rhino
 
 mtllib phone.mtl
-g Default
 o object_1
-usemtl grey
 v -20 7.5 36
 v -20 5.5 36
 v -8 7.5 36
