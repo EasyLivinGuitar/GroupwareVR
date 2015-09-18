@@ -38,7 +38,7 @@ def IDtoW(ID, A):
 # @param q The rotation quat to be converted.
 
 
-def get_euler_angles(q):
+def  get_euler_angles(q):
     sqx = q.x * q.x
     sqy = q.y * q.y
     sqz = q.z * q.z
@@ -186,6 +186,9 @@ class setupEnvironment(avango.script.Script):
     '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
     taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1]
 
+    '''should the task swich between translation aims reachable with 1 dof or 0?'''
+    taskDOFTranslateList = [1, 1, 1, 1, 1, 0, 0, 0, 1, 1]
+
     '''is the task above the table or is it on the table?'''
     space3DList = [True, False, True, False, True, True, False, True, True, False]
 
@@ -238,7 +241,7 @@ class setupEnvironment(avango.script.Script):
     showHuman = False
 
     '''phone or colored cross setup?'''
-    usePhoneCursor = True
+    usePhoneCursor = False
 
     res_pass = avango.gua.nodes.ResolvePassDescription()
 
@@ -282,19 +285,20 @@ class setupEnvironment(avango.script.Script):
         self.permanentBG = False
         # connect time with the timerField
         self.timerField.connect_from(self.timeSensor.Time)
-        testConfigNo=999
+        testConfigNo = -1
 
-        while testConfigNo>=len(self.disableAxisList):
-            testConfigNo=int(input("Config Number: "))
+        while testConfigNo >= len(self.disableAxisList) or testConfigNo == -1:
+            testConfigNo = int(input("Config Number: "))
            
-            if(testConfigNo>=len(self.disableAxisList)):
-                print("ERROR: Wrong Config Number")
+            if testConfigNo >= len(self.disableAxisList) or testConfigNo == -1:
+                print("ERROR: Invalid Config Number")
                 printHelp()
 
         self.disableAxis = self.disableAxisList[testConfigNo]
         self.virtualDOFRotate = self.virtualDOFRotateList[testConfigNo]
         self.space3D = self.space3DList[testConfigNo]
         self.taskDOFRotate = self.taskDOFRotateList[testConfigNo]
+        self.taskDOFTranslate = self.taskDOFTranslateList[testConfigNo]
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
             self.taskDOFRotate = 1
@@ -302,7 +306,7 @@ class setupEnvironment(avango.script.Script):
         if self.taskDOFRotate == 0:
             self.taskString = str(testConfigNo)+"_pointing"
         else:
-            if self.getDOFTranslateVirtual() > 1:
+            if self.taskDOFTranslate > 0:
                 self.taskString = str(testConfigNo)+"_docking"
             else:
                 self.taskString = str(testConfigNo)+"_rotation"

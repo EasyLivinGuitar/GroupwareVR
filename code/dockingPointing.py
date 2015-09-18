@@ -160,22 +160,21 @@ class trackingManager(avango.script.Script):
             # position disks
             if environment.taskDOFRotate > 0:
                 if core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]:
-                    # attach disks to pointer
+                    # attach disks to cursor
                     self.disks.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
                     # attach disks to aim
                     self.disks.setTranslate(avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()))
 
                 # highlight rotation if near target
-                if environment.showWhenInTarget:
-                    # highlight rotation if near target
-                    if (core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]
-                        and self.getErrorRotate() < W_rot[self.index] / 2
-                    ):
-                        highlightR = True
-                        self.disks.highlightRed()
-                    else:
-                        self.disks.setColor()
+                if (environment.showWhenInTarget
+                    and core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.index]
+                    and self.getErrorRotate() < W_rot[self.index] / 2
+                ):
+                    highlightR = True
+                    self.disks.highlightRed()
+                else:
+                    self.disks.setColor()
 
             # highlight translation
             highlightT = False
@@ -262,7 +261,7 @@ class trackingManager(avango.script.Script):
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
         if self.index < len(ID):
             # move target
-             # switches aim and shadow aim
+            # switches aim and shadow aim
             temp = self.aimShadow.Transform.value
             self.aimShadow.Transform.value = self.aim.Transform.value
             self.aim.Transform.value = temp
@@ -571,43 +570,43 @@ def start():
     environment.getWindow().on_key_press(trackManager.handle_key)
     environment.setup(graph)
 
-    trackManager.aim = loader.create_geometry_from_file(
-        "modified_sphere",
-        "data/objects/modified_sphere.obj",
-        avango.gua.LoaderFlags.NORMALIZE_SCALE
-    )
-    trackManager.aim.Transform.value = (
-        avango.gua.make_trans_mat(-environment.D_trans / 2, 0, 0)
-        * avango.gua.make_scale_mat(W_trans[0])
-    )
-    trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
-    trackManager.aim.Material.value.EnableBackfaceCulling.value = False
-    environment.everyObject.Children.value.append(trackManager.aim)
+    if environment.taskDOFTranslate > 0:
+        trackManager.aim = loader.create_geometry_from_file(
+            "modified_sphere",
+            "data/objects/modified_sphere.obj",
+            avango.gua.LoaderFlags.NORMALIZE_SCALE
+        )
+        trackManager.aim.Transform.value = (
+            avango.gua.make_trans_mat(-environment.D_trans / 2, 0, 0)
+            * avango.gua.make_scale_mat(W_trans[0])
+        )
+        trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
+        trackManager.aim.Material.value.EnableBackfaceCulling.value = False
+        environment.everyObject.Children.value.append(trackManager.aim)
 
-    trackManager.aimShadow = loader.create_geometry_from_file(
-        "modified_sphere",
-        "data/objects/modified_sphere.obj",
-        avango.gua.LoaderFlags.NORMALIZE_SCALE
-    )
-    trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
-        environment.D_trans / 2,
-        0,
-        0
-    ) * avango.gua.make_scale_mat(W_trans[0])
-    trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
-    trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
-    environment.everyObject.Children.value.append(trackManager.aimShadow)
+        trackManager.aimShadow = loader.create_geometry_from_file(
+            "modified_sphere",
+            "data/objects/modified_sphere.obj",
+            avango.gua.LoaderFlags.NORMALIZE_SCALE
+        )
+        trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
+            environment.D_trans / 2,
+            0,
+            0
+        ) * avango.gua.make_scale_mat(W_trans[0])
+        trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+        trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
+        environment.everyObject.Children.value.append(trackManager.aimShadow)
 
     # loadMeshes
-    cursor = Cursor.Cursor().create(environment)
-    trackManager.cursorContainer = cursor
-    trackManager.cursorNode = cursor.getNode()
+    trackManager.cursorContainer = Cursor.Cursor().create(environment)
+    trackManager.cursorNode = trackManager.cursorContainer.getNode()
 
     if environment.taskDOFRotate > 0:
         trackManager.disks.setupDisks(trackManager.cursorNode)
         trackManager.disks.setDisksTransMats(targetDiameter[0])
         trackManager.disks.setRotation(avango.gua.make_rot_mat(environment.D_rot, 0, 1, 0))
-        trackManager.disks.setDisksTransMats(targetDiameter[0])
+        #trackManager.disks.setDisksTransMats(targetDiameter[0])
 
     # listen to button
     button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
