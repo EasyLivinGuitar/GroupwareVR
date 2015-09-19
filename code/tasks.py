@@ -139,16 +139,7 @@ class trackingManager(avango.script.Script):
     @field_has_changed(Button)
     def button_pressed(self):
         if self.Button.value:
-            if not self.endedTests:
-                self.select()
-                if environment.logResults and self.startedTests and not self.endedTests:
-                    self.logSetter()
-                    environment.logData(logmanager)
-                    self.resetValues()
-
-                self.nextSettingStep()
-            else:
-                print("Tests ended")
+             self.select()
         else:
             self.flagPrinted = False
 
@@ -197,7 +188,11 @@ class trackingManager(avango.script.Script):
                 environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
 
         # set logging vars
-        if self.startedTests and self.endedTests == False:
+        if self.startedTests and not self.endedTests:
+            # only set starting time after animation
+            if self.startTime == 0 and not self.cursorContainer.isAnimating():
+                self.startTime = self.timer.value
+
             self.setSpeedTranslate()
             self.setSpeedRotate()
             self.frame_counter_speed += 1
@@ -216,26 +211,35 @@ class trackingManager(avango.script.Script):
             # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        if self.index < len(ID):
+        if self.index < len(ID) and not self.cursorContainer.isAnimating():
             # auswerten
             if self.startedTests:
-                self.setMT(self.lastTime, self.timer.value)
-                self.points = self.points + (self.ID + self.ID / self.MT)
-            if self.getErrorRotate() < W_rot[self.index] / 2 and self.getErrorTranslate() < W_trans[self.index] / 2:
-                # hit
-                self.goal = True
-                if(environment.provideFeedback):
-                    environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
-                    if environment.taskDOFRotate == 0:
-                        environment.playSound("balloon")
-                    else:
-                        environment.playSound("hit_rotate")
-            else:
-                # miss
-                self.goal = False
-                if(environment.provideFeedback):
-                    environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
-                    environment.playSound("miss")
+                self.MT = self.timer.value - self.startTime
+                self.startTime = 0 #reset starting time
+                self.points += self.ID + self.ID / self.MT
+
+                if self.getErrorRotate() < W_rot[self.index] / 2 and self.getErrorTranslate() < W_trans[self.index] / 2:
+                    # hit
+                    self.goal = True
+                    if environment.provideFeedback:
+                        environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
+                        if environment.taskDOFRotate == 0:
+                            environment.playSound("balloon")
+                        else:
+                            environment.playSound("hit_rotate")
+                else:
+                    # miss
+                    self.goal = False
+                    if environment.provideFeedback:
+                        environment.setBackgroundColor(avango.gua.Color(0.3, 0, 0), 0.18)
+                        environment.playSound("miss")
+
+                if environment.logResults and not self.endedTests:
+                    self.logSetter()
+                    environment.logData(logmanager)
+                    self.resetValues()
+
+            self.nextSettingStep()
 
     def nextSettingStep(self):
         if self.counter % environment.N == environment.N - 1:
@@ -243,7 +247,6 @@ class trackingManager(avango.script.Script):
             self.index += 1
 
         if not self.startedTests:
-            self.lastTime = self.timer.value
             self.startedTests = True
         else:
             self.counter += 1
@@ -562,10 +565,6 @@ class trackingManager(avango.script.Script):
     def setID(self, index):
         if index < len(ID):
             self.ID = ID[index]
-
-    def setMT(self, start, end):
-        self.MT = end - start
-        self.lastTime = self.timer.value
 
     def setTP(self, index):
         if self.MT > 0 and self.current_index < len(ID):

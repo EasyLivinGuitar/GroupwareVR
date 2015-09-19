@@ -167,10 +167,13 @@ class Cursor(avango.script.Script):
         self.cursor.Transform.value = translation * yRot * avango.gua.make_scale_mat(
             self.cursor.Transform.value.get_scale())
 
-    '''This method moves the cursor to the aim. aimPos can be null'''
+    '''This method moves the cursor to the aim. aimPos can be None'''
     def animateTo(self, aimPos, aimRot):
         self.startPos = self.cursor.Transform.value.get_translate()
         self.startRot = self.cursor.Transform.value.get_rotate_scale_corrected()
         self.animEndPos = aimPos
         self.animEndRot = aimRot
         self.animationStartTime = self.TimeIn.value  # aktuelle Zeit
+
+    def isAnimating(self):
+        return self.animEndRot is not None or self.animEndPos is not None

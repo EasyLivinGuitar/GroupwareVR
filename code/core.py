@@ -220,7 +220,7 @@ class setupEnvironment(avango.script.Script):
 
     ''' show a preview of the motion first'''
     AnimationPreview = True
-    AnimationTime = 0.5 # in s
+    AnimationTime = 2 # in s
 
     '''you can fixate the cursor during the animation preview'''
     enableCursorDuringAnimation = True
