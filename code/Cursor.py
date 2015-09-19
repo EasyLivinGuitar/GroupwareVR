@@ -24,6 +24,7 @@ class Cursor(avango.script.Script):
         self.setup = None
         self.human = None
         self.cursor = None
+        self.timer = None
 
     def create(self, setup):
         self.setup = setup
@@ -61,8 +62,8 @@ class Cursor(avango.script.Script):
         # connect pencil->inputMat
         self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
 
-        timer = avango.nodes.TimeSensor()
-        self.TimeIn.connect_from(timer.Time)
+        self.timer = avango.nodes.TimeSensor()
+        self.TimeIn.connect_from(self.timer.Time)
 
         return self
 
@@ -114,7 +115,6 @@ class Cursor(avango.script.Script):
                 )
 
         # animation over?
-        print(str(self.TimeIn.value)+"-"+str(self.animationStartTime)+"="+str(self.TimeIn.value - self.animationStartTime))
         if self.TimeIn.value - self.animationStartTime > self.setup.AnimationTime:
             self.animEndPos = None
             self.animEndRot = None
@@ -167,7 +167,7 @@ class Cursor(avango.script.Script):
         self.cursor.Transform.value = translation * yRot * avango.gua.make_scale_mat(
             self.cursor.Transform.value.get_scale())
 
-    '''This method moves the cursor to the aim'''
+    '''This method moves the cursor to the aim. aimPos can be null'''
     def animateTo(self, aimPos, aimRot):
         self.startPos = self.cursor.Transform.value.get_translate()
         self.startRot = self.cursor.Transform.value.get_rotate_scale_corrected()
