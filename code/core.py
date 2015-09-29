@@ -192,11 +192,37 @@ class setupEnvironment(avango.script.Script):
     '''is the task above the table or is it on the table?'''
     space3DList = [True, False, True, False, True, True, False, True, True, False]
 
+    D_rot_list = [
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120],
+                  [120, 120, 120]
+    ]  # in degrees, [saveslotno][n times each aka 'index']
+    D_trans_list = [
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+        [0.3,0.3,0.3],
+    ]  # in meter, [saveslotno][n times each aka 'index']
+
     # the amount of trials per ID
     N = 8
 
     # setup
-    ID = [4, 5, 6]  # fitt's law
+    ID = [4, 5, 6]  # fitt's law, [index]
 
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -207,11 +233,8 @@ class setupEnvironment(avango.script.Script):
     '''get the position of the center where the pointer and the aim is located.'''
     displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
-    D_rot = 120  # in degrees
-    D_trans = 0.3  # in meter
-
     logResults = True
-    saveReplay = True
+    saveReplay = False
 
     '''if false needs a button press or next step, if true then autodetects'''
     useAutoDetect = False
@@ -219,7 +242,7 @@ class setupEnvironment(avango.script.Script):
     randomTargets = True
 
     ''' show a preview of the motion first'''
-    AnimationPreview = True
+    AnimationPreview = False
     AnimationTime = 2 # in s
 
     '''you can fixate the cursor during the animation preview'''
@@ -299,6 +322,8 @@ class setupEnvironment(avango.script.Script):
         self.space3D = self.space3DList[testConfigNo]
         self.taskDOFRotate = self.taskDOFRotateList[testConfigNo]
         self.taskDOFTranslate = self.taskDOFTranslateList[testConfigNo]
+        self.D_rot = self.D_rot_list[testConfigNo]  # in degrees
+        self.D_trans = self.D_trans_list[testConfigNo]  # in meter
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
             self.taskDOFRotate = 1
