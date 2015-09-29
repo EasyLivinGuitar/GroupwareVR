@@ -205,6 +205,7 @@ class setupEnvironment(avango.script.Script):
                   [120, 120, 120]
     ]  # in degrees, [saveslotno][n times each aka 'index']
     D_trans_list = [
+        [0.01,0.5,0.3],
         [0.3,0.3,0.3],
         [0.3,0.3,0.3],
         [0.3,0.3,0.3],
@@ -212,8 +213,7 @@ class setupEnvironment(avango.script.Script):
         [0.3,0.3,0.3],
         [0.3,0.3,0.3],
         [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
+        [0.3,0.5,0.3],
         [0.3,0.3,0.3],
         [0.3,0.3,0.3],
     ]  # in meter, [saveslotno][n times each aka 'index']

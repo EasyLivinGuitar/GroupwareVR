@@ -262,15 +262,12 @@ class trackingManager(avango.script.Script):
         if self.index < len(ID):
             if environment.taskDOFTranslate > 0:
                 # move target
-                # switches aim and shadow aim
-                temp = self.aimShadow.Transform.value
-                self.aimShadow.Transform.value = self.aim.Transform.value
-                self.aim.Transform.value = temp
+                sign = 1
+                if self.counter % 2 == 1:
+                    sign = -1
 
-                self.aim.Transform.value = avango.gua.make_trans_mat(
-                    self.aim.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
-                self.aimShadow.Transform.value = avango.gua.make_trans_mat(
-                    self.aimShadow.Transform.value.get_translate()) * avango.gua.make_scale_mat(W_trans[self.index])
+                self.aim.Transform.value = avango.gua.make_trans_mat(sign * environment.D_trans[self.index] / 2, 0, 0 ) * avango.gua.make_scale_mat(W_trans[self.index])
+                self.aimShadow.Transform.value = avango.gua.make_trans_mat(sign * -environment.D_trans[self.index] / 2, 0, 0 ) * avango.gua.make_scale_mat(W_trans[self.index])
 
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
@@ -628,10 +625,9 @@ def start():
             avango.gua.LoaderFlags.NORMALIZE_SCALE
         )
         trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
-            environment.D_trans[0] / 2,
-            0,
-            0
-        ) * avango.gua.make_scale_mat(W_trans[0])
+            environment.D_trans[0] / 2, 0, 0 )\
+             * avango.gua.make_scale_mat(W_trans[0]
+        )
         trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
         trackManager.aimShadow.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(trackManager.aimShadow)
