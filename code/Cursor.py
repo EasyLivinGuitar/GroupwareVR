@@ -83,9 +83,8 @@ class Cursor(avango.script.Script):
             )
 
         if (self.animEndPos is not None) or (self.animEndRot is not None):
-           # print("animate")
             # animate the movement preview
-            percentile = (self.TimeIn.value - self.animationStartTime) / self.setup.AnimationTime
+            percentile = (self.TimeIn.value - self.animationStartTime) / self.setup.animationTime
             # if no end position give n use cursor position instead
             if self.animEndPos is None:
                 translateMat = avango.gua.make_trans_mat(self.cursor.Transform.value.get_translate())
@@ -115,7 +114,7 @@ class Cursor(avango.script.Script):
                 )
 
         # animation over?
-        if self.TimeIn.value - self.animationStartTime > self.setup.AnimationTime:
+        if self.TimeIn.value - self.animationStartTime > self.setup.animationTime:
             self.animEndPos = None
             self.animEndRot = None
 

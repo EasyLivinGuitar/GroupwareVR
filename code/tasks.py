@@ -124,7 +124,6 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.taskNum = 0
         self.disks = DisksContainer.DisksContainer(environment)
         self.aim = None
         self.aimShadow = None
@@ -279,8 +278,11 @@ class trackingManager(avango.script.Script):
                         self.disks.setRotation(rotation)
             else:
                 if environment.taskDOFRotate > 0:
-                    if self.taskNum == 0 or self.taskNum == 2:
-                        distance = environment.D_rot[self.index]
+                    if self.counter % 2 == 0:  # toggle beetwen
+                        if environment.randomDistanceR:
+                            distance = random.uniform(60, 180)
+                        else:
+                            distance = environment.D_rot[self.index]
                         if environment.taskDOFRotate == 3:
                             rotateAroundX = 1
                         else:
@@ -290,10 +292,9 @@ class trackingManager(avango.script.Script):
                         distance = 0
 
                     self.disks.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                    self.taskNum = (self.taskNum + 1) % 2
                     self.disks.setDisksTransMats(targetDiameter[self.index])
 
-            if environment.AnimationPreview:
+            if environment.animationPreview:
                 if self.aim is None:
                     self.cursorContainer.animateTo(
                         None,

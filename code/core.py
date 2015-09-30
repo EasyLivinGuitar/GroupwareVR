@@ -156,15 +156,14 @@ def print_graph(root_node):
         stack.extend([(child, level + 1) for child in reversed(node.Children.value)])
 
 def printHelp():
-    print("Config Numbers (0 - 9):")
+    environment = setupEnvironment()
+    print("Config Numbers (0 - " + str(len(environment.disableAxisList)-1) + "):")
     print("0 - 4 : Pointing")
     print("5 - 7 : Rotation")
     print("8 - 9 : Docking\n")
 
-    environment = setupEnvironment()
-
     for i in range(0, len(environment.disableAxisList)):
-        print(str(i) + ": "+str(environment.disableAxisList[i]) + " DOF_R_virtual: "+str(environment.virtualDOFRotateList[i])+" DOF_R_task: "+str(environment.taskDOFRotateList[i]))
+        print(str(i) + ": "+str(environment.disableAxisList[i]) + " DOF R virtual: "+str(environment.virtualDOFRotateList[i])+" DOF R task: "+str(environment.taskDOFRotateList[i]))
 
 
 
@@ -177,52 +176,67 @@ class setupEnvironment(avango.script.Script):
 
     # task config
     '''disable translation on this axis'''
-    disableAxisList = [[0, 0, 0], [0, 1, 1], [0, 1, 1], [0, 1, 0], [0, 1, 0], [1, 1, 1], [1, 1, 1], [1, 1, 1],
-                       [0, 0, 0], [0, 1, 0]]  # x,y,z
+    disableAxisList = [
+        [0, 0, 0],
+        [0, 1, 1],
+        [0, 1, 1],
+       [0, 1, 0],
+       [0, 1, 0],
+       [1, 1, 1],
+       [1, 1, 1],
+       [1, 1, 1],
+       [0, 0, 0],
+       [0, 1, 0],
+       [0, 0, 0]
+    ]  # x,y,z
 
     '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
-    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1]
+    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3]
 
     '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
-    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1]
+    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 3]
 
     '''should the task swich between translation aims reachable with 1 dof or 0?'''
-    taskDOFTranslateList = [1, 1, 1, 1, 1, 0, 0, 0, 1, 1]
+    taskDOFTranslateList = [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0]
 
     '''is the task above the table or is it on the table?'''
-    space3DList = [True, False, True, False, True, True, False, True, True, False]
+    space3DList = [True, False, True, False, True, True, False, True, True, False, True]
 
     D_rot_list = [
+                  [0, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 0],
                   [120, 120, 120],
                   [120, 120, 120],
                   [120, 120, 120],
                   [120, 120, 120],
                   [120, 120, 120],
                   [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120]
+                  [120, 120, 120]# 11 random distance
+
     ]  # in degrees, [saveslotno][n times each aka 'index']
+
     D_trans_list = [
-        [0.01,0.5,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.5,0.3],
-        [0.3,0.3,0.3],
-        [0.3,0.3,0.3],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3],
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3],
+        [0.3, 0.3, 0.3] # 11 random distance
     ]  # in meter, [saveslotno][n times each aka 'index']
 
     # the amount of trials per ID
     N = 8
 
     # setup
-    ID = [4, 5, 6]  # fitt's law, [index]
+   # ID = [4, 5, 6]  # fitt's law, [index]
+    ID = [5, 5, 5]  # fitt's law, [index]
 
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -239,11 +253,14 @@ class setupEnvironment(avango.script.Script):
     '''if false needs a button press or next step, if true then autodetects'''
     useAutoDetect = False
 
-    randomTargets = True
+    randomTargets = False
+
+    '''use random rotation distance'''
+    randomDistanceR = True
 
     ''' show a preview of the motion first'''
-    AnimationPreview = False
-    AnimationTime = 2 # in s
+    animationPreview = False
+    animationTime = 2  # in s
 
     '''you can fixate the cursor during the animation preview'''
     enableCursorDuringAnimation = True
@@ -314,7 +331,7 @@ class setupEnvironment(avango.script.Script):
             testConfigNo = int(input("Config Number: "))
            
             if testConfigNo >= len(self.disableAxisList) or testConfigNo == -1:
-                print("ERROR: Invalid Config Number")
+                print("ERROR: invalid config number " + str(testConfigNo))
                 printHelp()
 
         self.disableAxis = self.disableAxisList[testConfigNo]
@@ -350,7 +367,6 @@ class setupEnvironment(avango.script.Script):
             return 3
         else:
             return 1
-
 
     def setup(self, graph):
         light = avango.gua.nodes.LightNode(
