@@ -18,7 +18,7 @@ s2 = avango.daemon.Station('M2')
 # create instance of Polhemus
 polhemus = avango.daemon.polhemus.Polhemus()
 
-# add stations (index should correspond to the number of the Marker)
+# add stations (level should correspond to the number of the Marker)
 polhemus.stations[1] = s1
 polhemus.stations[2] = s2
 

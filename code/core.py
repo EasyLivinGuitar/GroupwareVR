@@ -26,7 +26,7 @@ Then start the scene with the according start.sh
 
 
 ##
-# @param ID the index of difficulty
+# @param ID the level of difficulty
 # @param A the amplitude
 
 
@@ -171,6 +171,7 @@ def printHelp():
 
 
 class setupEnvironment(avango.script.Script):
+    # user id 0 and group 0 is developer flag
     userId = 0
     group = 0
 
@@ -187,35 +188,62 @@ class setupEnvironment(avango.script.Script):
        [1, 1, 1],
        [0, 0, 0],
        [0, 1, 0],
+       [0, 0, 0],
        [0, 0, 0]
-    ]  # x,y,z
+    ]  # second dimension is axis x,y,z
 
     '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
-    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3]
+    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3, 3]
 
     '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
-    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 3]
+    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 1, 1]
 
-    '''should the task swich between translation aims reachable with 1 dof or 0?'''
-    taskDOFTranslateList = [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0]
+    '''should the task swich between translation aims reachable with 1 DOF or 0?'''
+    taskDOFTranslateList = [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0, # 10
+        0
+    ]
 
     '''is the task above the table or is it on the table?'''
-    space3DList = [True, False, True, False, True, True, False, True, True, False, True]
+    space3DList = [
+        True,
+        False,
+        True,
+        False,
+        True,
+        True,
+        False,
+        True,
+        True,
+        False,
+        True,
+        True
+    ]
 
     D_rot_list = [
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120],
-                  [120, 120, 120]# 11 random distance
-
-    ]  # in degrees, [saveslotno][n times each aka 'index']
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+        [120, 120, 120],
+        [120, 120, 120],
+        [120, 120, 120],
+        [120, 120, 120],
+        [120, 120, 120],
+        [120, 120, 120],
+        [-1, -1, -1],  # 10 random distance, values are ignored
+        [120, 120, 120]
+    ]  # in degrees, [saveslotno][n times each aka 'level']
 
     D_trans_list = [
         [0.3, 0.3, 0.3],
@@ -228,15 +256,28 @@ class setupEnvironment(avango.script.Script):
         [0.0, 0.0, 0.0],
         [0.3, 0.3, 0.3],
         [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3] # 11 random distance
-    ]  # in meter, [saveslotno][n times each aka 'index']
+        [0.0, 0.0, 0.0],  # 10 random distance
+        [0.0, 0.0, 0.0]
+    ]  # in meter, [saveslotno][n times each aka 'level']
 
-    # the amount of trials per ID
+    # the amount of repitions per ID
     N = 8
 
     # setup
-   # ID = [4, 5, 6]  # fitt's law, [index]
-    ID = [5, 5, 5]  # fitt's law, [index]
+    ID_list = [
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [4, 5, 6],
+        [0, 0, 0],  # 10
+        [0, 0, 0]
+    ] # fitt's law, [saveslotno][level]
 
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -253,14 +294,44 @@ class setupEnvironment(avango.script.Script):
     '''if false needs a button press or next step, if true then autodetects'''
     useAutoDetect = False
 
+    '''use random target orientation'''
     randomTargets = False
 
-    '''use random rotation distance'''
-    randomDistanceR = True
+    '''use random target rotation distance'''
+    randomDistanceR_list = [
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        True,  # 10 random distance
+        False
+    ]
+
+    ''' use random target width'''
+    random_W_R_list = [
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,  #10
+        True  # 11 random target width
+    ]
 
     ''' show a preview of the motion first'''
     animationPreview = False
-    animationTime = 2  # in s
+    animationTime = 2  # time of animation preview in s
 
     '''you can fixate the cursor during the animation preview'''
     enableCursorDuringAnimation = True
@@ -341,6 +412,9 @@ class setupEnvironment(avango.script.Script):
         self.taskDOFTranslate = self.taskDOFTranslateList[testConfigNo]
         self.D_rot = self.D_rot_list[testConfigNo]  # in degrees
         self.D_trans = self.D_trans_list[testConfigNo]  # in meter
+        self.randomDistanceR = self.randomDistanceR_list[testConfigNo]
+        self.random_W_R = self.random_W_R_list[testConfigNo]
+        self.ID = self.ID_list[testConfigNo]
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
             self.taskDOFRotate = 1

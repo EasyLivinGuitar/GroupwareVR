@@ -7,7 +7,7 @@ import avango.sound.openal
 import math
 import core
 
-'''The cursor and aim. Can ahve a human'''
+'''The cursor and aim. Can have a human'''
 class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
     pointer_device_sensor = None
