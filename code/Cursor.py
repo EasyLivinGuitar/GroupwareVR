@@ -23,7 +23,7 @@ class Cursor(avango.script.Script):
         self.startRot = None
         self.setup = None
         self.human = None
-        self.cursor = None
+        self.cursor = None #the geometry
         self.timer = None
 
     def create(self, setup):
@@ -34,7 +34,7 @@ class Cursor(avango.script.Script):
             self.cursor = setup.loader.create_geometry_from_file("phone",
                                                                  "data/objects/phone.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-            self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.002)
+            self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.001)
             self.cursor.Material.value.EnableBackfaceCulling.value = False
         else:
             self.cursor = setup.loader.create_geometry_from_file("colored_cross",
@@ -54,7 +54,7 @@ class Cursor(avango.script.Script):
             self.human.Material.value.EnableBackfaceCulling.value = False
             self.setup.everyObject.Children.value.append(self.human)
 
-        # listen to tracked position of pointer
+        # listen to tracked position of pself.cursor.Transformointer
         self.pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
         self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
 

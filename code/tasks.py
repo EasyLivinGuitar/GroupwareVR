@@ -7,7 +7,7 @@ import avango.daemon
 import avango.gua
 import avango.script
 import core
-import DisksContainer
+import BoundsContainer
 import Cursor
 import LogManager
 import random
@@ -128,7 +128,7 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.disks = DisksContainer.DisksContainer(environment)
+        self.boundsContainer = BoundsContainer.DisksContainer(environment)
         self.aim = None
         self.aimShadow = None
         self.level = 0
@@ -152,14 +152,14 @@ class trackingManager(avango.script.Script):
         if not self.endedTests:
             highlightR = False
 
-            # position disks
+            # position boundsContainer
             if environment.taskDOFRotate > 0:
                 if environment.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.counter]:
-                    # attach disks to cursor
-                    self.disks.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
+                    # attach boundsContainer to cursor
+                    self.boundsContainer.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
-                    # attach disks to aim
-                    self.disks.setTranslate(avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()))
+                    # attach boundsContainer to aim
+                    self.boundsContainer.setTranslate(avango.gua.make_trans_mat(self.aim.Transform.value.get_translate()))
 
                 # highlight rotation if near target
                 if (environment.showWhenInTarget
@@ -167,9 +167,9 @@ class trackingManager(avango.script.Script):
                     and self.getErrorRotate() < W_rot[self.counter] / 2
                 ):
                     highlightR = True
-                    self.disks.highlightRed()
+                    self.boundsContainer.highlightRed()
                 else:
-                    self.disks.setColor()
+                    self.boundsContainer.setColor()
 
             # highlight translation
             highlightT = False
@@ -275,12 +275,12 @@ class trackingManager(avango.script.Script):
 
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
-                    if environment.taskDOFRotate == 3:
+                    if environment.trandomDistanceRaskDOFRotate == 3:
                         rotation = self.getRandomRotation3D()
-                        self.disks.setRotation(rotation)
+                        self.boundsContainer.setRotation(rotation)
                     else:
                         rotation = self.getRandomRotation2D()
-                        self.disks.setRotation(rotation)
+                        self.boundsContainer.setRotation(rotation)
             else:
                 if environment.taskDOFRotate > 0:
                     if self.counter % 2 == 0:  # toggle beetwen
@@ -296,26 +296,28 @@ class trackingManager(avango.script.Script):
                         rotateAroundX = 0
                         distance = 0
 
-                    self.disks.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                    self.disks.setDisksTransMats(targetDiameter[self.counter])
+                    self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                    self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
+
+            self.boundsContainer.setErrorMargin(W_trans[self.counter])#todo should be W_t
 
             if environment.animationPreview:
                 if self.aim is None:
                     self.cursorContainer.animateTo(
                         None,
-                        self.disks.getRotate()
+                        self.boundsContainer.getRotate()
                     )
                 else:
                     self.cursorContainer.animateTo(
                         self.aim.Transform.value.get_translate(),
-                        self.disks.getRotate()
+                        self.boundsContainer.getRotate()
                     )
 
     def getErrorRotate(self):
         if environment.taskDOFRotate > 0:
             return core.getRotationError1D(
                 self.cursorNode.Transform.value.get_rotate_scale_corrected(),
-                self.disks.getRotate()
+                self.boundsContainer.getRotate()
             )
         return 0
 
@@ -401,8 +403,9 @@ class trackingManager(avango.script.Script):
             # berechne effektive breite
             W_e = 4.133*sd
 
-            # effektiver ID
-            self.id_e = math.log(2*environment.D_rot[self.level] / W_e, 2)
+            if not environment.randomDistanceR:
+                # effektiver ID
+                self.id_e = math.log(2*environment.D_rot[self.level] / W_e, 2)
         else:
             self.id_e = 0
 
@@ -643,10 +646,10 @@ def start():
     trackManager.cursorNode = trackManager.cursorContainer.getNode()
 
     if environment.taskDOFRotate > 0:
-        trackManager.disks.setupDisks(trackManager.cursorNode)
-        trackManager.disks.setDisksTransMats(targetDiameter[0])
-        trackManager.disks.setRotation(avango.gua.make_rot_mat(environment.D_rot[0], 0, 1, 0))
-        #trackManager.disks.setDisksTransMats(targetDiameter[0])
+        trackManager.boundsContainer.setupDisks(trackManager.cursorNode)
+        trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
+        trackManager.boundsContainer.setRotation(avango.gua.make_rot_mat(environment.D_rot[0], 0, 1, 0))
+        #trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
 
     # listen to button
     button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())

@@ -337,7 +337,7 @@ class setupEnvironment(avango.script.Script):
     enableCursorDuringAnimation = True
 
     '''phone or colored cross setup?'''
-    usePhoneCursor = False
+    usePhoneCursor = True
 
     '''radius of spikes from center in the model file'''
     r_model = 0.10
