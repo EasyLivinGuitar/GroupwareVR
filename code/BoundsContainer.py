@@ -19,18 +19,18 @@ class DisksContainer:
             self.human = None
             self.node = None
             self.setup = setenv
+            self.errormargin = 0
 
         '''for attaching the disk to the pointer, the pointer is needed'''
         def setupDisks(self, pencilNode):
-            #attack disks to pointer
+            #attack boundsContainer to pointer
             self.node = avango.gua.nodes.TransformNode(
                 Transform = avango.gua.make_trans_mat(pencilNode.Transform.value.get_translate())
             )
 
             if self.setup.usePhoneCursor:
                 self.phone = self.setup.loader.create_geometry_from_file("phone_outline", "data/objects/phone/phoneAntennaOutlines.obj", avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-                scale=0.002
-                self.phone.Transform.value=avango.gua.make_scale_mat(1.454545455*scale, 2.333333333*scale, 1.181818182*scale)
+                self.setErrorMargin(0)
                 self.node.Children.value.append(self.phone)
             else:
                 self.disk1 = self.setup.loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
@@ -77,6 +77,15 @@ class DisksContainer:
                     self.human.Transform.value = (
                         avango.gua.make_scale_mat(0.007)
                     )
+
+        def setErrorMargin(self, errormargin):
+            self.errormargin = errormargin
+            if self.setup.usePhoneCursor:
+                self.phone.Transform.value = avango.gua.make_scale_mat(
+                    (4.4*0.01+errormargin)/(4.4*0.01)*0.001,
+                    (1.5*0.01+errormargin)/(1.5*0.01)*0.001,
+                    (11*0.01 +errormargin)/(11*0.01)*0.001
+                )
 
         def setRotation(self, rotMat):
             self.node.Transform.value = avango.gua.make_trans_mat(self.node.Transform.value.get_translate()) * rotMat *avango.gua.make_scale_mat(self.node.Transform.value.get_scale())
