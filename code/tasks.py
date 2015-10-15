@@ -152,9 +152,10 @@ class trackingManager(avango.script.Script):
         if not self.endedTests:
             highlightR = False
 
-            # position boundsContainer
+            # position boundsContainer2
             if environment.taskDOFRotate > 0:
-                if environment.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.counter]:
+                if environment.taskDOFTranslate == 0\
+                        or (environment.snapBoundsContainerIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.counter]):
                     # attach boundsContainer to cursor
                     self.boundsContainer.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
@@ -275,7 +276,7 @@ class trackingManager(avango.script.Script):
 
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
-                    if environment.trandomDistanceRaskDOFRotate == 3:
+                    if environment.taskDOFRotate == 3:
                         rotation = self.getRandomRotation3D()
                         self.boundsContainer.setRotation(rotation)
                     else:
@@ -284,10 +285,7 @@ class trackingManager(avango.script.Script):
             else:
                 if environment.taskDOFRotate > 0:
                     if self.counter % 2 == 0:  # toggle beetwen
-                        if environment.randomDistanceR:
-                            distance = random.uniform(6, 18)*10 # value between 60 and 180
-                        else:
-                            distance = environment.D_rot[self.level]
+                        distance = environment.D_rot[self.level]
                         if environment.taskDOFRotate == 3:
                             rotateAroundX = 1
                         else:
@@ -403,9 +401,12 @@ class trackingManager(avango.script.Script):
             # berechne effektive breite
             W_e = 4.133*sd
 
-            if not environment.randomDistanceR:
+            if environment.logEffectiveForR:
                 # effektiver ID
                 self.id_e = math.log(2*environment.D_rot[self.level] / W_e, 2)
+            elif environment.logEffectiveForT:
+                # effektiver ID
+                self.id_e = math.log(2*environment.D_trans[self.level] / W_e, 2)
         else:
             self.id_e = 0
 
