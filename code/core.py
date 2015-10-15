@@ -178,109 +178,9 @@ class setupEnvironment(avango.script.Script):
 
     config = config.Config()
 
-    # task config
-    '''disable translation on this axis'''
-    disableAxisList = [
-        [0, 0, 0],
-        [0, 1, 1],
-        [0, 1, 1],
-       [0, 1, 0],
-       [0, 1, 0],
-       [1, 1, 1],
-       [1, 1, 1],
-       [1, 1, 1],
-       [0, 0, 0],
-       [0, 1, 0],
-       [0, 0, 0],
-       [0, 0, 0]
-    ]  # second dimension is axis x,y,z
-
-    '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
-    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3, 3]
-
-    '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
-    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 1, 1]
-
-    '''should the task swich between translation aims reachable with 1 DOF or 0?'''
-    taskDOFTranslateList = [
-        1,
-        1,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        0, # 10
-        0
-    ]
-
-    '''is the task above the table or is it on the table?'''
-    space3DList = [
-        True,
-        False,
-        True,
-        False,
-        True,
-        True,
-        False,
-        True,
-        True,
-        False,
-        True,
-        True
-    ]
-
-    D_rot_list = [
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0],
-        [120, 120, 120],
-        [120, 120, 120],
-        [120, 120, 120],
-        [120, 120, 120],
-        [120, 120, 120],
-        [120, 120, 120],
-        [-1, -1, -1],  # 10 random distance, values are ignored
-        [120, 120, 120]
-    ]  # in degrees, [saveslotno][n times each aka 'level']
-
-    D_trans_list = [
-        [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3],
-        [0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0],
-        [0.3, 0.3, 0.3],
-        [0.3, 0.3, 0.3],
-        [0.0, 0.0, 0.0],  # 10 random distance
-        [0.0, 0.0, 0.0]
-    ]  # in meter, [saveslotno][n times each aka 'level']
-
     # the amount of repitions per ID
     N = 8
 
-    # setup
-    ID_list = [
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [4, 5, 6],
-        [0, 0, 0],  # 10
-        [0, 0, 0]
-    ] # fitt's law, [saveslotno][level]
 
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
@@ -369,10 +269,10 @@ class setupEnvironment(avango.script.Script):
         self.timerField.connect_from(self.timeSensor.Time)
         testConfigNo = -1
 
-        while testConfigNo >= len(self.disableAxisList) or testConfigNo == -1:
+        while testConfigNo >= 10 or testConfigNo == -1:
             testConfigNo = int(input("Config Number: "))
            
-            if testConfigNo >= len(self.disableAxisList) or testConfigNo == -1:
+            if testConfigNo >= 10 or testConfigNo == -1:
                 print("ERROR: invalid config number " + str(testConfigNo))
                 printHelp()
 
