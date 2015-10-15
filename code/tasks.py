@@ -27,7 +27,7 @@ W_trans = []
 targetDiameter = []
 
 for i in range(0, len(ID)*environment.N):
-    if not environment.random_W_R:
+    if not environment.randomTargets:
         W_rot.append(core.IDtoW(ID[int(i/environment.N)], environment.D_rot[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
         W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
     else:

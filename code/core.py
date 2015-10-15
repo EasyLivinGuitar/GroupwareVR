@@ -5,6 +5,7 @@ import avango.gua
 import avango.script
 import avango.sound
 import avango.sound.openal
+import config
 import math
 import os.path
 import glob
@@ -175,6 +176,8 @@ class setupEnvironment(avango.script.Script):
     userId = 0
     group = 0
 
+    config = config.Config()
+
     # task config
     '''disable translation on this axis'''
     disableAxisList = [
@@ -297,38 +300,6 @@ class setupEnvironment(avango.script.Script):
     '''use random target orientation'''
     randomTargets = False
 
-    '''use random target rotation distance'''
-    randomDistanceR_list = [
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        True,  # 10 random distance
-        False
-    ]
-
-    ''' use random target width'''
-    random_W_R_list = [
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,  #10
-        True  # 11 random target width
-    ]
-
     ''' show a preview of the motion first'''
     animationPreview = False
     animationTime = 2  # time of animation preview in s
@@ -405,16 +376,16 @@ class setupEnvironment(avango.script.Script):
                 print("ERROR: invalid config number " + str(testConfigNo))
                 printHelp()
 
-        self.disableAxis = self.disableAxisList[testConfigNo]
-        self.virtualDOFRotate = self.virtualDOFRotateList[testConfigNo]
-        self.space3D = self.space3DList[testConfigNo]
-        self.taskDOFRotate = self.taskDOFRotateList[testConfigNo]
-        self.taskDOFTranslate = self.taskDOFTranslateList[testConfigNo]
-        self.D_rot = self.D_rot_list[testConfigNo]  # in degrees
-        self.D_trans = self.D_trans_list[testConfigNo]  # in meter
-        self.randomDistanceR = self.randomDistanceR_list[testConfigNo]
-        self.random_W_R = self.random_W_R_list[testConfigNo]
-        self.ID = self.ID_list[testConfigNo]
+        self.config.setConfig(testConfigNo)
+
+        self.disableAxis = self.config.disableAxisTranslate
+        self.virtualDOFRotate = self.config.virtualDOFRotate
+        self.space3D = self.config.space3D
+        self.taskDOFRotate = self.config.taskDOFRotate
+        self.taskDOFTranslate = self.config.taskDOFTranslate
+        self.D_rot = self.config.D_rot  # in degrees
+        self.D_trans = self.config.D_trans # in meter
+        self.ID = self.config.ID
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
             self.taskDOFRotate = 1

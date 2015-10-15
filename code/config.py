@@ -6,18 +6,19 @@ import avango.script
 import avango.sound
 import avango.sound.openal
 import core
+import sys
 
 class Config():
-	 '''disable translation on this axis'''
+	'''disable translation on this axis'''
 	disableAxisTranslate = []
 
-	 '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
+	'''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
 	virtualDOFRotate = 0
 
- 	'''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
+	'''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
 	taskDOFRotate = 0
 
-	 '''should the task swich between translation aims reachable with 1 DOF or 0?'''
+	'''should the task swich between translation aims reachable with 1 DOF or 0?'''
 	taskDOFTranslate = 0
 
 	'''is the task above the table or is it on the table?'''
@@ -65,16 +66,20 @@ class Config():
 	def setConfig(self, conf_num):
 		#Slot 0
 		if(conf_num==0):
+			self.disableAxisTranslate = [0, 0, 0]
 			self.virtualDOFRotate = 3
 			self.taskDOFRotate = 0
 			self.taskDOFTranslate = 1
 			self.space3D = True
 			self.D_trans = [0.3, 0.3, 0.3]
+			self.D_rot = [30, 30, 30]
 			self.ID = [4, 5, 6]
 			self.N = 5
-
-		if(conf_num==1):
+		elif(conf_num==1):
 			pass #add configs
+		else:
+			print("ERROR: No such configuration\n \n")
+			sys.exit(0)
 
 		self.verifyValues()
 
@@ -86,13 +91,13 @@ class Config():
 			if(len(self.D_trans) == 0):
 				if(len(self.ID) == len(self.W_trans)):
 					for i in range(0, len(self.W_trans) * self.N):
-						D_trans[i] = 2 ** self.ID[int(i / self.N)] * self.W_trans[int(i / self.N)] / 2
+						self.D_trans.append(2 ** self.ID[int(i / self.N)] * self.W_trans[int(i / self.N)] / 2)
 				else:
 					print("ERROR: Unequal number of given ID's and target widths!")
 			if(len(self.W_trans) == 0):
 				if(len(self.ID) == len(self.D_rot)):
 					for i in range(0, len(self.D_trans) * self.N):
-						W_trans[i] = core.IDtoW(self.ID[int(i / self.N)], self.D_trans[int(i / self.N)])
+						self.W_trans.append(core.IDtoW(self.ID[int(i / self.N)], self.D_trans[int(i / self.N)]))
 				else:
 					print("ERROR: Unequal number of given ID's and distances!")
 
@@ -102,13 +107,13 @@ class Config():
 			if(len(self.D_rot) == 0):
 				if(len(self.ID) == len(self.W_rot)):
 					for i in range(0, len(self.W_rot) * self.N):
-						D_rot[i] = 2 ** self.ID[int(i / self.N)] * self.W_rot[int(i / self.N)] / 2
+						self.D_rot[i] = 2 ** self.ID[int(i / self.N)] * self.W_rot[int(i / self.N)] / 2
 				else:
 					print("ERROR: Unequal number of given ID's and target widths!")
 			if(len(self.W_rot) == 0):
 				if(len(self.ID) == len(self.D_rot)):
 					for i in range(0, len(self.D_rot) * self.N):
-						W_rot[i] = core.IDtoW(self.ID[int(i / self.N)], self.D_rot[int(i / self.N)])
+						self.W_rot.append((core.IDtoW(self.ID[int(i / self.N)], self.D_rot[int(i / self.N)])))
 				else:
 					print("ERROR: Unequal number of given ID's and distances!")
 
