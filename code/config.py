@@ -62,21 +62,84 @@ class Config():
     logEffectiveForR = False
     logEffectiveForT = False
 
+    def getTrialsCount(self):
+        a = len(self.W_trans)
+        b = len(self.W_rot)
+        c = len(self.ID)
+        if a>b:
+            biggest=a
+        else:
+            biggest=b
+
+        if c>biggest:
+            biggest = c
+        return biggest
+
+    def verifyValues(self):
+        if len(self.W_trans) == 0 and len(self.D_trans) == 0 and self.taskDOFTranslate != 0:
+            print ("Config WARNING: No translation information available!")
+        else:
+            if len(self.D_trans) == 0 and self.taskDOFTranslate>0:
+                if len(self.ID) == len(self.W_trans):
+                    for i in range(0, len(self.W_trans) * self.N):
+                        self.D_trans.append(2 ** self.ID[int(i / self.N)] * self.W_trans[int(i / self.N)] / 2)
+                else:
+                    print("Config ERROR: Unequal number of given ID's and target widths!")
+            if len(self.W_trans) == 0 and self.taskDOFTranslate>0:
+                if len(self.ID) == len(self.D_rot):
+                    for i in range(0, len(self.D_trans) * self.N):
+                        self.W_trans.append(core.IDtoW(self.ID[int(i / self.N)], self.D_trans[int(i / self.N)]))
+                else:
+                    print("Config ERROR: Unequal number of given ID's and distances!")
+
+        if len(self.W_rot) == 0 and len(self.D_rot) == 0 and self.taskDOFRotate>0:
+            print ("Config WARNING: No rotation available!")
+        else:
+            if len(self.D_rot) == 0:
+                if len(self.ID) == len(self.W_rot):
+                    for i in range(0, lcounteren(self.W_rot) * self.N):
+                        self.D_rot[i] = 2 ** self.ID[int(i / self.N)] * self.W_rot[int(i / self.N)] / 2
+                else:
+                    print("Config ERROR: Unequal number of given ID's and rotation target widths!")
+            if len(self.W_rot) == 0 and self.taskDOFRotate>0:
+                if len(self.ID) == len(self.D_rot):
+                    for i in range(0, len(self.D_rot) * self.N):
+                        self.W_rot.append((core.IDtoW(self.ID[int(i / self.N)], self.D_rot[int(i / self.N)])))
+                else:
+                    print("Config ERROR: Unequal number of given ID's and rotation distances!")
+
+        #fill every list which is not set with zeros
+        if len(self.W_trans)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.W_trans.append(0)
+        if len(self.W_rot)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.W_rot.append(0)
+        if len(self.D_trans)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.D_trans.append(0)
+        if len(self.D_rot)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.D_rot.append(0)
+        if len(self.ID)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.ID.append(0)
 
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
 
     def setConfig(self, conf_num):
         # Slot 0
         if conf_num == 0:
-            self.disableAxisTranslate = [0, 0, 0]
+            self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
-            self.taskDOFRotate = 0
-            self.taskDOFTranslate = 1
+            self.taskDOFRotate = 3
+            self.taskDOFTranslate = 0
+            self.usePhoneCursor = True
             self.space3D = True
-            self.D_trans = [0.3, 0.3, 0.3]
-            self.D_rot = [30, 30, 30]
-            self.ID = [4, 5, 6]
-            self.N = 5
+            self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
+            self.D_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
+            self.logEffectiveForR = True
+            self.N = 1  #wenn N = 1 dann funktioniert die effektive berechnung nicht mehr
         elif conf_num == 1:
             pass  # add configs
         else:
@@ -84,39 +147,6 @@ class Config():
             sys.exit(0)
 
         self.verifyValues()
-
-    def verifyValues(self):
-        if len(self.W_trans) == 0 and len(self.D_trans) == 0:
-            print ("WARNING: No translation information available!")
-        else:
-            if len(self.D_trans) == 0:
-                if len(self.ID) == len(self.W_trans):
-                    for i in range(0, len(self.W_trans) * self.N):
-                        self.D_trans.append(2 ** self.ID[int(i / self.N)] * self.W_trans[int(i / self.N)] / 2)
-                else:
-                    print("ERROR: Unequal number of given ID's and target widths!")
-            if len(self.W_trans) == 0:
-                if len(self.ID) == len(self.D_rot):
-                    for i in range(0, len(self.D_trans) * self.N):
-                        self.W_trans.append(core.IDtoW(self.ID[int(i / self.N)], self.D_trans[int(i / self.N)]))
-                else:
-                    print("ERROR: Unequal number of given ID's and distances!")
-
-        if len(self.W_rot) == 0 and len(self.D_rot) == 0:
-            print ("WARNING: No rotation available!")
-        else:
-            if len(self.D_rot) == 0:
-                if len(self.ID) == len(self.W_rot):
-                    for i in range(0, len(self.W_rot) * self.N):
-                        self.D_rot[i] = 2 ** self.ID[int(i / self.N)] * self.W_rot[int(i / self.N)] / 2
-                else:
-                    print("ERROR: Unequal number of given ID's and target widths!")
-            if len(self.W_rot) == 0:
-                if len(self.ID) == len(self.D_rot):
-                    for i in range(0, len(self.D_rot) * self.N):
-                        self.W_rot.append((core.IDtoW(self.ID[int(i / self.N)], self.D_rot[int(i / self.N)])))
-                else:
-                    print("ERROR: Unequal number of given ID's and distances!")
 
 
 

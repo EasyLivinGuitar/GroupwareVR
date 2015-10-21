@@ -21,22 +21,22 @@ environment = core.setupEnvironment().create()
 
 ID = environment.ID
 
+W_rot = environment.W_rot
+W_trans = environment.W_trans
 
-W_rot = []
-W_trans = []
+
 targetDiameter = []
-
-for i in range(0, len(ID)*environment.N):
-    if not environment.randomTargets:
-        W_rot.append(core.IDtoW(ID[int(i/environment.N)], environment.D_rot[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
-        W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
-    else:
-        W_rot.append(i*2+2)  # in degrees
-        W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
+for i in range(0, environment.config.getTrialsCount()):
+    #if not environment.randomTargets:
+    #    W_rot.append(core.IDtoW(ID[int(i/environment.N)], environment.D_rot[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
+    #else:
+    #    W_rot.append(i*2+2)  # in degrees
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
 
     # add ID wenn es noch einen Rotations-Anteil gibt
-    if environment.taskDOFRotate != 0:
-        targetDiameter.append(2 * environment.r * math.tan(W_rot[i] * math.pi / 180))  # größe (Durchmesser) der Gegenkathete auf dem kreisumfang
+    if environment.taskDOFRotate > 0:
+        targetDiameter.append(2 * environment.r * math.tan(environment.W_rot[i] * math.pi / 180))  # größe (Durchmesser) der Gegenkathete auf dem kreisumfang
 
 THRESHHOLD_TRANSLATE = 0.3
 FRAMES_FOR_AUTODETECT_TRANSLATE = 3
@@ -165,7 +165,7 @@ class trackingManager(avango.script.Script):
                 # highlight rotation if near target
                 if (environment.showWhenInTarget
                     and (environment.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.aim.Transform.value) <= W_trans[self.counter])
-                    and self.getErrorRotate() < W_rot[self.counter] / 2
+                    and self.getErrorRotate() < environment.W_rot[self.counter] / 2
                 ):
                     highlightR = True
                     self.boundsContainer.highlightRed()
@@ -217,14 +217,14 @@ class trackingManager(avango.script.Script):
             # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        if self.level < len(ID) and not self.cursorContainer.isAnimating():
+        if self.level < environment.config.getTrialsCount() and not self.cursorContainer.isAnimating():
             # auswerten
             if self.startedTests:
                 self.MT = self.timer.value - self.startTime
                 self.startTime = 0 #reset starting time
                 self.points += ID[self.level] + ID[self.level] / self.MT
 
-                if self.getErrorRotate() < W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
+                if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
                     # hit
                     self.goal = True
                     if environment.provideFeedback:
@@ -257,14 +257,14 @@ class trackingManager(avango.script.Script):
         else:
             self.counter += 1
 
-        if self.level == len(ID):
+        if self.level == environment.config.getTrialsCount():
             self.endedTests = True
             environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
             print("Your Score: " + str(self.points))
 
         # print("P:"+str( pencilRot )+"")
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
-        if self.level < len(ID):
+        if self.level < environment.config.getTrialsCount():
             if environment.taskDOFTranslate > 0:
                 # move target
                 sign = 1
@@ -297,7 +297,7 @@ class trackingManager(avango.script.Script):
                     self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                     self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
 
-            self.boundsContainer.setErrorMargin(W_trans[self.counter])#todo should be W_t
+            self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])#todo should be W_t
 
             if environment.animationPreview:
                 if self.aim is None:
@@ -350,7 +350,7 @@ class trackingManager(avango.script.Script):
 
                 self.result_file.write(
                     "TimeStamp: " + str(self.timer.value) + "\n" +
-                    "ErrorRotate: " + str(self.getErrorRotate()) + "\n" +
+                    "ErrorRotalen(te: " + str(self.getErrorRotate()) + "\n" +
                     "Pointerpos: \n" + str(self.cursorNode.Transform.value) + "\n" +
                     aimString + "\n\n")
                 self.result_file.close()
@@ -365,7 +365,7 @@ class trackingManager(avango.script.Script):
                     self.overshootInside_translate = False
 
     def checkRotateOvershoots(self):
-        if self.getErrorRotate() < W_rot[self.counter] / 2:
+        if self.getErrorRotate() < environment.W_rot[self.counter] / 2:
             self.overshootInside_rotate = True
         else:
             if self.overshootInside_rotate:
@@ -374,7 +374,7 @@ class trackingManager(avango.script.Script):
 
     # sets the fields in the logmanager
     def logSetter(self):
-        if self.getErrorRotate() < W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
+        if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
             self.goal = True
         else:
             self.goal = False
@@ -382,7 +382,7 @@ class trackingManager(avango.script.Script):
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
 
-        if self.counter % environment.N == environment.N - 1:
+        if environment.N > 1 and self.counter % environment.N == environment.N - 1:# is at end of level
             # berechne erwartungswert
             erw = 0
             for i in range(environment.N*self.level, environment.N*(self.level+1)):
@@ -436,17 +436,17 @@ class trackingManager(avango.script.Script):
         else:
             logmanager.set("movement direction", "(0.0  0.0  0.0)")
 
-        logmanager.set("target distance T", environment.D_trans[self.level])
+        logmanager.set("target distance T", environment.D_trans[self.counter])
         logmanager.set("target width T", W_trans[self.counter])
-        logmanager.set("target distance R", environment.D_rot[self.level])
+        logmanager.set("target distance R", environment.D_rot[self.counter])
         logmanager.set("target width R", W_rot[self.counter])
-        logmanager.set("ID combined", ID[self.level] + ID[self.level])  # add and rot
+        logmanager.set("ID combined", ID[self.level] + ID[self.counter])  # add and rot
         if environment.taskDOFRotate == 0:#no rotation
             logmanager.set("ID T", ID[self.level])
             logmanager.set("ID R", 0)
         else:
-            logmanager.set("ID T", ID[self.level])
-            logmanager.set("ID R ", ID[self.level])
+            logmanager.set("ID T", ID[self.counter])
+            logmanager.set("ID R ", ID[self.counter])
         logmanager.set("ID effective ", self.id_e)
         logmanager.set("repetition", environment.N)
         logmanager.set("trial", self.counter)
@@ -596,7 +596,7 @@ class trackingManager(avango.script.Script):
         self.first_rotate = True
 
     def setTP(self, index):
-        if self.MT > 0 and self.current_level < len(ID):
+        if self.MT > 0 and self.current_level < environment.config.getTrialsCount():
             self.TP = ID[index] / self.MT
 
     def handle_key(self, key, scancode, action, mods):

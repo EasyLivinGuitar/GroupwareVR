@@ -257,6 +257,8 @@ class setupEnvironment(avango.script.Script):
         self.taskDOFTranslate = self.config.taskDOFTranslate
         self.D_rot = self.config.D_rot  # in degrees
         self.D_trans = self.config.D_trans # in meter
+        self.W_rot = self.config.W_rot # in meter
+        self.W_trans = self.config.W_trans # in meter
         self.ID = self.config.ID
         self.usePhoneCursor = self.config.usePhoneCursor
         self.showHuman = self.config.showHuman
