@@ -28,11 +28,11 @@ W_trans = environment.W_trans
 targetDiameter = []
 for i in range(0, environment.config.getTrialsCount()):
     #if not environment.randomTargets:
-    #    W_rot.append(core.IDtoW(ID[int(i/environment.N)], environment.D_rot[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
     #else:
     #    W_rot.append(i*2+2)  # in degrees
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.N)], environment.D_trans[int(i/environment.N)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
 
     # add ID wenn es noch einen Rotations-Anteil gibt
     if environment.taskDOFRotate > 0:
@@ -248,14 +248,15 @@ class trackingManager(avango.script.Script):
             self.nextSettingStep()
 
     def nextSettingStep(self):
-        if self.counter % environment.N == environment.N - 1:
-            environment.playSound("levelUp")
-            self.level += 1
-
         if not self.startedTests:
             self.startedTests = True
         else:
             self.counter += 1
+
+        if self.counter % environment.levelSize == environment.levelSize - 1:
+            if environment.config.playLevelUpSound:
+                environment.playSound("levelUp")
+            self.level += 1
 
         if self.level == environment.config.getTrialsCount():
             self.endedTests = True
@@ -382,18 +383,18 @@ class trackingManager(avango.script.Script):
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
 
-        if environment.N > 1 and self.counter % environment.N == environment.N - 1:# is at end of level
+        if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
             # berechne erwartungswert
             erw = 0
-            for i in range(environment.N*self.level, environment.N*(self.level+1)):
+            for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
                 erw += self.error_r[i]
-            erw /= environment.N # jedes ereignis ist gleich wahrscheinlich
+            erw /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
 
             # berechne varianz
             varianz = 0
-            for i in range(environment.N*self.level, environment.N*(self.level+1)):
+            for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
                 varianz += (self.error_r[i]-erw)*(self.error_r[i]-erw)
-            varianz /= environment.N # jedes ereignis ist gleich wahrscheinlich
+            varianz /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
 
             # berechne standardabweichung
             sd = math.sqrt(varianz)
@@ -448,7 +449,7 @@ class trackingManager(avango.script.Script):
             logmanager.set("ID T", ID[self.counter])
             logmanager.set("ID R ", ID[self.counter])
         logmanager.set("ID effective ", self.id_e)
-        logmanager.set("repetition", environment.N)
+        logmanager.set("repetition", environment.levelSize)
         logmanager.set("trial", self.counter)
         logmanager.set("Button clicks", self.clicks)
         logmanager.set("succesfull clicks", self.successful_clicks)

@@ -31,8 +31,11 @@ Then start the scene with the according start.sh
 # @param A the amplitude
 
 
-def IDtoW(ID, A):
+def ID_A_to_W(ID, A):
     return (2 * A) / (2 ** ID)
+
+def A_W_to_ID(A, W):
+    return math.log(2*A/W)/math.log(2)
 
 
 ## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
@@ -270,7 +273,7 @@ class setupEnvironment(avango.script.Script):
         self.useAutoDetect = self.config.useAutoDetect
         self.logEffectiveForR = self.config.logEffectiveForR
         self.logEffectiveForT = self.config.logEffectiveForT
-        self.N = self.config.N
+        self.levelSize = self.config.levelSize
         #self.snapBoundsContainerIfNear =
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:

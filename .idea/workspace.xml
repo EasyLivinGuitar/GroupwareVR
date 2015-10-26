@@ -32,8 +32,8 @@
       <file leaf-file-name="core.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/core.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-9.0">
-              <caret line="126" column="24" selection-start-line="126" selection-start-column="18" selection-end-line="126" selection-end-column="24" />
+            <state vertical-scroll-proportion="-4.935484">
+              <caret line="275" column="22" selection-start-line="275" selection-start-column="13" selection-end-line="275" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -42,8 +42,8 @@
       <file leaf-file-name="tasks.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/code/tasks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-16.032259">
-              <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="257" column="48" selection-start-line="257" selection-start-column="48" selection-end-line="257" selection-end-column="48" />
               <folding>
                 <element signature="e#15#26#0" expanded="true" />
               </folding>
@@ -54,8 +54,8 @@
       <file leaf-file-name="config.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/code/config.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5051975">
-              <caret line="141" column="22" selection-start-line="141" selection-start-column="22" selection-end-line="141" selection-end-column="22" />
+            <state vertical-scroll-proportion="0.510395">
+              <caret line="120" column="0" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
               <folding>
                 <element signature="e#15#25#0" expanded="true" />
               </folding>
@@ -97,9 +97,9 @@
         <option value="$PROJECT_DIR$/code/daemon.py" />
         <option value="$PROJECT_DIR$/code/Cursor.py" />
         <option value="$PROJECT_DIR$/code/BoundsContainer.py" />
+        <option value="$PROJECT_DIR$/code/config.py" />
         <option value="$PROJECT_DIR$/code/core.py" />
         <option value="$PROJECT_DIR$/code/tasks.py" />
-        <option value="$PROJECT_DIR$/code/config.py" />
       </list>
     </option>
   </component>
@@ -437,7 +437,13 @@
       <option name="project" value="LOCAL" />
       <updated>1444921996213</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="snapping can be disabled/enabled, coping more fields from config, fixed crash">
+      <created>1445449128885</created>
+      <option name="number" value="00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1445449128885</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TodoView">
@@ -608,10 +614,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="149" column="13" selection-start-line="149" selection-start-column="13" selection-end-line="149" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -662,10 +664,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="121" column="22" selection-start-line="121" selection-start-column="22" selection-end-line="121" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -716,10 +714,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="46" column="37" selection-start-line="46" selection-start-column="37" selection-end-line="46" selection-end-column="37" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -777,10 +771,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="87" column="30" selection-start-line="87" selection-start-column="26" selection-end-line="87" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -831,10 +821,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -934,10 +920,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="78" column="20" selection-start-line="78" selection-start-column="20" selection-end-line="78" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#13#0" expanded="false" />
-            <element signature="e#5574#7175#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -954,16 +936,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/code/core.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.0">
-          <caret line="126" column="24" selection-start-line="126" selection-start-column="18" selection-end-line="126" selection-end-column="24" />
+        <state vertical-scroll-proportion="-4.935484">
+          <caret line="275" column="22" selection-start-line="275" selection-start-column="13" selection-end-line="275" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/code/tasks.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-16.032259">
-          <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="257" column="48" selection-start-line="257" selection-start-column="48" selection-end-line="257" selection-end-column="48" />
           <folding>
             <element signature="e#15#26#0" expanded="true" />
           </folding>
@@ -972,8 +954,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/code/config.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5051975">
-          <caret line="141" column="22" selection-start-line="141" selection-start-column="22" selection-end-line="141" selection-end-column="22" />
+        <state vertical-scroll-proportion="0.510395">
+          <caret line="120" column="0" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
           <folding>
             <element signature="e#15#25#0" expanded="true" />
           </folding>
