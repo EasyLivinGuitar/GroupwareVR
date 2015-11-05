@@ -43,7 +43,7 @@ THRESHHOLD_TRANSLATE = 0.3
 FRAMES_FOR_AUTODETECT_TRANSLATE = 3
 
 FRAMES_FOR_AUTODETECT_ROTATE = 3
-THRESHHOLD_ROTATE = 40
+THRESHHOLD_ROTATE = 60
 FRAMES_FOR_SPEED = 4  # How many frames taken to calculate speed and acceleration
 
 graph = avango.gua.nodes.SceneGraph(Name="scenegraph")  # Create Graph
@@ -246,8 +246,10 @@ class trackingManager(avango.script.Script):
                     self.logSetter()
                     environment.logData(logmanager)
                     self.resetValues()
+            self.Button.value = False
 
             self.nextSettingStep()
+
 
     def nextSettingStep(self):
         if not self.startedTests:
@@ -347,13 +349,12 @@ class trackingManager(avango.script.Script):
                 self.result_file = open(path + environment.taskString + "_trial" + str(self.num_files) + ".replay",
                                         "a+")
                 if environment.taskDOFTranslate > 0:
-                    aimString = "Aimpos: \n" + str(self.aim.Transform.value)
+                    aimString = "Aimpos: \n" + str(self.aim.Transform.value) + "\n"
                 else:
-                    aimString = "Aimpos: \nnone"
+                    aimString = "Aimpos: \n" + str(self.cursorNode.Transform.value) + "\n"
 
                 self.result_file.write(
                     "TimeStamp: " + str(self.timer.value) + "\n" +
-                    "ErrorRotalen(te: " + str(self.getErrorRotate()) + "\n" +
                     "Pointerpos: \n" + str(self.cursorNode.Transform.value) + "\n" +
                     aimString + "\n\n")
                 self.result_file.close()
@@ -514,14 +515,14 @@ class trackingManager(avango.script.Script):
 
     def setSpeedRotate(self):
         if self.frame_counter_speed % 5 == 0:
-            self.PencilRotation1 = self.cursorNode.Transform.value.get_rotate()
-            self.start_time = self.timer.value
+            self.PencilRotation1 = self.cursorNode.Transform.value.get_rotate_scale_corrected()
+            self.start_time_rotate_speed = self.timer.value
         else:
             if self.frame_counter_speed % 5 == FRAMES_FOR_SPEED - 1:
-                self.PencilRotation2 = self.cursorNode.Transform.value.get_rotate()
-                self.end_time = self.timer.value
+                self.PencilRotation2 = self.cursorNode.Transform.value.get_rotate_scale_corrected()
+                self.end_time_rotate_speed = self.timer.value
                 div = core.getRotationError1D(self.PencilRotation1, self.PencilRotation2)
-                time = self.end_time - self.start_time
+                time = self.end_time_rotate_speed - self.start_time_rotate_speed
                 self.current_speed_rotate = div / time
 
                 if self.current_speed_rotate < 10 ** -3:
@@ -533,17 +534,18 @@ class trackingManager(avango.script.Script):
                 if self.current_speed_rotate > self.local_peak_speed_r:
                     self.local_peak_speed_r = self.current_speed_rotate
 
+
     def setSpeedTranslate(self):
         if self.frame_counter_speed % 5 == 0:
             self.TransTranslation1 = self.cursorNode.Transform.value.get_translate()
-            self.start_time = self.timer.value
+            self.start_time_translate_speed = self.timer.value
         else:
             if self.frame_counter_speed % 5 == FRAMES_FOR_SPEED - 1:
                 self.TransTranslation2 = self.cursorNode.Transform.value.get_translate()
-                self.end_time = self.timer.value
+                self.end_time_translate_speed = self.timer.value
                 div = self.TransTranslation2 - self.TransTranslation1
                 length = math.sqrt(div.x ** 2 + div.y ** 2 + div.z ** 2)
-                time = self.end_time - self.start_time
+                time = self.end_time_translate_speed - self.start_time_translate_speed
                 self.current_speed_translate = length / time
 
                 if self.current_speed_translate < 10 ** -3:  # noise filter
@@ -591,34 +593,44 @@ class trackingManager(avango.script.Script):
             else:
                 self.low_speed_counter_translate = 0
                 if self.first_translate:
-                    self.first_reversal_point_t = self.cursorNode.Transform.value.get_translate().x
+                    self.first_reversal_point_t = self.getErrorTranslate()
                     self.first_reversal_acceleration_t = self.current_acceleration_translate
                     self.first_translate = False
-                self.reversal_points_t.append(self.cursorNode.Transform.value.get_translate().x)
-                #if environment.useAutoDetect:
-                   # self.select()
+                    self.reversal_points_t.append(self.first_reversal_point_t)
+                else:
+                    self.reversal_points_t.append(self.getErrorTranslate())
+
+ 
+
 
     def checkReversalRotate(self):
-        if math.fabs(self.current_speed_rotate) < THRESHHOLD_ROTATE < self.peak_speed_r:
+        # print ("Rotation Speed: "+str(self.current_speed_rotate))
+        if math.fabs(self.current_speed_rotate) < 40 < self.peak_speed_r:
             if self.low_speed_counter_rotate < FRAMES_FOR_AUTODETECT_ROTATE - 1:
                 self.low_speed_counter_rotate += 1
             else:
                 self.low_speed_counter_rotate = 0
                 if self.first_rotate:
-                    self.first_reversal_point_r = self.cursorNode.Transform.value.get_rotate().get_angle()
+                    self.first_reversal_point_r = self.getErrorRotate()
                     self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
                     self.reversal_points_r.append(self.first_reversal_point_r)
                     self.first_rotate = False
+                    #self.Button.value = True
 
-                if self.local_peak_speed_r > THRESHHOLD_ROTATE:
+                if self.local_peak_speed_r > 100:
                     self.speededup = True
                     self.local_peak_speed_r = 0
 
                 if self.speededup:
-                    self.reversal_points_r.append(self.cursorNode.Transform.value.get_rotate().get_angle())
+                    self.reversal_points_r.append(self.getErrorRotate())
+                    if(environment.config.useAutoDetect):
+                        if(self.getErrorRotate() <= W_rot[self.counter]):
+                            self.Button.value = True
+
                     self.speededup = False
-                #if environment.useAutoDetect:
-                   # self.select()
+
+        else:
+            self.low_speed_counter_rotate = 0
 
     def resetValues(self):
         self.overshoots_t = 0

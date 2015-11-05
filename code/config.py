@@ -158,6 +158,7 @@ class Config():
             self.taskDOFRotate = 3
             self.taskDOFTranslate = 0
             self.usePhoneCursor = True
+            self.useAutoDetect = True
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
             self.D_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]

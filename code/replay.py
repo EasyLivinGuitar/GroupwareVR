@@ -4,6 +4,7 @@ import avango.gua
 import avango.script
 import core
 import math
+import queue
 
 from avango.script import field_has_changed
 
@@ -86,8 +87,6 @@ class PointerStuff(avango.script.Script):
             if check:
                 if check[0]=="TimeStamp:":
                     timeStamp=float(check[1])
-                if check[0]=="Error:":
-                    error=float(check[1])
                 if check[0]=="Pointerpos:":
                     pointer_mat=self.getMatrix(lines, i+1)
                 if check[0]=="Aimpos:":
@@ -95,7 +94,7 @@ class PointerStuff(avango.script.Script):
                     gotValues=True
 
                 if gotValues:
-                    step=MatrixStep(timeStamp, error, pointer_mat, home_mat)
+                    step=MatrixStep(timeStamp, pointer_mat, home_mat)
                     self.queue.put(step)
                     gotValues=False
 
@@ -145,36 +144,36 @@ class PointerStuff(avango.script.Script):
 
 class MatrixStep:
     TimeStamp=0.0
-    Error=0.0
     PointerMat=avango.gua.SFMatrix4
     HomeMat=avango.gua.SFMatrix4
 
-    def __init__(self, stamp, error, p_mat, h_mat):
+    def __init__(self, stamp, p_mat, h_mat):
         self.TimeStamp=stamp
-        self.Error=error
         self.PointerMat=p_mat
         self.HomeMat=h_mat
 
 
 
 def start ():
+    environment = core.setupEnvironment()
+
     graph=avango.gua.nodes.SceneGraph(Name="scenegraph") #Create Graph
     loader = avango.gua.nodes.TriMeshLoader() #Create Loader
 
     #Meshes
     pencil = loader.create_geometry_from_file("tracked_object", "data/objects/tracked_object.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
     pencil.Transform.value=avango.gua.make_rot_mat(180, 1, 0, 0)*avango.gua.make_scale_mat(0.02)
-    pencil.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 1, 0, 0.2))
+    pencil.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0))
 
     pencil_transform=avango.gua.nodes.TransformNode(Children=[pencil])
 
     home=loader.create_geometry_from_file("light_sphere", "data/objects/light_sphere.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
     home.Transform.value = avango.gua.make_scale_mat(0.15)
-    home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 1)) #Transparenz funktioniert nicht
+    home.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0,0, 0)) #Transparenz funktioniert nicht
 
     home_transform=avango.gua.nodes.TransformNode(Children=[home])
 
-    setupEnvironment.setup(graph)
+    environment.setup(graph)
 
     graph.Root.value.Children.value.extend([pencil_transform, home_transform])
 
@@ -194,7 +193,7 @@ def start ():
     pointerstuff.timer.connect_from(timer.Time)
 
     print("Launch")
-    setupEnvironment.launch(globals())
+    environment.launch(globals())
 
 
 if __name__ == '__main__':

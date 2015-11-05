@@ -189,7 +189,7 @@ class setupEnvironment(avango.script.Script):
     displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
 
     logResults = True
-    saveReplay = False
+    saveReplay = True
 
     snapBoundsContainerIfNear = False
 
