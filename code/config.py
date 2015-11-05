@@ -31,7 +31,8 @@ class Config():
     '''number of repetitions per setting'''
     levelSize = -1
 
-    ID = []
+    ID_t = []
+    ID_r = []
 
     '''needs button press'''
     useAutoDetect = False
@@ -68,7 +69,8 @@ class Config():
     def getTrialsCount(self):
         a = len(self.W_trans)
         b = len(self.W_rot)
-        c = len(self.ID)
+        c = len(self.ID_r)
+        d = len(self.ID_t)
         if a > b:
             biggest = a
         else:
@@ -76,22 +78,26 @@ class Config():
 
         if c > biggest:
             biggest = c
+
+        if d > biggest:
+            biggest = d
+
         return biggest
 
     def verifyValues(self):
         if len(self.W_trans) == 0 and len(self.D_trans) == 0 and self.taskDOFTranslate != 0:
             print ("Config WARNING: No translation information available!")
         else:
-            if len(self.D_trans) == 0 and self.taskDOFTranslate>0:
-                if len(self.ID) == len(self.W_trans):
+            if len(self.D_trans) == 0 and self.taskDOFTranslate > 0:
+                if len(self.ID_t) == len(self.W_trans):#has enough ID information
                     for i in range(0, len(self.W_trans) * self.levelSize):
-                        self.D_trans.append(2 ** self.ID[int(i / self.levelSize)] * self.W_trans[int(i / self.levelSize)] / 2)
+                        self.D_trlogEffectiveForRans.append(2 ** self.ID_t[int(i / self.levelSize)] * self.W_trans[int(i / self.levelSize)] / 2)
                 else:
                     print("Config ERROR: Unequal number of given ID's and target widths!")
-            if len(self.W_trans) == 0 and self.taskDOFTranslate>0:
-                if len(self.ID) == len(self.D_rot):
+            if len(self.W_trans) == 0 and self.taskDOFTranslate > 0:
+                if len(self.ID_r) == len(self.D_rot):#has enough ID information
                     for i in range(0, len(self.D_trans) * self.levelSize):
-                        self.W_trans.append(core.ID_A_to_W(self.ID[int(i / self.levelSize)], self.D_trans[int(i / self.levelSize)]))
+                        self.W_trans.append(core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.D_trans[int(i / self.levelSize)]))
                 else:
                     print("Config ERROR: Unequal number of given ID's and distances!")
 
@@ -99,25 +105,28 @@ class Config():
             print ("Config WARNING: No rotation available!")
         else:
             if len(self.D_rot) == 0:
-                if len(self.ID) == len(self.W_rot):
+                if len(self.ID_r) == len(self.W_rot):
                     for i in range(0, len(self.W_rot) * self.levelSize):
-                        self.D_rot[i] = 2 ** self.ID[int(i / self.levelSize)] * self.W_rot[int(i / self.levelSize)] / 2
+                        self.D_rot[i] = 2 ** self.ID_r[int(i / self.levelSize)] * self.W_rot[int(i / self.levelSize)] / 2
                 else:
                     print("Config ERROR: Unequal number of given ID's and rotation target widths!")
             if len(self.W_rot) == 0 and self.taskDOFRotate>0:
-                if len(self.ID) == len(self.D_rot):
+                if len(self.ID_r) == len(self.D_rot):
                     for i in range(0, len(self.D_rot) * self.levelSize):
-                        self.W_rot.append((core.ID_A_to_W(self.ID[int(i / self.levelSize)], self.D_rot[int(i / self.levelSize)])))
+                        self.W_rot.append((core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.D_rot[int(i / self.levelSize)])))
                 else:
                     print("Config ERROR: Unequal number of given ID's and rotation distances!")
 
         #calculate ID if missing
-        if len(self.ID) == 0:
+        if len(self.ID_t) == 0:
             for i in range(0, self.getTrialsCount()):
-                if len(self.D_rot)>0 and self.D_rot[i] != 0:
-                    self.ID.append(core.A_W_to_ID(self.D_rot[i], self.W_rot[i]))
-                else:
-                    self.ID.append(core.A_W_to_ID(self.D_trans[i], self.W_trans[i]))
+                if len(self.D_trans) > 0 and self.D_trans[i] != 0:#can calculate ID for translation
+                    self.ID_t.append(core.A_W_to_ID(self.D_trans[i], self.W_trans[i]))
+
+        if len(self.ID_r) == 0:
+            for i in range(0, self.getTrialsCount()):
+                if len(self.D_rot) > 0 and self.D_rot[i] != 0:#can calculate ID for rotation
+                    self.ID_r.append(core.A_W_to_ID(self.D_rot[i], self.W_rot[i]))
 
         #fill every list which is not set with zeros
         if len(self.W_trans)==0:
@@ -132,9 +141,12 @@ class Config():
         if len(self.D_rot)==0:
             for i in range(0, self.getTrialsCount()):
                 self.D_rot.append(0)
-        if len(self.ID)==0:
+        if len(self.ID_t)==0:
             for i in range(0, self.getTrialsCount()):
-                self.ID.append(0)
+                self.ID_t.append(0)
+        if len(self.ID_r)==0:
+            for i in range(0, self.getTrialsCount()):
+                self.ID_r.append(0)
 
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
 
@@ -150,7 +162,7 @@ class Config():
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
             self.D_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-            self.logEffectiveForR = True
+            self.logEffectiveForR = False
             self.levelSize = 1  #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
         elif conf_num == 1:#max. rot. grnauigkeit
             self.disableAxisTranslate = [1, 1, 1]

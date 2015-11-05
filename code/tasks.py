@@ -19,7 +19,8 @@ environment = core.setupEnvironment().create()
 
 # fitt's law parameter
 
-ID = environment.ID
+ID_t = environment.ID_t
+ID_r = environment.ID_r
 
 W_rot = environment.W_rot
 W_trans = environment.W_trans
@@ -134,7 +135,8 @@ class trackingManager(avango.script.Script):
         self.level = 0
         self.cursorNode = None
         self.points = 0
-        self.id_e = 0
+        self.id_e_r = 0
+        self.id_e_t = 0
 
     def __del__(self):
         if environment.logResults:
@@ -222,7 +224,7 @@ class trackingManager(avango.script.Script):
             if self.startedTests:
                 self.MT = self.timer.value - self.startTime
                 self.startTime = 0 #reset starting time
-                self.points += ID[self.level] + ID[self.level] / self.MT
+                self.points += (ID_t[self.level] + ID_r[self.level]) / self.MT
 
                 if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
                     # hit
@@ -374,6 +376,38 @@ class trackingManager(avango.script.Script):
                 self.overshoots_r += 1
                 self.overshootInside_rotate = False
 
+    def getEffectiveID(self, rot):
+        # berechne erwartungswert
+        erw = 0
+        for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
+            if rot:
+                erw += self.error_r[i]
+            else: 
+                erw += self.error_t[i]
+        erw /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
+
+        # berechne varianz
+        varianz = 0
+        for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
+            if rot:
+                 varianz += (self.error_r[i]-erw)*(self.error_r[i]-erw)
+            else: 
+                 varianz += (self.error_t[i]-erw)*(self.error_t[i]-erw)
+
+        varianz /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
+
+        # berechne standardabweichung
+        sd = math.sqrt(varianz)
+
+        # berechne effektive breite
+        W_e = 4.133*sd
+
+        # effektiver ID
+        if rot: 
+            self.id_e_r = math.log(2*environment.D_rot[self.level] / W_e, 2)
+        else:
+            self.id_e_t = math.log(2*environment.D_trans[self.level] / W_e, 2)
+
     # sets the fields in the logmanager
     def logSetter(self):
         if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
@@ -384,31 +418,12 @@ class trackingManager(avango.script.Script):
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
 
+        #berechne effektiven ID
         if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
-            # berechne erwartungswert
-            erw = 0
-            for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
-                erw += self.error_r[i]
-            erw /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
-
-            # berechne varianz
-            varianz = 0
-            for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
-                varianz += (self.error_r[i]-erw)*(self.error_r[i]-erw)
-            varianz /= environment.levelSize # jedes ereignis ist gleich wahrscheinlich
-
-            # berechne standardabweichung
-            sd = math.sqrt(varianz)
-
-            # berechne effektive breite
-            W_e = 4.133*sd
-
             if environment.logEffectiveForR:
-                # effektiver ID
-                self.id_e = math.log(2*environment.D_rot[self.level] / W_e, 2)
-            elif environment.logEffectiveForT:
-                # effektiver ID
-                self.id_e = math.log(2*environment.D_trans[self.level] / W_e, 2)
+                getEffectiveID(True)
+            if environment.logEffectiveForT:
+                getEffectiveID(False)
         else:
             self.id_e = 0
 
@@ -442,26 +457,43 @@ class trackingManager(avango.script.Script):
         logmanager.set("target width T", W_trans[self.counter])
         logmanager.set("target distance R", environment.D_rot[self.counter])
         logmanager.set("target width R", W_rot[self.counter])
-        logmanager.set("ID combined", ID[self.level] + ID[self.counter])  # add and rot
-        if environment.taskDOFRotate == 0:#no rotation
-            logmanager.set("ID T", ID[self.level])
-            logmanager.set("ID R", 0)
+
+        a = 0
+        b = 0
+        if environment.logEffectiveForR:
+            a = self.id_e_r
+            print("effective r"+str(a))
+            logmanager.set("ID effective R", a)
         else:
-            logmanager.set("ID T", ID[self.counter])
-            logmanager.set("ID R ", ID[self.counter])
-        logmanager.set("ID effective ", self.id_e)
+            if environment.taskDOFRotate != 0:#no rotation
+                a = ID_r[self.counter]
+            logmanager.set("ID R ", a)
+
+        if environment.logEffectiveForT:
+            b = self.id_e_t
+            logmanager.set("ID effective T", b)
+        else:
+            if environment.taskDOFTranslate != 0:#no translation
+                b = ID_t[self.counter]
+            logmanager.set("ID T ", b)
+
+        logmanager.set("ID combined", (a + b))  # add and rot       
+              
         logmanager.set("repetition", environment.levelSize)
         logmanager.set("trial", self.counter)
         logmanager.set("Button clicks", self.clicks)
         logmanager.set("succesfull clicks", self.successful_clicks)
+
         if self.goal:
             logmanager.set("Hit", 1)
         else:
             logmanager.set("Hit", 0)
+
         logmanager.set("overshoots R", self.overshoots_r)
         logmanager.set("overshoots T", self.overshoots_t)
         logmanager.set("peak acceleration T", self.peak_acceleration_t)
         logmanager.set("peak acceleration R", self.peak_acceleration_r)
+
         if self.peak_acceleration_r > 0:
             logmanager.set("movement continuity R", self.first_reversal_acceleration_rotate / self.peak_acceleration_r)
         else:
@@ -568,6 +600,9 @@ class trackingManager(avango.script.Script):
                 else:
                     self.reversal_points_t.append(self.getErrorTranslate())
 
+ 
+
+
     def checkReversalRotate(self):
         # print ("Rotation Speed: "+str(self.current_speed_rotate))
         if math.fabs(self.current_speed_rotate) < 40 < self.peak_speed_r:
@@ -593,6 +628,7 @@ class trackingManager(avango.script.Script):
                             self.Button.value = True
 
                     self.speededup = False
+
         else:
             self.low_speed_counter_rotate = 0
 
@@ -610,7 +646,7 @@ class trackingManager(avango.script.Script):
 
     def setTP(self, index):
         if self.MT > 0 and self.current_level < environment.config.getTrialsCount():
-            self.TP = ID[index] / self.MT
+            self.TP = (ID_t[index]+ID_r[index]) / self.MT
 
     def handle_key(self, key, scancode, action, mods):
         if action == 1:
