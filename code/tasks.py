@@ -499,6 +499,8 @@ class trackingManager(avango.script.Script):
                 if self.current_speed_rotate > self.local_peak_speed_r:
                     self.local_peak_speed_r = self.current_speed_rotate
 
+        print (self.current_speed_rotate)
+
     def setSpeedTranslate(self):
         if self.frame_counter_speed % 5 == 0:
             self.TransTranslation1 = self.cursorNode.Transform.value.get_translate()
