@@ -262,7 +262,8 @@ class setupEnvironment(avango.script.Script):
         self.D_trans = self.config.D_trans # in meter
         self.W_rot = self.config.W_rot # in meter
         self.W_trans = self.config.W_trans # in meter
-        self.ID = self.config.ID
+        self.ID_t = self.config.ID_t
+        self.ID_r = self.config.ID_r
         self.usePhoneCursor = self.config.usePhoneCursor
         self.showHuman = self.config.showHuman
         self.showWhenInTarget = self.config.showWhenInTarget
