@@ -82,9 +82,9 @@ class DisksContainer:
             self.errormargin = errormargin
             if self.setup.usePhoneCursor:
                 self.phone.Transform.value = avango.gua.make_scale_mat(
-                    (4.4*0.01+errormargin)/(4.4*0.01)*0.001,
-                    (1.5*0.01+errormargin)/(1.5*0.01)*0.001,
-                    (11*0.01 +errormargin)/(11*0.01)*0.001
+                    (4.4*0.01 + errormargin)/(4.4*0.01)*0.001,
+                    (1.5*0.01 + errormargin)/(1.5*0.01)*0.001,
+                    (11*0.01  + errormargin)/(11*0.01)*0.001
                 )
 
         def setRotation(self, rotMat):

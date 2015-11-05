@@ -31,8 +31,11 @@ Then start the scene with the according start.sh
 # @param A the amplitude
 
 
-def IDtoW(ID, A):
+def ID_A_to_W(ID, A):
     return (2 * A) / (2 ** ID)
+
+def A_W_to_ID(A, W):
+    return math.log(2*A/W)/math.log(2)
 
 
 ## Converts a rotation matrix to the Euler angles yaw, pitch and roll.
@@ -176,12 +179,6 @@ class setupEnvironment(avango.script.Script):
     userId = 0
     group = 0
 
-    config = config.Config()
-
-    # the amount of repitions per ID
-    N = 8
-
-
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
 
@@ -194,36 +191,13 @@ class setupEnvironment(avango.script.Script):
     logResults = True
     saveReplay = False
 
-    '''if false needs a button press or next step, if true then autodetects'''
-    useAutoDetect = False
-
-    '''use random target orientation'''
-    randomTargets = False
-
-    ''' show a preview of the motion first'''
-    animationPreview = False
-    animationTime = 2  # time of animation preview in s
-
-    '''you can fixate the cursor during the animation preview'''
-    enableCursorDuringAnimation = True
-
-    '''phone or colored cross setup?'''
-    usePhoneCursor = True
+    snapBoundsContainerIfNear = False
 
     '''radius of spikes from center in the model file'''
     r_model = 0.10
 
     '''radius of spikes displayed'''
     r = 0.02
-
-    '''highlight if inside the target'''
-    showWhenInTarget = False
-
-    '''software provides feedback if user hits oder misses'''
-    provideFeedback = False
-
-    '''show human'''
-    showHuman = False
 
     res_pass = avango.gua.nodes.ResolvePassDescription()
 
@@ -276,6 +250,7 @@ class setupEnvironment(avango.script.Script):
                 print("ERROR: invalid config number " + str(testConfigNo))
                 printHelp()
 
+        self.config = config.Config()
         self.config.setConfig(testConfigNo)
 
         self.disableAxis = self.config.disableAxisTranslate
@@ -285,7 +260,21 @@ class setupEnvironment(avango.script.Script):
         self.taskDOFTranslate = self.config.taskDOFTranslate
         self.D_rot = self.config.D_rot  # in degrees
         self.D_trans = self.config.D_trans # in meter
+        self.W_rot = self.config.W_rot # in meter
+        self.W_trans = self.config.W_trans # in meter
         self.ID = self.config.ID
+        self.usePhoneCursor = self.config.usePhoneCursor
+        self.showHuman = self.config.showHuman
+        self.showWhenInTarget = self.config.showWhenInTarget
+        self.animationPreview = self.config.animationPreview
+        self.animationTime = self.config.animationTime
+        self.randomTargets = self.config.randomTargets
+        self.provideFeedback = self.config.provideFeedback
+        self.useAutoDetect = self.config.useAutoDetect
+        self.logEffectiveForR = self.config.logEffectiveForR
+        self.logEffectiveForT = self.config.logEffectiveForT
+        self.levelSize = self.config.levelSize
+        #self.snapBoundsContainerIfNear =
 
         if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
             self.taskDOFRotate = 1
