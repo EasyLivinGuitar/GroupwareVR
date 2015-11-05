@@ -29,7 +29,7 @@ class DisksContainer:
             )
 
             if self.setup.usePhoneCursor:
-                self.phone = self.setup.loader.create_geometry_from_file("phone_outline", "data/objects/phone/phoneAntennaOutlines.obj", avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+                self.phone = self.setup.loader.create_geometry_from_file("phone_outline", "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj", avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
                 self.setErrorMargin(0)
                 self.node.Children.value.append(self.phone)
             else:
