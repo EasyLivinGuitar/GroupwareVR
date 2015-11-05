@@ -226,7 +226,7 @@ class trackingManager(avango.script.Script):
                 self.startTime = 0 #reset starting time
                 self.points += (ID_t[self.level] + ID_r[self.level]) / self.MT
 
-                if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
+                if self.getErrorRotate() <= environment.W_rot[self.counter] / 2 and self.getErrorTranslate() <= W_trans[self.counter] / 2:
                     # hit
                     self.goal = True
                     if environment.provideFeedback:
