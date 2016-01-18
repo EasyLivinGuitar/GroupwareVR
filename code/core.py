@@ -258,8 +258,8 @@ class setupEnvironment(avango.script.Script):
         self.space3D = self.config.space3D
         self.taskDOFRotate = self.config.taskDOFRotate
         self.taskDOFTranslate = self.config.taskDOFTranslate
-        self.D_rot = self.config.D_rot  # in degrees
-        self.D_trans = self.config.D_trans # in meter
+        self.A_rot = self.config.A_rot  # in degrees
+        self.A_trans = self.config.A_trans # in meter
         self.W_rot = self.config.W_rot # in meter
         self.W_trans = self.config.W_trans # in meter
         self.ID_t = self.config.ID_t

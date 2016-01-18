@@ -29,11 +29,11 @@ W_trans = environment.W_trans
 targetDiameter = []
 for i in range(0, environment.config.getTrialsCount()):
     #if not environment.randomTargets:
-    #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
     #else:
     #    W_rot.append(i*2+2)  # in degrees
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.D_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
 
     # add ID wenn es noch einen Rotations-Anteil gibt
     if environment.taskDOFRotate > 0:
@@ -276,8 +276,8 @@ class trackingManager(avango.script.Script):
                 if self.counter % 2 == 1:
                     sign = -1
 
-                self.aim.Transform.value = avango.gua.make_trans_mat(sign * environment.D_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
-                self.aimShadow.Transform.value = avango.gua.make_trans_mat(sign * -environment.D_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
+                self.aim.Transform.value = avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
+                self.aimShadow.Transform.value = avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
 
             if environment.randomTargets:
                 if environment.taskDOFRotate > 0:
@@ -290,7 +290,7 @@ class trackingManager(avango.script.Script):
             else:
                 if environment.taskDOFRotate > 0:
                     if self.counter % 2 == 0:  # toggle beetwen
-                        distance = environment.D_rot[self.level]
+                        distance = environment.A_rot[self.level]
                         if environment.taskDOFRotate == 3:
                             rotateAroundX = 1
                         else:
@@ -332,10 +332,10 @@ class trackingManager(avango.script.Script):
             return 0
 
     def getRandomRotation3D(self):
-        return avango.gua.make_rot_mat(random.uniform(0.0, environment.D_rot[self.level]), random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
+        return avango.gua.make_rot_mat(random.uniform(0.0, environment.A_rot[self.level]), random.randint(0, 1), random.randint(0, 1), random.randint(0, 1))
 
     def getRandomRotation2D(self):
-        return avango.gua.make_rot_mat(random.uniform(0.0, environment.D_rot[self.level]), 0, random.randint(0, 1), 0)
+        return avango.gua.make_rot_mat(random.uniform(0.0, environment.A_rot[self.level]), 0, random.randint(0, 1), 0)
 
     def logReplay(self):
         path = environment.getPath()
@@ -404,9 +404,9 @@ class trackingManager(avango.script.Script):
 
         # effektiver ID
         if rot: 
-            self.id_e_r = math.log(2*environment.D_rot[self.level] / W_e, 2)
+            self.id_e_r = math.log(2*environment.A_rot[self.level] / W_e, 2)
         else:
-            self.id_e_t = math.log(2*environment.D_trans[self.level] / W_e, 2)
+            self.id_e_t = math.log(2*environment.A_trans[self.level] / W_e, 2)
 
     # sets the fields in the logmanager
     def logSetter(self):
@@ -453,9 +453,9 @@ class trackingManager(avango.script.Script):
         else:
             logmanager.set("movement direction", "(0.0  0.0  0.0)")
 
-        logmanager.set("target distance T", environment.D_trans[self.counter])
+        logmanager.set("target distance T", environment.A_trans[self.counter])
         logmanager.set("target width T", W_trans[self.counter])
-        logmanager.set("target distance R", environment.D_rot[self.counter])
+        logmanager.set("target distance R", environment.A_rot[self.counter])
         logmanager.set("target width R", W_rot[self.counter])
 
         a = 0
@@ -671,7 +671,7 @@ def start():
             avango.gua.LoaderFlags.NORMALIZE_SCALE
         )
         trackManager.aim.Transform.value = (
-            avango.gua.make_trans_mat(-environment.D_trans[0] / 2, 0, 0)
+            avango.gua.make_trans_mat(-environment.A_trans[0] / 2, 0, 0)
             * avango.gua.make_scale_mat(W_trans[0])
         )
         trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
@@ -684,7 +684,7 @@ def start():
             avango.gua.LoaderFlags.NORMALIZE_SCALE
         )
         trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
-            environment.D_trans[0] / 2, 0, 0 )\
+            environment.A_trans[0] / 2, 0, 0 )\
              * avango.gua.make_scale_mat(W_trans[0]
         )
         trackManager.aimShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
@@ -698,7 +698,7 @@ def start():
     if environment.taskDOFRotate > 0:
         trackManager.boundsContainer.setupDisks(trackManager.cursorNode)
         trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
-        trackManager.boundsContainer.setRotation(avango.gua.make_rot_mat(environment.D_rot[0], 0, 1, 0))
+        trackManager.boundsContainer.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
         #trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
 
     # listen to button
