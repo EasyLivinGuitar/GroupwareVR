@@ -447,6 +447,7 @@ class trackingManager(avango.script.Script):
         logmanager.set("DOF virtual T", environment.getDOFTranslateVirtual())
         logmanager.set("DOF virtual R", environment.virtualDOFRotate)
         logmanager.set("task R DOF", environment.taskDOFRotate)
+        logmanager.set("task T DOF", environment.taskDOFTranslate)
         if environment.taskDOFTranslate > 0:
             logmanager.set(
                 "movement direction",
@@ -454,11 +455,13 @@ class trackingManager(avango.script.Script):
             )
         else:
             logmanager.set("movement direction", "(0.0  0.0  0.0)")
-
-        logmanager.set("target distance T", environment.A_trans[self.counter])
-        logmanager.set("target width T", W_trans[self.counter])
-        logmanager.set("target distance R", environment.A_rot[self.counter])
-        logmanager.set("target width R", W_rot[self.counter])
+        
+        if environment.taskDOFTranslate > 0:
+            logmanager.set("target distance T", environment.A_trans[self.counter])
+            logmanager.set("target width T", W_trans[self.counter])
+        if environment.taskDOFRotate > 0:
+            logmanager.set("target distance R", environment.A_rot[self.counter])
+            logmanager.set("target width R", W_rot[self.counter])
 
         ID_R = 0
         ID_T = 0
@@ -467,8 +470,8 @@ class trackingManager(avango.script.Script):
             print("effective r"+str(ID_R))
             logmanager.set("ID effective R", ID_R)
         else:
-            if environment.taskDOFRotate != 0:#has rotation
-                ID_rot = ID_r[self.counter]
+            if environment.taskDOFRotate > 0:#has rotation
+                ID_R = ID_r[self.counter]
             logmanager.set("ID R", ID_R)
 
         if environment.logEffectiveForT:
@@ -479,11 +482,11 @@ class trackingManager(avango.script.Script):
                 ID_T = ID_t[self.counter]
             logmanager.set("ID T", ID_T)
 
-        logmanager.set("ID combined", (ID_R + ID_T))  # add and rot           
+        logmanager.set("ID combined", (ID_R + ID_T))
         logmanager.set("repetition", environment.levelSize)
         logmanager.set("trial", self.counter)
         logmanager.set("Button clicks", self.clicks)
-        logmanager.set("succesfull clicks", self.successful_clicks)
+        logmanager.set("successful clicks", self.successful_clicks)
 
         if self.goal:
             logmanager.set("Hit", 1)
