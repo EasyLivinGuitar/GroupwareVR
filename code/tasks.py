@@ -448,8 +448,10 @@ class trackingManager(avango.script.Script):
         logmanager.set("DOF virtual R", environment.virtualDOFRotate)
         logmanager.set("task R DOF", environment.taskDOFRotate)
         if environment.taskDOFTranslate > 0:
-            logmanager.set("movement direction",
-                       self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate())
+            logmanager.set(
+                "movement direction",
+                self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate()
+            )
         else:
             logmanager.set("movement direction", "(0.0  0.0  0.0)")
 
@@ -458,27 +460,26 @@ class trackingManager(avango.script.Script):
         logmanager.set("target distance R", environment.A_rot[self.counter])
         logmanager.set("target width R", W_rot[self.counter])
 
-        a = 0
-        b = 0
+        ID_R = 0
+        ID_T = 0
         if environment.logEffectiveForR:
-            a = self.id_e_r
-            print("effective r"+str(a))
-            logmanager.set("ID effective R", a)
+            ID_R = self.id_e_r
+            print("effective r"+str(ID_R))
+            logmanager.set("ID effective R", ID_R)
         else:
-            if environment.taskDOFRotate != 0:#no rotation
-                a = ID_r[self.counter]
-            logmanager.set("ID R ", a)
+            if environment.taskDOFRotate != 0:#has rotation
+                ID_rot = ID_r[self.counter]
+            logmanager.set("ID R", ID_R)
 
         if environment.logEffectiveForT:
-            b = self.id_e_t
-            logmanager.set("ID effective T", b)
+            ID_T = self.id_e_t
+            logmanager.set("ID effective T", ID_T)
         else:
-            if environment.taskDOFTranslate != 0:#no translation
-                b = ID_t[self.counter]
-            logmanager.set("ID T ", b)
+            if environment.taskDOFTranslate != 0:#has translation
+                ID_T = ID_t[self.counter]
+            logmanager.set("ID T", ID_T)
 
-        logmanager.set("ID combined", (a + b))  # add and rot       
-              
+        logmanager.set("ID combined", (ID_R + ID_T))  # add and rot           
         logmanager.set("repetition", environment.levelSize)
         logmanager.set("trial", self.counter)
         logmanager.set("Button clicks", self.clicks)
@@ -489,29 +490,34 @@ class trackingManager(avango.script.Script):
         else:
             logmanager.set("Hit", 0)
 
-        logmanager.set("overshoots R", self.overshoots_r)
-        logmanager.set("overshoots T", self.overshoots_t)
-        logmanager.set("peak acceleration T", self.peak_acceleration_t)
-        logmanager.set("peak acceleration R", self.peak_acceleration_r)
-
-        if self.peak_acceleration_r > 0:
-            logmanager.set("movement continuity R", self.first_reversal_acceleration_rotate / self.peak_acceleration_r)
-        else:
-            logmanager.set("movement continuity R", "#div0")
-        if self.peak_acceleration_t > 0:
-            logmanager.set("movement continuity T", self.first_reversal_acceleration_t / self.peak_acceleration_t)
-        else:
-            logmanager.set("movement continuity T", "#div0")
-        logmanager.set("peak speed R", self.peak_speed_r)
-        logmanager.set("peak speed T", self.peak_speed_t)
         logmanager.set("hit type", hit_type)
         logmanager.set("MT", self.MT)
-        logmanager.set("error R", self.getErrorRotate())
-        logmanager.set("error T", self.getErrorTranslate())
-        logmanager.set("first reversal R", self.first_reversal_point_r)
-        logmanager.set("first reversal T", self.first_reversal_point_t)
-        logmanager.set("reversal points R", len(self.reversal_points_r))
-        logmanager.set("reversal points T", len(self.reversal_points_t))
+
+        if environment.taskDOFTranslate > 0:#has translation
+            logmanager.set("overshoots T", self.overshoots_t)
+            logmanager.set("peak acceleration T", self.peak_acceleration_t)
+            if self.peak_acceleration_t > 0:
+                logmanager.set("movement continuity T", self.first_reversal_acceleration_t / self.peak_acceleration_t)
+            else:
+                logmanager.set("movement continuity T", "#div0")
+            logmanager.set("error T", self.getErrorTranslate())
+            logmanager.set("peak speed T", self.peak_speed_t)
+            logmanager.set("first reversal T", self.first_reversal_point_t)
+            logmanager.set("reversal points T", len(self.reversal_points_t))
+
+        if environment.taskDOFRotate > 0:#has rotation    
+            logmanager.set("overshoots R", self.overshoots_r)
+            logmanager.set("peak acceleration R", self.peak_acceleration_r)
+
+            if self.peak_acceleration_r > 0:
+                logmanager.set("movement continuity R", self.first_reversal_acceleration_rotate / self.peak_acceleration_r)
+            else:
+                logmanager.set("movement continuity R", "#div0")
+            logmanager.set("error R", self.getErrorRotate())    
+            logmanager.set("peak speed R", self.peak_speed_r)
+
+            logmanager.set("first reversal R", self.first_reversal_point_r)
+            logmanager.set("reversal points R", len(self.reversal_points_r))
 
     def setSpeedRotate(self):
         if self.frame_counter_speed % 5 == 0:
