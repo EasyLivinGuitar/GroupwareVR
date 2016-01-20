@@ -149,9 +149,9 @@ class Config():
                 self.ID_r.append(0)
 
         #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
-        if self.levelSize==1 and (self.logEffectiveForR or self.logEffectiveForT)
+        if self.levelSize==1 and (self.logEffectiveForR or self.logEffectiveForT):
             print("Config ERROR: It is not possible to calculate effective values with one trial per level.")
-        if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT)
+        if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT):
             print("Config Warning: The amount of trials per level is very low to calulcate effective values.")
 
 

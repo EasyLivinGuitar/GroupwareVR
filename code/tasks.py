@@ -453,8 +453,6 @@ class trackingManager(avango.script.Script):
                 "movement direction",
                 self.aim.Transform.value.get_translate() - self.aimShadow.Transform.value.get_translate()
             )
-        else:
-            logmanager.set("movement direction", "(0.0  0.0  0.0)")
         
         if environment.taskDOFTranslate > 0:
             logmanager.set("target distance T", environment.A_trans[self.counter])
@@ -521,6 +519,13 @@ class trackingManager(avango.script.Script):
 
             logmanager.set("first reversal R", self.first_reversal_point_r)
             logmanager.set("reversal points R", len(self.reversal_points_r))
+
+        if environment.config.usePhoneCursor:
+            logmanager.set("Cursor", "Phone")
+        elif environment.config.showHuman:
+            logmanager.set("Cursor", "Human")
+        else:
+            logmanager.set("Cursor", "Cursor")
 
     def setSpeedRotate(self):
         if self.frame_counter_speed % 5 == 0:
