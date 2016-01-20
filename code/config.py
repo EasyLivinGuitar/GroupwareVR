@@ -1,6 +1,5 @@
 # coding=utf-8
 import sys
-
 import core
 
 
@@ -85,7 +84,7 @@ class Config():
         return biggest
 
     '''checks the content of the configuration and fills needed arrays'''
-    def verifyValues(self):
+    def verifyConfig(self):
         if len(self.W_trans) == 0 and len(self.A_trans) == 0 and self.taskDOFTranslate != 0:
             print ("Config WARNING: No translation information available!")
         else:
@@ -149,8 +148,14 @@ class Config():
             for i in range(0, self.getTrialsCount()):
                 self.ID_r.append(0)
 
-    '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
+        #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
+        if self.levelSize==1 and (self.logEffectiveForR or self.logEffectiveForT)
+            print("Config ERROR: It is not possible to calculate effective values with one trial per level.")
+        if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT)
+            print("Config Warning: The amount of trials per level is very low to calulcate effective values.")
 
+
+    '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
     def setConfig(self, conf_num):
         # Slot 0
         if conf_num == 0:#berechne max. rotationswinkel
@@ -164,7 +169,7 @@ class Config():
             self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
             self.A_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
             self.logEffectiveForR = False
-            self.levelSize = 1  #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
+            self.levelSize = 1
         elif conf_num == 1:#max. rot. grnauigkeit
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
@@ -174,7 +179,7 @@ class Config():
             self.space3D = True
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
             self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden
-            self.levelSize = 1  #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
+            self.levelSize = 1
         elif conf_num == 2:#max. trans grnauigkeit
             self.disableAxisTranslate = [0, 0, 0]
             self.virtualDOFRotate = 0
@@ -184,12 +189,12 @@ class Config():
             self.space3D = True
             self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
-            self.levelSize = 1  #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
+            self.levelSize = 1
         else:
             print("ERROR: No such configuration\n")
             sys.exit(0)
 
-        self.verifyValues()
+        self.verifyConfig()
 
 
 
