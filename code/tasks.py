@@ -302,7 +302,8 @@ class trackingManager(avango.script.Script):
                     self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                     self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
 
-            self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])#todo should be W_t
+            if self.boundsContainer is not None:#prevent crash because some cursors don't have a bounds container
+                self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])#todo should be W_t
 
             if environment.animationPreview:
                 if self.aim is None:

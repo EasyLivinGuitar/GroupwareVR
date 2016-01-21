@@ -23,7 +23,7 @@ class BoundsContainer:
 
         '''for attaching the disk to the pointer, the pointer is needed'''
         def setupDisks(self, pencilNode):
-            #attack boundsContainer to pointer
+            #attaches boundsContainer to pointer
             self.node = avango.gua.nodes.TransformNode(
                 Transform = avango.gua.make_trans_mat(pencilNode.Transform.value.get_translate())
             )
