@@ -86,23 +86,23 @@ class Config():
     '''checks the content of the configuration and fills needed arrays'''
     def verifyConfig(self):
         if len(self.W_trans) == 0 and len(self.A_trans) == 0 and self.taskDOFTranslate != 0:
-            print ("Config WARNING: No translation information available!")
+            print ("\033[93mConfig Warning\033[0m: No translation information available!")
         else:
             if len(self.A_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_t) == len(self.W_trans):#has enough ID information
                     for i in range(0, len(self.W_trans) * self.levelSize):
                         self.A_trans.append(2 ** self.ID_t[int(i / self.levelSize)] * self.W_trans[int(i / self.levelSize)] / 2)
                 else:
-                    print("Config ERROR: Unequal number of given ID's and target widths!")
+                    print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and target widths!")
             if len(self.W_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_r) == len(self.A_rot):#has enough ID information
                     for i in range(0, len(self.A_trans) * self.levelSize):
                         self.W_trans.append(core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.A_trans[int(i / self.levelSize)]))
                 else:
-                    print("Config ERROR: Unequal number of given ID's and distances!")
+                    print("\033[91mConfig ERROR\033[0m: Unequal number of given ID's and distances!")
 
         if len(self.W_rot) == 0 and len(self.A_rot) == 0 and self.taskDOFRotate>0:
-            print ("Config WARNING: No rotation available!")
+            print ("\033[93mConfig Warning\033[0m: No rotation available!")
         else:
             if len(self.A_rot) == 0:
                 if len(self.ID_r) == len(self.W_rot):
@@ -115,7 +115,7 @@ class Config():
                     for i in range(0, len(self.A_rot) * self.levelSize):
                         self.W_rot.append((core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.A_rot[int(i / self.levelSize)])))
                 else:
-                    print("Config ERROR: Unequal number of given ID's and rotation distances!")
+                    print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and rotation distances!")
 
         #calculate ID if missing
         if len(self.ID_t) == 0:
@@ -150,9 +150,12 @@ class Config():
 
         #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
         if self.levelSize==1 and (self.logEffectiveForR or self.logEffectiveForT):
-            print("Config ERROR: It is not possible to calculate effective values with one trial per level.")
+            print("033[91mConfig ERROR\033[0m: It is not possible to calculate effective values with one trial per level.")
         if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT):
-            print("Config Warning: The amount of trials per level is very low to calulcate effective values.")
+            print("\033[93mConfig Warning\033[0m: The amount of trials per level is very low to calulcate effective values.")
+        if self.taskDOFTranslate > 0 and self.usePhoneCursor:
+            print("\033[93mConfig Warning\033[0m: Phone cursor and translation tasks don't work well together.")    
+
 
 
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
@@ -185,7 +188,7 @@ class Config():
             self.virtualDOFRotate = 0
             self.taskDOFRotate = 0
             self.taskDOFTranslate = 1
-            self.usePhoneCursor = True
+            self.usePhoneCursor = False
             self.space3D = True
             self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
