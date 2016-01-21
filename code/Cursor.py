@@ -40,7 +40,7 @@ class Cursor(avango.script.Script):
             self.cursor = setup.loader.create_geometry_from_file("colored_cross",
                                                                  "data/objects/colored_cross.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
-       # self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
+            self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
 
         #self.cursor.Material.value.EnableBackfaceCulling.value = False
         # pencil.Transform.value = avango.gua.make_scale_mat(1)#to prevent that this gets huge
@@ -61,6 +61,7 @@ class Cursor(avango.script.Script):
         self.pointer_device_sensor.Station.value = "pointer"
         # connect pencil->inputMat
         self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
+
 
         self.timer = avango.nodes.TimeSensor()
         self.TimeIn.connect_from(self.timer.Time)
@@ -134,15 +135,18 @@ class Cursor(avango.script.Script):
             q.z = 0  # tried to fix to remove roll
             q.x = 0  # tried to fix to remove roll
             q.normalize()
-            yRot = avango.gua.make_rot_mat(core.get_euler_angles(q)[0] * 180.0 / math.pi, 0, 1,
+            rot = avango.gua.make_rot_mat(core.get_euler_angles(q)[0] * 180.0 / math.pi, 0, 1,
                                            0)  # get euler y rotation, has also roll in it
+        elif self.setup.virtualDOFRotate == 0:
+            rot = avango.gua.make_identity_mat()
         else:
-            yRot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
+            rot = avango.gua.make_rot_mat(self.getTransfromValue().get_rotate_scale_corrected())
+
 
         if self.setup.disableAxis[0]:
             x = 0
         else:
-            x = self.getTransfromValue().get_translate().x - self.setup.offsetTracking.get_translate().x
+            x = self.getTransfromValue().get_translate().x
 
         if self.setup.disableAxis[1]:
             y = 0
@@ -150,12 +154,12 @@ class Cursor(avango.script.Script):
             if self.setup.space3D:  # on table?
                 y = self.getTransfromValue().get_translate().y
             else:
-                y = self.getTransfromValue().get_translate().y - self.setup.offsetTracking.get_translate().y
+                y = self.getTransfromValue().get_translate().y
 
         if self.setup.disableAxis[2]:
             z = 0
         else:
-            z = self.getTransfromValue().get_translate().z - self.setup.offsetTracking.get_translate().z
+            z = self.getTransfromValue().get_translate().z
 
         translation = avango.gua.make_trans_mat(
             x,
@@ -163,8 +167,7 @@ class Cursor(avango.script.Script):
             z
         )
 
-        self.cursor.Transform.value = translation * yRot * avango.gua.make_scale_mat(
-            self.cursor.Transform.value.get_scale())
+        self.cursor.Transform.value = translation * rot * avango.gua.make_scale_mat(self.cursor.Transform.value.get_scale())
 
     '''This method moves the cursor to the aim. aimPos can be None'''
     def animateTo(self, aimPos, aimRot):

@@ -167,7 +167,7 @@ class Config():
             self.taskDOFRotate = 3
             self.taskDOFTranslate = 0
             self.usePhoneCursor = True
-            self.useAutoDetect = True
+            self.useAutoDetect = False
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
             self.A_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
@@ -178,7 +178,7 @@ class Config():
             self.virtualDOFRotate = 3
             self.taskDOFRotate = 3
             self.taskDOFTranslate = 0
-            self.usePhoneCursor = False#hier kann der phone cursor nicht genutzt werden, da die zielgrößen-anzeige nicht möglich ist
+            self.usePhoneCursor = True
             self.space3D = True
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
             self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden
@@ -188,7 +188,7 @@ class Config():
             self.virtualDOFRotate = 0
             self.taskDOFRotate = 0
             self.taskDOFTranslate = 1
-            self.usePhoneCursor = False
+            self.usePhoneCursor = True
             self.space3D = True
             self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden

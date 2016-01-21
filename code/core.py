@@ -180,13 +180,13 @@ class setupEnvironment(avango.script.Script):
     group = 0
 
     ''' difference from screen center to center of tracking'''
-    offsetTracking = avango.gua.make_trans_mat(0.0, -0.34, 0.70)
+    offsetTracking = avango.gua.make_trans_mat(-1.0, -(0.58 + 0.975), 0.26 + 3.48) * avango.gua.make_rot_mat(90.0,0,1,0)
 
     '''get the offsets of the pointer.'''
-    offsetPointer = avango.gua.make_trans_mat(0.0, 0, 0.30)
+    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
 
     '''get the position of the center where the pointer and the aim is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0, .30)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.40)
 
     logResults = True
     saveReplay = True

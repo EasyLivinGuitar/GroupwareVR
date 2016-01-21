@@ -129,9 +129,7 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.boundsContainer = None
-        if not environment.usePhoneCursor:
-            self.boundsContainer = BoundsContainer.BoundsContainer(environment)
+        self.boundsContainer = BoundsContainer.BoundsContainer(environment)
         self.aim = None
         self.aimShadow = None
         self.level = 0
@@ -304,7 +302,6 @@ class trackingManager(avango.script.Script):
                     self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                     self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
 
-            if self.boundsContainer is not None:#prevent crash because some cursors don't have a bounds container
                 self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])#todo should be W_t
 
             if environment.animationPreview:
@@ -682,24 +679,38 @@ def start():
     environment.setup(graph)
 
     if environment.taskDOFTranslate > 0:
-        trackManager.aim = loader.create_geometry_from_file(
-            "modified_sphere",
-            "data/objects/modified_sphere.obj",
+        if environment.usePhoneCursor:
+          trackManager.aim = loader.create_geometry_from_file(
+            "phone",
+            "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
             avango.gua.LoaderFlags.NORMALIZE_SCALE
         )
+        else:  
+            trackManager.aim = loader.create_geometry_from_file(
+                "modified_sphere",
+                "data/objects/modified_sphere.obj",
+                avango.gua.LoaderFlags.NORMALIZE_SCALE
+            )
         trackManager.aim.Transform.value = (
             avango.gua.make_trans_mat(-environment.A_trans[0] / 2, 0, 0)
             * avango.gua.make_scale_mat(W_trans[0])
-        )
+        )    
         trackManager.aim.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
         trackManager.aim.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(trackManager.aim)
 
-        trackManager.aimShadow = loader.create_geometry_from_file(
-            "modified_sphere",
-            "data/objects/modified_sphere.obj",
+        if environment.usePhoneCursor:
+          trackManager.aimShadow = loader.create_geometry_from_file(
+            "phone",
+            "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
             avango.gua.LoaderFlags.NORMALIZE_SCALE
         )
+        else:  
+            trackManager.aimShadow = loader.create_geometry_from_file(
+                "modified_sphere",
+                "data/objects/modified_sphere.obj",
+                avango.gua.LoaderFlags.NORMALIZE_SCALE
+            )
         trackManager.aimShadow.Transform.value = avango.gua.make_trans_mat(
             environment.A_trans[0] / 2, 0, 0 )\
              * avango.gua.make_scale_mat(W_trans[0]
