@@ -129,7 +129,7 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.boundsContainer = BoundsContainer.DisksContainer(environment)
+        self.boundsContainer = BoundsContainer.BoundsContainer(environment)
         self.aim = None
         self.aimShadow = None
         self.level = 0

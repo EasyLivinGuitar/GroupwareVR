@@ -5,8 +5,8 @@ import avango.script
 import avango.sound
 import avango.sound.openal
 
-
-class DisksContainer:
+'''a class managing an attachment to the cursor'''
+class BoundsContainer:
 
         def __init__(self, setenv):
             self.disk1 = None

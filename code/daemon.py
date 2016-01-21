@@ -25,10 +25,10 @@ def init_pst_tracking():
 
 def init_art_tracking():
 	_art = avango.daemon.DTrack()
-	_art.port = "5001"
+	_art.port = "5000"
 
-	_art.stations[3] = avango.daemon.Station('pointer')
-	_art.stations[2] = avango.daemon.Station('glasses')
+	_art.stations[1] = avango.daemon.Station('pointer')
+	_art.stations[10] = avango.daemon.Station('glasses')
 
 	device_list.append(_art)
 
