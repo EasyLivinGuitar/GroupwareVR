@@ -129,7 +129,9 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.boundsContainer = BoundsContainer.BoundsContainer(environment)
+        self.boundsContainer = None
+        if not environment.usePhoneCursor:
+            self.boundsContainer = BoundsContainer.BoundsContainer(environment)
         self.aim = None
         self.aimShadow = None
         self.level = 0
