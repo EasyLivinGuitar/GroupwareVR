@@ -7,7 +7,8 @@ import avango.daemon
 import avango.gua
 import avango.script
 import core
-import BoundsContainer
+import RotationTarget
+import Phone
 import Cursor
 import LogManager
 import random
@@ -132,8 +133,9 @@ class trackingManager(avango.script.Script):
         self.super(trackingManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.boundsContainer = BoundsContainer.BoundsContainer(environment)
+        self.rotationTarget = RotationTarget.RotationTarget(environment)
         self.target = None
+        self.phone = None
         self.targetShadow = None
         self.level = 0
         self.cursorNode = None
@@ -157,15 +159,17 @@ class trackingManager(avango.script.Script):
         if not self.endedTests:
             highlightR = False
 
-            # position boundsContainer2
+            # position rotationTarget
             if environment.taskDOFRotate > 0:
                 if environment.taskDOFTranslate == 0\
-                        or (environment.snapBoundsContainerIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter]):
-                    # attach boundsContainer to cursor
-                    self.boundsContainer.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
+                        or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter]):
+                    # attach rotationTarget to cursor
+                    self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
+                    if config.usePhoneCursor:
+                        self.phone.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
-                    # attach boundsContainer to target
-                    self.boundsContainer.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
+                    # attach rotationTarget to target
+                    self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
 
                 # highlight rotation if near target
                 if (environment.showWhenInTarget
@@ -173,9 +177,9 @@ class trackingManager(avango.script.Script):
                     and self.getErrorRotate() < environment.W_rot[self.counter] / 2
                 ):
                     highlightR = True
-                    self.boundsContainer.highlightRed()
+                    self.rotationTarget.highlightRed()
                 else:
-                    self.boundsContainer.setColor()
+                    self.rotationTarget.setColor()
 
             # highlight translation
             highlightT = False
@@ -253,7 +257,6 @@ class trackingManager(avango.script.Script):
 
             self.nextSettingStep()
 
-
     def nextSettingStep(self):
         if not self.startedTests:
             self.startedTests = True
@@ -287,16 +290,16 @@ class trackingManager(avango.script.Script):
                 self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.counter]*additionalScale))
 
-            if environment.randomTargets:
-                if config.taskDOFRotate > 0:
-                    if config.taskDOFRotate == 3:
-                        rotation = self.getRandomRotation3D()
-                        self.boundsContainer.setRotation(rotation)
-                    else:
-                        rotation = self.getRandomRotation2D()
-                        self.boundsContainer.setRotation(rotation)
-            else:
-                if config.taskDOFRotate > 0:
+            if config.taskDOFRotate > 0:
+                if environment.randomTargets:
+                    if config.taskDOFRotate > 0:
+                        if config.taskDOFRotate == 3:
+                            rotation = self.getRandomRotation3D()
+                            self.rotationTarget.setRotation(rotation)
+                        else:
+                            rotation = self.getRandomRotation2D()
+                            self.rotationTarget.setRotation(rotation)
+                else:
                     if self.counter % 2 == 0:  # toggle beetwen
                         distance = environment.A_rot[self.level]
                         if config.taskDOFRotate == 3:
@@ -308,35 +311,31 @@ class trackingManager(avango.script.Script):
                         distance = 0
 
                     #apply directly to target if a translation task     
-                    if taskDOFTranslate > 0:
-                        #target.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                    else:
-                        self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                        self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
-                
-                #apply directly to target if a translation task     
-                if taskDOFTranslate > 0:
-                    #target.setErrorMargin(environment.W_trans[self.counter])
-                else:
-                    self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])
+                    if config.usePhoneCursor:
+                        self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                        self.phone.setErrorMargin(environment.W_trans[self.counter])
+
+                    if not config.usePhoneCursor:   
+                        self.rotationTarget.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                        self.rotationTarget.setDisksTransMats(targetDiameter[self.counter])
 
             if environment.animationPreview:
                 if self.target is None:
                     self.cursorContainer.animateTo(
                         None,
-                        self.boundsContainer.getRotate()
+                        self.rotationTarget.getRotate()
                     )
                 else:
                     self.cursorContainer.animateTo(
                         self.target.Transform.value.get_translate(),
-                        self.boundsContainer.getRotate()
+                        self.rotationTarget.getRotate()
                     )
 
     def getErrorRotate(self):
         if environment.taskDOFRotate > 0:
             return core.getRotationError1D(
                 self.cursorNode.Transform.value.get_rotate_scale_corrected(),
-                self.boundsContainer.getRotate()
+                self.rotationTarget.getRotate()
             )
         return 0
 
@@ -564,7 +563,6 @@ class trackingManager(avango.script.Script):
                 if self.current_speed_rotate > self.local_peak_speed_r:
                     self.local_peak_speed_r = self.current_speed_rotate
 
-
     def setSpeedTranslate(self):
         if self.frame_counter_speed % 5 == 0:
             self.TransTranslation1 = self.cursorNode.Transform.value.get_translate()
@@ -631,8 +629,6 @@ class trackingManager(avango.script.Script):
                     self.reversal_points_t.append(self.getErrorTranslate())
 
  
-
-
     def checkReversalRotate(self):
         # print ("Rotation Speed: "+str(self.current_speed_rotate))
         if math.fabs(self.current_speed_rotate) < 40 < self.peak_speed_r:
@@ -694,13 +690,10 @@ def start():
     environment.getWindow().on_key_press(trackManager.handle_key)
     environment.setup(graph)
 
-    if environment.taskDOFTranslate > 0:
+    if environment.taskDOFTranslate > 0:#show targets
         if environment.usePhoneCursor:
-          trackManager.target = loader.create_geometry_from_file(
-            "phone",
-            "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
-            avango.gua.LoaderFlags.NORMALIZE_SCALE
-            )
+            trackManager.phone = Phone.Phone(environment)
+            trackManager.target = trackManager.phone.geometry
         else:  
             trackManager.target = loader.create_geometry_from_file(
                 "modified_sphere",
@@ -747,10 +740,14 @@ def start():
     trackManager.cursorNode = trackManager.cursorContainer.getNode()
 
     if config.taskDOFRotate > 0:
-        trackManager.boundsContainer.setupDisks(trackManager.cursorNode)
-        trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
-        trackManager.boundsContainer.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
-        #trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
+        if config.usePhoneCursor:
+            if trackManager.phone is None:
+                trackManager.phone = Phone.Phone(environment)
+        else:
+            trackManager.rotationTarget.setupDisks(trackManager.cursorNode)
+            trackManager.rotationTarget.setDisksTransMats(targetDiameter[0])
+            trackManager.rotationTarget.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
+            #trackManager.rotationTarget.setDisksTransMats(targetDiameter[0])
 
     # listen to button
     button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())

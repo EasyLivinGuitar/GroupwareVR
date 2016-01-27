@@ -189,7 +189,7 @@ class setupEnvironment(avango.script.Script):
     logResults = True
     saveReplay = True
 
-    snapBoundsContainerIfNear = False
+    snapRotationTargetIfNear = False
 
     '''radius of spikes from center in the model file'''
     r_model = 0.10
@@ -274,7 +274,7 @@ class setupEnvironment(avango.script.Script):
         self.logEffectiveForR = self.config.logEffectiveForR
         self.logEffectiveForT = self.config.logEffectiveForT
         self.levelSize = self.config.levelSize
-        #self.snapBoundsContainerIfNear =
+        #self.snapRotationTargetIfNear =
 
         if self.taskDOFRotate == 0:
             self.taskString = str(testConfigNo)+"_pointing"
