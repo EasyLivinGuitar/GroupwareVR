@@ -117,8 +117,6 @@ def getRotationError3D(aMat, bMat):
 '''
 get rotation error between two rotations
 '''
-
-
 def getRotationError1D(rotA, rotB):
     matA = avango.gua.make_rot_mat(rotA)
     matB = avango.gua.make_rot_mat(rotB)
@@ -131,13 +129,13 @@ def getDistance2D(target1, target2):
     trans_x = target1.get_translate()[0]
     trans_y = target1.get_translate()[1]
 
-    aim_x = target2.get_translate()[0]
-    aim_y = target2.get_translate()[1]
+    target_x = target2.get_translate()[0]
+    target_y = target2.get_translate()[1]
 
-    trans_aim_x_square = (trans_x - aim_x) * (trans_x - aim_x)
-    trans_aim_y_square = (trans_y - aim_y) * (trans_y - aim_y)
+    trans_target_x_square = (trans_x - target_x) * (trans_x - target_x)
+    trans_target_y_square = (trans_y - target_y) * (trans_y - target_y)
 
-    return math.sqrt(trans_aim_x_square + trans_aim_y_square)
+    return math.sqrt(trans_target_x_square + trans_target_y_square)
 
 
 def getDistance3D(target1, target2):
@@ -145,11 +143,11 @@ def getDistance3D(target1, target2):
     trans_y = target1.get_translate()[1]
     trans_z = target1.get_translate()[2]
 
-    aim_x = target2.get_translate()[0]
-    aim_y = target2.get_translate()[1]
-    aim_z = target2.get_translate()[2]
+    target_x = target2.get_translate()[0]
+    target_y = target2.get_translate()[1]
+    target_z = target2.get_translate()[2]
 
-    return math.sqrt((trans_x - aim_x) ** 2 + (trans_y - aim_y) ** 2 + (trans_z - aim_z) ** 2)
+    return math.sqrt((trans_x - target_x) ** 2 + (trans_y - target_y) ** 2 + (trans_z - target_z) ** 2)
 
 
 def print_graph(root_node):
@@ -185,7 +183,7 @@ class setupEnvironment(avango.script.Script):
     '''get the offsets of the pointer.'''
     offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
 
-    '''get the position of the center where the pointer and the aim is located.'''
+    '''get the position of the center where the pointer and the target is located.'''
     displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.40)
 
     logResults = True

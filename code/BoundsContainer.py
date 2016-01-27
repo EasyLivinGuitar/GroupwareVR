@@ -33,23 +33,23 @@ class BoundsContainer:
                 self.setErrorMargin(0)
                 self.node.Children.value.append(self.phone)
             else:
-                self.disk1 = self.setup.loader.create_geometry_from_file("disk", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                self.disk1 = self.setup.loader.create_geometry_from_file("cylinder1", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                 self.node.Children.value.append(self.disk1)
 
-                self.disk2 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                self.disk2 = self.setup.loader.create_geometry_from_file("cylinder2", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                 self.node.Children.value.append(self.disk2)
 
-                self.disk3 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                self.disk3 = self.setup.loader.create_geometry_from_file("cylinder3", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                 self.node.Children.value.append(self.disk3)
 
-                self.disk6 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                self.disk6 = self.setup.loader.create_geometry_from_file("cylinder6", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                 self.node.Children.value.append(self.disk6)
 
                 if self.setup.virtualDOFRotate==3:
-                    self.disk4 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                    self.disk4 = self.setup.loader.create_geometry_from_file("cylinder4", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                     self.node.Children.value.append(self.disk4)
 
-                    self.disk5 = self.setup.loader.create_geometry_from_file("cylinder", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
+                    self.disk5 = self.setup.loader.create_geometry_from_file("cylinder5", "data/objects/disk_rotated.obj", avango.gua.LoaderFlags.NORMALIZE_SCALE)
                     self.node.Children.value.append(self.disk5)
 
             if self.setup.showHuman:
@@ -80,7 +80,7 @@ class BoundsContainer:
 
         def setErrorMargin(self, errormargin):
             self.errormargin = errormargin
-            if self.setup.usePhoneCursor:
+            if self.phone is not None:
                 self.phone.Transform.value = avango.gua.make_scale_mat(
                     (4.4*0.01 + errormargin)/(4.4*0.01)*0.001,
                     (1.5*0.01 + errormargin)/(1.5*0.01)*0.001,

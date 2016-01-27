@@ -10,10 +10,10 @@ class Config():
     '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
     virtualDOFRotate = 0
 
-    '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
+    '''should the task swich between rotation targets using 3  or 1 DOF or disable it =0?'''
     taskDOFRotate = 0
 
-    '''should the task swich between translation aims reachable with 1 DOF or 0?'''
+    '''should the task swich between translation targets reachable with 1 DOF or 0?'''
     taskDOFTranslate = 0
 
     '''is the task above the table or is it on the table?'''
@@ -154,7 +154,7 @@ class Config():
         if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT):
             print("\033[93mConfig Warning\033[0m: The amount of trials per level is very low to calulcate effective values.")
         if self.taskDOFTranslate > 0 and self.usePhoneCursor:
-            print("\033[93mConfig Warning\033[0m: Phone cursor and translation tasks don't work well together.")    
+            print("\033[93mConfig Warning\033[0m: Phone cursor and translation may not work well together.")    
 
 
 
@@ -220,10 +220,10 @@ class Config():
  #    '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
  #    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3, 3]
 
- #    '''should the task swich between rotation aims using 3  or 1 DOF or disable it =0?'''
+ #    '''should the task swich between rotation targets using 3  or 1 DOF or disable it =0?'''
  #    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 1, 1]
 
- #    '''should the task swich between translation aims reachable with 1 DOF or 0?'''
+ #    '''should the task swich between translation targets reachable with 1 DOF or 0?'''
  #    taskDOFTranslateList = [
  #        1,
  #        1,

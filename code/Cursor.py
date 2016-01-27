@@ -7,7 +7,7 @@ import avango.sound.openal
 import math
 import core
 
-'''The cursor and aim. Can have a human'''
+'''The cursor and target. Can have a human'''
 class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
     pointer_device_sensor = None
@@ -169,12 +169,12 @@ class Cursor(avango.script.Script):
 
         self.cursor.Transform.value = translation * rot * avango.gua.make_scale_mat(self.cursor.Transform.value.get_scale())
 
-    '''This method moves the cursor to the aim. aimPos can be None'''
-    def animateTo(self, aimPos, aimRot):
+    '''This method moves the cursor to the target. targetPos can be None'''
+    def animateTo(self, targetPos, targetRot):
         self.startPos = self.cursor.Transform.value.get_translate()
         self.startRot = self.cursor.Transform.value.get_rotate_scale_corrected()
-        self.animEndPos = aimPos
-        self.animEndRot = aimRot
+        self.animEndPos = targetPos
+        self.animEndRot = targetRot
         self.animationStartTime = self.TimeIn.value  # aktuelle Zeit
 
     def isAnimating(self):
