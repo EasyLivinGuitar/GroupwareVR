@@ -184,7 +184,7 @@ class setupEnvironment(avango.script.Script):
     offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0, 0.40)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.15, 0.40)
 
     logResults = True
     saveReplay = True

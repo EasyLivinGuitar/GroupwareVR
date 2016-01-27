@@ -56,6 +56,16 @@ pencil_transform = avango.gua.nodes.TransformNode()
 
 logmanager = LogManager.LogManager()
 
+def setErrorMargin(geometry, errormargin):
+    geometry.Transform.value = (
+        avango.gua.make_trans_mat(geometry.Transform.value.get_translate())#keep translate
+        * avango.gua.make_rot_mat(geometry.Transform.value.get_rotate_scale_corrected())#keep rot
+        * avango.gua.make_scale_mat(
+            (4.4*0.01 + errormargin)/(4.4*0.01)*0.001,
+            (1.5*0.01 + errormargin)/(1.5*0.01)*0.001,
+            (11*0.01  + errormargin)/(11*0.01)*0.001
+        )
+    )
 
 class trackingManager(avango.script.Script):
     Button = avango.SFBool()
@@ -282,13 +292,14 @@ class trackingManager(avango.script.Script):
                 if self.counter % 2 == 1:
                     sign = -1
 
-                additionalScale = 1.0
-                if config.usePhoneCursor:
-                   additionalScale = 0.01
                 self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.counter]*additionalScale))
+                    * avango.gua.make_scale_mat(W_trans[self.counter]))
                 self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.counter]*additionalScale))
+                    * avango.gua.make_scale_mat(W_trans[self.counter]))
+
+                if config.usePhoneCursor:
+                    setErrorMargin( self.target,W_trans[self.counter])
+                    setErrorMargin( self.targetShadow,W_trans[self.counter])
 
             if config.taskDOFRotate > 0:
                 if environment.randomTargets:
@@ -313,9 +324,8 @@ class trackingManager(avango.script.Script):
                     #apply directly to target if a translation task     
                     if config.usePhoneCursor:
                         self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                        self.phone.setErrorMargin(environment.W_trans[self.counter])
-
-                    if not config.usePhoneCursor:   
+                        self.phone.setErrorMargin(W_trans[self.counter])
+                    else: 
                         self.rotationTarget.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.rotationTarget.setDisksTransMats(targetDiameter[self.counter])
 
@@ -694,6 +704,7 @@ def start():
         if environment.usePhoneCursor:
             trackManager.phone = Phone.Phone(environment)
             trackManager.target = trackManager.phone.geometry
+            trackManager.phone.setErrorMargin(W_trans[trackManager.counter])
         else:  
             trackManager.target = loader.create_geometry_from_file(
                 "modified_sphere",
@@ -727,13 +738,14 @@ def start():
         if trackManager.counter % 2 == 1:
             sign = -1
 
-        additionalScale = 1.0
-        if config.usePhoneCursor:
-           additionalScale = 0.01
         trackManager.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.counter]*additionalScale))
+            * avango.gua.make_scale_mat(W_trans[trackManager.counter]))
         trackManager.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.counter]*additionalScale))
+            * avango.gua.make_scale_mat(W_trans[trackManager.counter]))
+        if config.usePhoneCursor:
+            setErrorMargin(trackManager.target, W_trans[trackManager.counter])
+            setErrorMargin(trackManager.targetShadow, W_trans[trackManager.counter])
+
 
     # loadMeshes
     trackManager.cursorContainer = Cursor.Cursor().create(environment)
@@ -759,7 +771,6 @@ def start():
     trackManager.timer.connect_from(timer.Time)
 
     environment.launch(globals())
-
 
 if __name__ == '__main__':
     start()
