@@ -148,6 +148,10 @@ class Config():
             for i in range(0, self.getTrialsCount()):
                 self.ID_r.append(0)
 
+        if self.taskDOFRotate > self.virtualDOFRotate:
+            print("\033[93mConfig Warning\033[0m: You can not fullfill the rotation tasks with this config. Set to possible task.")
+            self.taskDOFRotate = virtualDOFRotate
+
         #wenn levelSize = 1 dann funktioniert die effektive berechnung nicht mehr
         if self.levelSize==1 and (self.logEffectiveForR or self.logEffectiveForT):
             print("033[91mConfig ERROR\033[0m: It is not possible to calculate effective values with one trial per level.")
@@ -193,119 +197,23 @@ class Config():
             self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
             self.levelSize = 1
+        elif conf_num == 3:#6DOF docking task test
+            self.disableAxisTranslate = [0, 0, 0]
+            self.virtualDOFRotate = 3
+            self.virtualDOFTranslate = 3
+            self.taskDOFRotate = 3
+            self.taskDOFTranslate = 1
+            self.usePhoneCursor = True
+            self.space3D = True
+            self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
+            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
+            self.levelSize = 1
+            #TODO
+            #1.remove bounds container if T task
+            #2. add bounds to target
+            #3. add rotation to target
         else:
             print("ERROR: No such configuration\n")
             sys.exit(0)
 
         self.verifyConfig()
-
-
-
- # '''disable translation on this axis'''
- #    disableAxisList = [
- #        [0, 0, 0],
- #        [0, 1, 1],
- #        [0, 1, 1],
- #       [0, 1, 0],
- #       [0, 1, 0],
- #       [1, 1, 1],
- #       [1, 1, 1],
- #       [1, 1, 1],
- #       [0, 0, 0],
- #       [0, 1, 0],
- #       [0, 0, 0],
- #       [0, 0, 0]
- #    ]  # second dimension is axis x,y,z
-
- #    '''if one rotation axis should be locked/disabled. Switches beetween 3 and 1 DOF'''
- #    virtualDOFRotateList = [3, 3, 3, 3, 3, 3, 1, 1, 3, 1, 3, 3]
-
- #    '''should the task swich between rotation targets using 3  or 1 DOF or disable it =0?'''
- #    taskDOFRotateList = [0, 0, 0, 0, 0, 3, 1, 1, 3, 1, 1, 1]
-
- #    '''should the task swich between translation targets reachable with 1 DOF or 0?'''
- #    taskDOFTranslateList = [
- #        1,
- #        1,
- #        1,
- #        1,
- #        1,
- #        0,
- #        0,
- #        0,
- #        1,
- #        1,
- #        0, # 10
- #        0
- #    ]
-
- #    '''is the task above the table or is it on the table?'''
- #    space3DList = [
- #        True,
- #        False,
- #        True,
- #        False,
- #        True,
- #        True,
- #        False,
- #        True,
- #        True,
- #        False,
- #        True,
- #        True
- #    ]
-
- #    D_rot_list = [
- #        [0, 0, 0],
- #        [0, 0, 0],
- #        [0, 0, 0],
- #        [0, 0, 0],
- #        [120, 120, 120],
- #        [120, 120, 120],
- #        [120, 120, 120],
- #        [120, 120, 120],
- #        [120, 120, 120],
- #        [120, 120, 120],
- #        [-1, -1, -1],  # 10 random distance, values are ignored
- #        [120, 120, 120]
- #    ]  # in degrees, [saveslotno][n times each aka 'level']
-
- #    D_trans_list = [
- #        [0.3, 0.3, 0.3],
- #        [0.3, 0.3, 0.3],
- #        [0.3, 0.3, 0.3],
- #        [0.3, 0.3, 0.3],
- #        [0.3, 0.3, 0.3],
- #        [0.0, 0.0, 0.0],
- #        [0.0, 0.0, 0.0],
- #        [0.0, 0.0, 0.0],
- #        [0.3, 0.3, 0.3],
- #        [0.3, 0.3, 0.3],
- #        [0.0, 0.0, 0.0],  # 10 random distance
- #        [0.0, 0.0, 0.0]
- #    ]  # in meter, [saveslotno][n times each aka 'level']
-
- #    # the amount of repitions per ID
- #    levelSize = 8
-
- #    # setup
- #    ID_list = [
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [4, 5, 6],
- #        [0, 0, 0],  # 10
- #        [0, 0, 0]
- #    ] # fitt's law, [saveslotno][level]
-
-
-
-
-
-

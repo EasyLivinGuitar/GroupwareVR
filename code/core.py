@@ -234,6 +234,7 @@ class setupEnvironment(avango.script.Script):
     def __init__(self):
         self.super(setupEnvironment).__init__()
 
+    '''returns itself. pseudo-constructor'''
     def create(self):
         self.timeTillBlack = 0
         self.permanentBG = False
@@ -274,9 +275,6 @@ class setupEnvironment(avango.script.Script):
         self.logEffectiveForT = self.config.logEffectiveForT
         self.levelSize = self.config.levelSize
         #self.snapBoundsContainerIfNear =
-
-        if self.virtualDOFRotate == 1 and self.taskDOFRotate > 1:
-            self.taskDOFRotate = 1
 
         if self.taskDOFRotate == 0:
             self.taskString = str(testConfigNo)+"_pointing"

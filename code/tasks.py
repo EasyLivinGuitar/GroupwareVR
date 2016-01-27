@@ -14,8 +14,11 @@ import random
 from avango.script import field_has_changed
 
 print(
-    "Welcome to the VR motor movement study application. \nTo change the parameters and/or change the group and user id open the 'core.py'.")
+    "\033[32mWelcome to the VR motor movement study application.\033[0m \n"
+    +"\033[90mWritten by Benedikt S. Vogler and Marcel Gohsen with the help of Alexander Kulik.\033[0m\n"
+    +"To change the parameters and/or change the group and user id open the 'core.py'.")
 environment = core.setupEnvironment().create()
+config = environment.config
 
 # fitt's law parameter
 
@@ -27,7 +30,7 @@ W_trans = environment.W_trans
 
 
 targetDiameter = []
-for i in range(0, environment.config.getTrialsCount()):
+for i in range(0, config.getTrialsCount()):
     #if not environment.randomTargets:
     #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
     #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
@@ -166,7 +169,7 @@ class trackingManager(avango.script.Script):
 
                 # highlight rotation if near target
                 if (environment.showWhenInTarget
-                    and (environment.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter])
+                    and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter])
                     and self.getErrorRotate() < environment.W_rot[self.counter] / 2
                 ):
                     highlightR = True
@@ -176,8 +179,8 @@ class trackingManager(avango.script.Script):
 
             # highlight translation
             highlightT = False
-            if environment.showWhenInTarget:
-                if environment.taskDOFTranslate > 0:
+            if config.showWhenInTarget:
+                if config.taskDOFTranslate > 0:
                     if self.getErrorTranslate() < W_trans[self.counter] / 2:
                         self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
                         highlightT = True
@@ -189,7 +192,7 @@ class trackingManager(avango.script.Script):
             if highlightR:
                 environment.setBackgroundColor(avango.gua.Color(0.2, 0.1, 0.0))
 
-            if (highlightT and highlightR) or (environment.taskDOFRotate == 0 and highlightT):
+            if (highlightT and highlightR) or (config.taskDOFRotate == 0 and highlightT):
                 environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
 
             if (not highlightT) and (not highlightR):
@@ -219,7 +222,7 @@ class trackingManager(avango.script.Script):
             # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        if self.level < environment.config.getTrialsCount() and not self.cursorContainer.isAnimating():
+        if self.level < config.getTrialsCount() and not self.cursorContainer.isAnimating():
             # auswerten
             if self.startedTests:
                 self.MT = self.timer.value - self.startTime
@@ -269,29 +272,34 @@ class trackingManager(avango.script.Script):
 
         # print("P:"+str( pencilRot )+"")
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
-        if self.level < environment.config.getTrialsCount():
-            if environment.taskDOFTranslate > 0:
+        if self.level < config.getTrialsCount():
+            if config.taskDOFTranslate > 0:
                 # move target
                 sign = 1
                 if self.counter % 2 == 1:
                     sign = -1
 
-                self.target.Transform.value = avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
-                self.targetShadow.Transform.value = avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(W_trans[self.counter])
+                additionalScale = 1.0
+                if config.usePhoneCursor:
+                   additionalScale = 0.01
+                self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+                    * avango.gua.make_scale_mat(W_trans[self.counter]*additionalScale))
+                self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
+                    * avango.gua.make_scale_mat(W_trans[self.counter]*additionalScale))
 
             if environment.randomTargets:
-                if environment.taskDOFRotate > 0:
-                    if environment.taskDOFRotate == 3:
+                if config.taskDOFRotate > 0:
+                    if config.taskDOFRotate == 3:
                         rotation = self.getRandomRotation3D()
                         self.boundsContainer.setRotation(rotation)
                     else:
                         rotation = self.getRandomRotation2D()
                         self.boundsContainer.setRotation(rotation)
             else:
-                if environment.taskDOFRotate > 0:
+                if config.taskDOFRotate > 0:
                     if self.counter % 2 == 0:  # toggle beetwen
                         distance = environment.A_rot[self.level]
-                        if environment.taskDOFRotate == 3:
+                        if config.taskDOFRotate == 3:
                             rotateAroundX = 1
                         else:
                             rotateAroundX = 0
@@ -299,10 +307,18 @@ class trackingManager(avango.script.Script):
                         rotateAroundX = 0
                         distance = 0
 
-                    self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                    self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
-
-                self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])#todo should be W_t
+                    #apply directly to target if a translation task     
+                    if taskDOFTranslate > 0:
+                        #target.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                    else:
+                        self.boundsContainer.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                        self.boundsContainer.setDisksTransMats(targetDiameter[self.counter])
+                
+                #apply directly to target if a translation task     
+                if taskDOFTranslate > 0:
+                    #target.setErrorMargin(environment.W_trans[self.counter])
+                else:
+                    self.boundsContainer.setErrorMargin(environment.W_trans[self.counter])
 
             if environment.animationPreview:
                 if self.target is None:
@@ -349,9 +365,9 @@ class trackingManager(avango.script.Script):
                 self.result_file = open(path + environment.taskString + "_trial" + str(self.num_files) + ".replay",
                                         "a+")
                 if environment.taskDOFTranslate > 0:
-                    targetString = "Aimpos: \n" + str(self.target.Transform.value) + "\n"
+                    targetString = "Target Pos: \n" + str(self.target.Transform.value) + "\n"
                 else:
-                    targetString = "Aimpos: \n" + str(self.cursorNode.Transform.value) + "\n"
+                    targetString = "Target Pos: \n" + str(self.cursorNode.Transform.value) + "\n"
 
                 self.result_file.write(
                     "TimeStamp: " + str(self.timer.value) + "\n" +
@@ -684,17 +700,14 @@ def start():
             "phone",
             "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
             avango.gua.LoaderFlags.NORMALIZE_SCALE
-        )
+            )
         else:  
             trackManager.target = loader.create_geometry_from_file(
                 "modified_sphere",
                 "data/objects/modified_sphere.obj",
                 avango.gua.LoaderFlags.NORMALIZE_SCALE
             )
-        trackManager.target.Transform.value = (
-            avango.gua.make_trans_mat(-environment.A_trans[0] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[0])
-        )    
+
         trackManager.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
         trackManager.target.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(trackManager.target)
@@ -705,7 +718,6 @@ def start():
                 "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
                 avango.gua.LoaderFlags.NORMALIZE_SCALE
             )
-            trackManager.targetShadow.Transform.value = avango.gua.make_scale_mat(0.001)
         else:  
             trackManager.targetShadow = loader.create_geometry_from_file(
                 "modified_sphere",
@@ -713,19 +725,28 @@ def start():
                 avango.gua.LoaderFlags.NORMALIZE_SCALE
             )
 
-        trackManager.targetShadow.Transform.value = avango.gua.make_trans_mat(
-            environment.A_trans[0] / 2, 0, 0 )\
-             * avango.gua.make_scale_mat(W_trans[0]
-        )
         trackManager.targetShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
         trackManager.targetShadow.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(trackManager.targetShadow)
+
+         # init target position
+        sign = 1
+        if trackManager.counter % 2 == 1:
+            sign = -1
+
+        additionalScale = 1.0
+        if config.usePhoneCursor:
+           additionalScale = 0.01
+        trackManager.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[trackManager.level] / 2, 0, 0)
+            * avango.gua.make_scale_mat(W_trans[trackManager.counter]*additionalScale))
+        trackManager.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[trackManager.level] / 2, 0, 0)
+            * avango.gua.make_scale_mat(W_trans[trackManager.counter]*additionalScale))
 
     # loadMeshes
     trackManager.cursorContainer = Cursor.Cursor().create(environment)
     trackManager.cursorNode = trackManager.cursorContainer.getNode()
 
-    if environment.taskDOFRotate > 0:
+    if config.taskDOFRotate > 0:
         trackManager.boundsContainer.setupDisks(trackManager.cursorNode)
         trackManager.boundsContainer.setDisksTransMats(targetDiameter[0])
         trackManager.boundsContainer.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
