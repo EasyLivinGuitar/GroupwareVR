@@ -160,9 +160,6 @@ def print_graph(root_node):
 def printHelp():
     environment = setupEnvironment()
     print("Config Numbers (0 - " + str(len(environment.disableAxisList)-1) + "):")
-    print("0 - 4 : Pointing")
-    print("5 - 7 : Rotation")
-    print("8 - 9 : Docking\n")
 
     for i in range(0, len(environment.disableAxisList)):
         print(str(i) + ": "+str(environment.disableAxisList[i]) + " DOF R virtual: "+str(environment.virtualDOFRotateList[i])+" DOF R task: "+str(environment.taskDOFRotateList[i]))
@@ -170,8 +167,6 @@ def printHelp():
 
 
 '''Settings'''
-
-
 class setupEnvironment(avango.script.Script):
     # user id 0 and group 0 is developer flag
     userId = 0
@@ -184,7 +179,7 @@ class setupEnvironment(avango.script.Script):
     offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0.15, 0.40)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.05, 0.40)
 
     logResults = True
     saveReplay = True

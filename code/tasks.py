@@ -145,6 +145,7 @@ class trackingManager(avango.script.Script):
         self.startTime = 0
         self.rotationTarget = RotationTarget.RotationTarget(environment)
         self.target = None
+        self.target_core = None
         self.phone = None
         self.targetShadow = None
         self.level = 0
@@ -296,11 +297,14 @@ class trackingManager(avango.script.Script):
 
                 self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.counter]))
+                self.target_core.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+                    * avango.gua.make_scale_mat(W_trans[self.counter]))
                 self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.counter]))
 
                 if config.usePhoneCursor:
                     setErrorMargin( self.target,W_trans[self.counter])
+                    setErrorMargin( self.target_core,0)
                     setErrorMargin( self.targetShadow,W_trans[self.counter])
 
             if config.taskDOFRotate > 0:
@@ -701,7 +705,11 @@ def start():
         if environment.usePhoneCursor:
             trackManager.phone = Phone.Phone(environment)
             trackManager.target = trackManager.phone.geometry
-            trackManager.phone.setErrorMargin(W_trans[trackManager.counter])
+            phone_core = Phone.Phone(environment)
+            #core inside the cursor outline
+            trackManager.target_core = phone_core.geometry
+            trackManager.target_core.Transform.value = (avango.gua.make_trans_mat(-environment.A_trans[trackManager.level] / 2, 0, 0) * avango.gua.make_scale_mat(
+            trackManager.target_core.Transform.value.get_scale()))
         else:  
             trackManager.target = loader.create_geometry_from_file(
                 "modified_sphere",
@@ -712,6 +720,8 @@ def start():
         trackManager.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
         trackManager.target.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(trackManager.target)
+        if trackManager.target_core is not None:
+            environment.everyObject.Children.value.append(trackManager.target_core)
 
         if environment.usePhoneCursor:
             trackManager.targetShadow = loader.create_geometry_from_file(
@@ -731,9 +741,9 @@ def start():
         environment.everyObject.Children.value.append(trackManager.targetShadow)
 
          # init target position
-        sign = 1
+        sign = -1
         if trackManager.counter % 2 == 1:
-            sign = -1
+            sign = 1
 
         trackManager.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[trackManager.level] / 2, 0, 0)
             * avango.gua.make_scale_mat(W_trans[trackManager.counter]))

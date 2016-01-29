@@ -165,7 +165,7 @@ class Config():
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
     def setConfig(self, conf_num):
         # Slot 0
-        if conf_num == 0:#berechne max. rotationswinkel
+        if conf_num == 0:#max. rotationswinkel bestimmen
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
             self.taskDOFRotate = 3
@@ -177,7 +177,7 @@ class Config():
             self.A_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
             self.logEffectiveForR = False
             self.levelSize = 1
-        elif conf_num == 1:#max. rot. grnauigkeit
+        elif conf_num == 1:#min. rot. Zielgröße bestimmen
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
             self.taskDOFRotate = 3
@@ -185,9 +185,9 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
-            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden
+            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit config 0 raus gefunden werden
             self.levelSize = 1
-        elif conf_num == 2:#max. trans Genauigkeit
+        elif conf_num == 2:#max. trans Genauigkeit bestimmen
             self.disableAxisTranslate = [0, 0, 0]
             self.virtualDOFRotate = 0
             self.taskDOFRotate = 0
@@ -195,7 +195,7 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.W_trans = [.035, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
-            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
+            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit config 0 raus gefunden werden
             self.levelSize = 1
         elif conf_num == 3:#6DOF docking task test
             self.disableAxisTranslate = [0, 0, 0]
@@ -206,9 +206,9 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.W_trans = [.035, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
-            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
+            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]#not rendered with phone cursor
-            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden
+            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
             self.levelSize = 1
             #TODO
             #1.remove bounds container if T task
