@@ -194,7 +194,7 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [.35, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
+            self.W_trans = [.035, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
             self.levelSize = 1
         elif conf_num == 3:#6DOF docking task test
@@ -205,7 +205,7 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [.35, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
+            self.W_trans = [.035, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]#not rendered with phone cursor
             self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden

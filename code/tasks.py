@@ -241,11 +241,13 @@ class trackingManager(avango.script.Script):
             if self.startedTests:
                 self.MT = self.timer.value - self.startTime
                 self.startTime = 0 #reset starting time
-                self.points += (ID_t[self.level] + ID_r[self.level]) / self.MT
-
-                if self.getErrorRotate() <= environment.W_rot[self.counter] / 2 and self.getErrorTranslate() <= W_trans[self.counter] / 2:
-                    # hit
+                # hit?
+                if self.getErrorRotate() <= environment.W_rot[self.counter] / 2 \
+                    and self.getErrorTranslate() <= W_trans[self.counter] / 2:
                     self.goal = True
+                    pointsGet = (ID_t[self.level] + ID_r[self.level]) / self.MT
+                    self.points += pointsGet
+                    print("Hit! +"+str(pointsGet)+" Points")
                     if environment.provideFeedback:
                         environment.setBackgroundColor(avango.gua.Color(0, 0.2, 0.05), 0.18)
                         if environment.taskDOFRotate == 0:
@@ -435,11 +437,6 @@ class trackingManager(avango.script.Script):
 
     # sets the fields in the logmanager
     def logSetter(self):
-        if self.getErrorRotate() < environment.W_rot[self.counter] / 2 and self.getErrorTranslate() < W_trans[self.counter] / 2:
-            self.goal = True
-        else:
-            self.goal = False
-
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
 
