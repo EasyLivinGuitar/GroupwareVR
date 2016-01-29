@@ -755,6 +755,7 @@ def start():
         if config.usePhoneCursor:
             if trackManager.phone is None:
                 trackManager.phone = Phone.Phone(environment)
+                trackManager.phone.setErrorMargin(0)
         else:
             trackManager.rotationTarget.setupDisks(trackManager.cursorNode)
             trackManager.rotationTarget.setDisksTransMats(targetDiameter[0])
