@@ -86,7 +86,7 @@ class Config():
     '''checks the content of the configuration and fills needed arrays'''
     def verifyConfig(self):
         if len(self.W_trans) == 0 and len(self.A_trans) == 0 and self.taskDOFTranslate != 0:
-            print ("\033[93mConfig Warning\033[0m: No translation information available!")
+            print ("\033[93mConfig Warning\033[0m: No translation information in config found!")
         else:
             if len(self.A_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_t) == len(self.W_trans):#has enough ID information
@@ -102,7 +102,7 @@ class Config():
                     print("\033[91mConfig ERROR\033[0m: Unequal number of given ID's and distances!")
 
         if len(self.W_rot) == 0 and len(self.A_rot) == 0 and self.taskDOFRotate>0:
-            print ("\033[93mConfig Warning\033[0m: No rotation available!")
+            print ("\033[93mConfig Warning\033[0m: No rotation information in config found!")
         else:
             if len(self.A_rot) == 0:
                 if len(self.ID_r) == len(self.W_rot):
@@ -158,7 +158,7 @@ class Config():
         if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT):
             print("\033[93mConfig Warning\033[0m: The amount of trials per level is very low to calulcate effective values.")
         if self.taskDOFTranslate > 0 and self.usePhoneCursor:
-            print("\033[93mConfig Warning\033[0m: Phone cursor and translation may not work well together.")    
+            print("\033[93mConfig Warning\033[0m: Phone cursor and translation may not yet work well together.")    
 
 
 
@@ -194,7 +194,7 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
+            self.W_trans = [.35, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
             self.levelSize = 1
         elif conf_num == 3:#6DOF docking task test
@@ -205,8 +205,10 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [.05, .010, .020, .024, .022, .020,  .015,  .012,  .08,  .05,  .04,  .03,  .02]
+            self.W_trans = [.35, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit 0 raus gefunden werden
+            self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]#not rendered with phone cursor
+            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit 0 raus gefunden werden
             self.levelSize = 1
             #TODO
             #1.remove bounds container if T task
