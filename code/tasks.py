@@ -173,7 +173,7 @@ class trackingManager(avango.script.Script):
             # position rotationTarget
             if environment.taskDOFRotate > 0:
                 if environment.taskDOFTranslate == 0\
-                        or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter]):
+                        or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level]):
                     # attach rotationTarget to cursor
                     self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                     if config.usePhoneCursor:
@@ -184,8 +184,8 @@ class trackingManager(avango.script.Script):
 
                 # highlight rotation if near target
                 if (environment.showWhenInTarget
-                    and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.counter])
-                    and self.getErrorRotate() < environment.W_rot[self.counter] / 2
+                    and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level])
+                    and self.getErrorRotate() < environment.W_rot[self.level] / 2
                 ):
                     highlightR = True
                     self.rotationTarget.highlightRed()
@@ -196,7 +196,7 @@ class trackingManager(avango.script.Script):
             highlightT = False
             if config.showWhenInTarget:
                 if config.taskDOFTranslate > 0:
-                    if self.getErrorTranslate() < W_trans[self.counter] / 2:
+                    if self.getErrorTranslate() < W_trans[self.level] / 2:
                         self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
                         highlightT = True
                     else:
@@ -243,8 +243,8 @@ class trackingManager(avango.script.Script):
                 self.MT = self.timer.value - self.startTime
                 self.startTime = 0 #reset starting time
                 # hit?
-                if self.getErrorRotate() <= environment.W_rot[self.counter] / 2 \
-                    and self.getErrorTranslate() <= W_trans[self.counter] / 2:
+                if self.getErrorRotate() <= environment.W_rot[self.level] / 2 \
+                    and self.getErrorTranslate() <= W_trans[self.level] / 2:
                     self.goal = True
                     pointsGet = (ID_t[self.level] + ID_r[self.level]) / self.MT
                     self.points += pointsGet
@@ -296,16 +296,16 @@ class trackingManager(avango.script.Script):
                     sign = -1
 
                 self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.counter]))
+                    * avango.gua.make_scale_mat(W_trans[self.level]))
                 self.target_core.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.counter]))
+                    * avango.gua.make_scale_mat(W_trans[self.level]))
                 self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.counter]))
+                    * avango.gua.make_scale_mat(W_trans[self.level]))
 
                 if config.usePhoneCursor:
-                    setErrorMargin( self.target,W_trans[self.counter])
+                    setErrorMargin( self.target,W_trans[self.level])
                     setErrorMargin( self.target_core,0)
-                    setErrorMargin( self.targetShadow,W_trans[self.counter])
+                    setErrorMargin( self.targetShadow,W_trans[self.level])
 
             if config.taskDOFRotate > 0:
                 if environment.randomTargets:
@@ -330,10 +330,10 @@ class trackingManager(avango.script.Script):
                     #apply directly to target if a translation task     
                     if config.usePhoneCursor:
                         self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                        self.phone.setErrorMargin(W_trans[self.counter])
+                        self.phone.setErrorMargin(W_trans[self.level])
                     else: 
                         self.rotationTarget.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
-                        self.rotationTarget.setDisksTransMats(targetDiameter[self.counter])
+                        self.rotationTarget.setDisksTransMats(targetDiameter[self.level])
 
             if environment.animationPreview:
                 if self.target is None:
@@ -400,7 +400,7 @@ class trackingManager(avango.script.Script):
                     self.overshootInside_translate = False
 
     def checkRotateOvershoots(self):
-        if self.getErrorRotate() < environment.W_rot[self.counter] / 2:
+        if self.getErrorRotate() < environment.W_rot[self.level] / 2:
             self.overshootInside_rotate = True
         else:
             if self.overshootInside_rotate:
@@ -481,11 +481,11 @@ class trackingManager(avango.script.Script):
             )
         
         if environment.taskDOFTranslate > 0:
-            logmanager.set("target distance T", environment.A_trans[self.counter])
-            logmanager.set("target width T", W_trans[self.counter])
+            logmanager.set("target distance T", environment.A_trans[self.level])
+            logmanager.set("target width T", W_trans[self.level])
         if environment.taskDOFRotate > 0:
-            logmanager.set("target distance R", environment.A_rot[self.counter])
-            logmanager.set("target width R", W_rot[self.counter])
+            logmanager.set("target distance R", environment.A_rot[self.level])
+            logmanager.set("target width R", W_rot[self.level])
 
         ID_R = 0
         ID_T = 0
@@ -495,7 +495,7 @@ class trackingManager(avango.script.Script):
             logmanager.set("ID effective R", ID_R)
         else:
             if environment.taskDOFRotate > 0:#has rotation
-                ID_R = ID_r[self.counter]
+                ID_R = ID_r[self.level]
             logmanager.set("ID R", ID_R)
 
         if environment.logEffectiveForT:
@@ -503,7 +503,7 @@ class trackingManager(avango.script.Script):
             logmanager.set("ID effective T", ID_T)
         else:
             if environment.taskDOFTranslate != 0:#has translation
-                ID_T = ID_t[self.counter]
+                ID_T = ID_t[self.level]
             logmanager.set("ID T", ID_T)
 
         logmanager.set("ID combined", (ID_R + ID_T))
@@ -661,7 +661,7 @@ class trackingManager(avango.script.Script):
                 if self.speededup:
                     self.reversal_points_r.append(self.getErrorRotate())
                     if(environment.config.useAutoDetect):
-                        if(self.getErrorRotate() <= W_rot[self.counter]):
+                        if(self.getErrorRotate() <= W_rot[self.level]):
                             self.Button.value = True
 
                     self.speededup = False
@@ -746,12 +746,12 @@ def start():
             sign = 1
 
         trackManager.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.counter]))
+            * avango.gua.make_scale_mat(W_trans[trackManager.level]))
         trackManager.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.counter]))
+            * avango.gua.make_scale_mat(W_trans[trackManager.level]))
         if config.usePhoneCursor:
-            setErrorMargin(trackManager.target, W_trans[trackManager.counter])
-            setErrorMargin(trackManager.targetShadow, W_trans[trackManager.counter])
+            setErrorMargin(trackManager.target, W_trans[trackManager.level])
+            setErrorMargin(trackManager.targetShadow, W_trans[trackManager.level])
 
 
     # loadMeshes
