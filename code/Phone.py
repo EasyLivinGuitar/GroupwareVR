@@ -1,5 +1,16 @@
 import avango
 
+def setErrorMargin(geometry, errormargin):
+    geometry.Transform.value = (
+        avango.gua.make_trans_mat(geometry.Transform.value.get_translate())#keep translate
+        * avango.gua.make_rot_mat(geometry.Transform.value.get_rotate_scale_corrected())#keep rot
+        * avango.gua.make_scale_mat(
+            (4.4*0.01 + errormargin)/(4.4*0.01)*0.001,
+            (1.5*0.01 + errormargin)/(1.5*0.01)*0.001,
+            (11*0.01  + errormargin)/(11*0.01)*0.001
+        )
+    )
+
 '''manages the phone model used as target and cursor'''
 class Phone(object):
 

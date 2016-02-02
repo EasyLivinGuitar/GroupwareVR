@@ -231,6 +231,10 @@ class setupEnvironment(avango.script.Script):
 
     '''returns itself. pseudo-constructor'''
     def create(self):
+        print(
+        "\033[32mWelcome to the VR motor movement study application.\033[0m \n"
+        +"\033[90mWritten by Benedikt S. Vogler and Marcel Gohsen with the help of Alexander Kulik.\033[0m\n"
+        +"To change the parameters and/or change the group and user id open the 'core.py'.")
         self.timeTillBlack = 0
         self.permanentBG = False
         # connect time with the timerField
@@ -282,6 +286,15 @@ class setupEnvironment(avango.script.Script):
         self.created_logfile = False
 
         return self
+
+    def launch(self, otherlocals):
+        print("Launch")
+        guaVE = GuaVE()
+        z = globals().copy()
+        z.update(otherlocals)
+        guaVE.start(locals(), z)
+
+        self.viewer.run()
 
     '''Get the degrees of freedom on the translation virtually'''
 
@@ -423,15 +436,6 @@ class setupEnvironment(avango.script.Script):
             self.created_logfile = True
 
         logmanager.writeToFile(path + self.taskString + "_trial" + str(self.num_files) + ".csv")
-
-    def launch(self, otherlocals):
-        print("Launch")
-        guaVE = GuaVE()
-        z = globals().copy()
-        z.update(otherlocals)
-        guaVE.start(locals(), z)
-
-        self.viewer.run()
 
     def setBackgroundColor(self, color, time=0):
         if time > 0:

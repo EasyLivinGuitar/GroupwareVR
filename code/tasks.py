@@ -14,10 +14,6 @@ import LogManager
 import random
 from avango.script import field_has_changed
 
-print(
-    "\033[32mWelcome to the VR motor movement study application.\033[0m \n"
-    +"\033[90mWritten by Benedikt S. Vogler and Marcel Gohsen with the help of Alexander Kulik.\033[0m\n"
-    +"To change the parameters and/or change the group and user id open the 'core.py'.")
 environment = core.setupEnvironment().create()
 config = environment.config
 
@@ -56,18 +52,7 @@ pencil_transform = avango.gua.nodes.TransformNode()
 
 logmanager = LogManager.LogManager()
 
-def setErrorMargin(geometry, errormargin):
-    geometry.Transform.value = (
-        avango.gua.make_trans_mat(geometry.Transform.value.get_translate())#keep translate
-        * avango.gua.make_rot_mat(geometry.Transform.value.get_rotate_scale_corrected())#keep rot
-        * avango.gua.make_scale_mat(
-            (4.4*0.01 + errormargin)/(4.4*0.01)*0.001,
-            (1.5*0.01 + errormargin)/(1.5*0.01)*0.001,
-            (11*0.01  + errormargin)/(11*0.01)*0.001
-        )
-    )
-
-class trackingManager(avango.script.Script):
+class taskManager(avango.script.Script):
     Button = avango.SFBool()
     timer = avango.SFFloat()
 
@@ -140,7 +125,7 @@ class trackingManager(avango.script.Script):
     cursorContainer = None
 
     def __init__(self):
-        self.super(trackingManager).__init__()
+        self.super(taskManager).__init__()
         self.isInside = False
         self.startTime = 0
         self.rotationTarget = RotationTarget.RotationTarget(environment)
@@ -153,6 +138,87 @@ class trackingManager(avango.script.Script):
         self.points = 0
         self.id_e_r = 0
         self.id_e_t = 0
+
+        environment.getWindow().on_key_press(self.handle_key)
+        environment.setup(graph)
+
+        if environment.taskDOFTranslate > 0:#show targets
+            if environment.usePhoneCursor:
+                self.phone = Phone.Phone(environment)
+                self.target = self.phone.geometry
+                phone_core = Phone.Phone(environment)
+                #core inside the cursor outline
+                self.target_core = phone_core.geometry
+                self.target_core.Transform.value = (avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(
+                self.target_core.Transform.value.get_scale()))
+            else:  
+                self.target = loader.create_geometry_from_file(
+                    "modified_sphere",
+                    "data/objects/modified_sphere.obj",
+                    avango.gua.LoaderFlags.NORMALIZE_SCALE
+                )
+
+            self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
+            self.target.Material.value.EnableBackfaceCulling.value = False
+            environment.everyObject.Children.value.append(self.target)
+            if self.target_core is not None:
+                environment.everyObject.Children.value.append(self.target_core)
+
+            if environment.usePhoneCursor:
+                self.targetShadow = loader.create_geometry_from_file(
+                    "phone",
+                    "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
+                    avango.gua.LoaderFlags.NORMALIZE_SCALE
+                )
+            else:  
+                self.targetShadow = loader.create_geometry_from_file(
+                    "modified_sphere",
+                    "data/objects/modified_sphere.obj",
+                    avango.gua.LoaderFlags.NORMALIZE_SCALE
+                )
+
+            self.targetShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
+            self.targetShadow.Material.value.EnableBackfaceCulling.value = False
+            environment.everyObject.Children.value.append(self.targetShadow)
+
+         # init target position
+        sign = -1
+        if self.counter % 2 == 1:
+            sign = 1
+
+        self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+            * avango.gua.make_scale_mat(W_trans[self.level]))
+        self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
+            * avango.gua.make_scale_mat(W_trans[self.level]))
+        if config.usePhoneCursor:
+            Phone.setErrorMargin(self.target, W_trans[self.level])
+            Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
+
+
+        # loadMeshes
+        self.cursorContainer = Cursor.Cursor().create(environment)
+        self.cursorNode = self.cursorContainer.getNode()
+
+        if config.taskDOFRotate > 0:
+            if config.usePhoneCursor:
+                if self.phone is None:
+                    self.phone = Phone.Phone(environment)
+                    self.phone.setErrorMargin(0)
+            else:
+                self.rotationTarget.setupDisks(self.cursorNode)
+                self.rotationTarget.setDisksTransMats(targetDiameter[0])
+                self.rotationTarget.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
+                #self.rotationTarget.setDisksTransMats(targetDiameter[0])
+
+        # listen to button
+        button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+        button_sensor.Station.value = "device-pointer"
+        self.Button.connect_from(button_sensor.Button0)
+
+        # timer
+        timer = avango.nodes.TimeSensor()
+        self.timer.connect_from(timer.Time)
+        environment.launch(globals())
 
     def __del__(self):
         if environment.logResults:
@@ -303,9 +369,9 @@ class trackingManager(avango.script.Script):
                     * avango.gua.make_scale_mat(W_trans[self.level]))
 
                 if config.usePhoneCursor:
-                    setErrorMargin( self.target,W_trans[self.level])
-                    setErrorMargin( self.target_core,0)
-                    setErrorMargin( self.targetShadow,W_trans[self.level])
+                    Phone.setErrorMargin(self.target, W_trans[self.level])
+                    Phone.setErrorMargin(self.target_core, 0)
+                    Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
 
             if config.taskDOFRotate > 0:
                 if environment.randomTargets:
@@ -695,90 +761,5 @@ class trackingManager(avango.script.Script):
                     self.Button.value = True
 
 
-def start():
-    trackManager = trackingManager()
-
-    environment.getWindow().on_key_press(trackManager.handle_key)
-    environment.setup(graph)
-
-    if environment.taskDOFTranslate > 0:#show targets
-        if environment.usePhoneCursor:
-            trackManager.phone = Phone.Phone(environment)
-            trackManager.target = trackManager.phone.geometry
-            phone_core = Phone.Phone(environment)
-            #core inside the cursor outline
-            trackManager.target_core = phone_core.geometry
-            trackManager.target_core.Transform.value = (avango.gua.make_trans_mat(-environment.A_trans[trackManager.level] / 2, 0, 0) * avango.gua.make_scale_mat(
-            trackManager.target_core.Transform.value.get_scale()))
-        else:  
-            trackManager.target = loader.create_geometry_from_file(
-                "modified_sphere",
-                "data/objects/modified_sphere.obj",
-                avango.gua.LoaderFlags.NORMALIZE_SCALE
-            )
-
-        trackManager.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
-        trackManager.target.Material.value.EnableBackfaceCulling.value = False
-        environment.everyObject.Children.value.append(trackManager.target)
-        if trackManager.target_core is not None:
-            environment.everyObject.Children.value.append(trackManager.target_core)
-
-        if environment.usePhoneCursor:
-            trackManager.targetShadow = loader.create_geometry_from_file(
-                "phone",
-                "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
-                avango.gua.LoaderFlags.NORMALIZE_SCALE
-            )
-        else:  
-            trackManager.targetShadow = loader.create_geometry_from_file(
-                "modified_sphere",
-                "data/objects/modified_sphere.obj",
-                avango.gua.LoaderFlags.NORMALIZE_SCALE
-            )
-
-        trackManager.targetShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
-        trackManager.targetShadow.Material.value.EnableBackfaceCulling.value = False
-        environment.everyObject.Children.value.append(trackManager.targetShadow)
-
-         # init target position
-        sign = -1
-        if trackManager.counter % 2 == 1:
-            sign = 1
-
-        trackManager.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.level]))
-        trackManager.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[trackManager.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[trackManager.level]))
-        if config.usePhoneCursor:
-            setErrorMargin(trackManager.target, W_trans[trackManager.level])
-            setErrorMargin(trackManager.targetShadow, W_trans[trackManager.level])
-
-
-    # loadMeshes
-    trackManager.cursorContainer = Cursor.Cursor().create(environment)
-    trackManager.cursorNode = trackManager.cursorContainer.getNode()
-
-    if config.taskDOFRotate > 0:
-        if config.usePhoneCursor:
-            if trackManager.phone is None:
-                trackManager.phone = Phone.Phone(environment)
-                trackManager.phone.setErrorMargin(0)
-        else:
-            trackManager.rotationTarget.setupDisks(trackManager.cursorNode)
-            trackManager.rotationTarget.setDisksTransMats(targetDiameter[0])
-            trackManager.rotationTarget.setRotation(avango.gua.make_rot_mat(environment.A_rot[0], 0, 1, 0))
-            #trackManager.rotationTarget.setDisksTransMats(targetDiameter[0])
-
-    # listen to button
-    button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-    button_sensor.Station.value = "device-pointer"
-    trackManager.Button.connect_from(button_sensor.Button0)
-
-    # timer
-    timer = avango.nodes.TimeSensor()
-    trackManager.timer.connect_from(timer.Time)
-
-    environment.launch(globals())
-
 if __name__ == '__main__':
-    start()
+    taskManager = taskManager()
