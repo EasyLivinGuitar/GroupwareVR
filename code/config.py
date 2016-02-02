@@ -157,10 +157,6 @@ class Config():
             print("033[91mConfig ERROR\033[0m: It is not possible to calculate effective values with one trial per level.")
         if self.levelSize==3 and (self.logEffectiveForR or self.logEffectiveForT):
             print("\033[93mConfig Warning\033[0m: The amount of trials per level is very low to calulcate effective values.")
-        if self.taskDOFTranslate > 0 and self.usePhoneCursor:
-            print("\033[93mConfig Warning\033[0m: Phone cursor and translation may not yet work well together.")    
-
-
 
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
     def setConfig(self, conf_num):

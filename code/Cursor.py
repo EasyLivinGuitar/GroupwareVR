@@ -10,8 +10,7 @@ import core
 '''The cursor and target. Can have a human'''
 class Cursor(avango.script.Script):
     TimeIn = avango.SFFloat()
-    pointer_device_sensor = None
-    inputMat = avango.gua.SFMatrix4()
+    inputMatA = avango.gua.SFMatrix4()
     animationStartTime = 0
 
     def __init__(self):
@@ -54,14 +53,13 @@ class Cursor(avango.script.Script):
             self.human.Material.value.EnableBackfaceCulling.value = False
             self.setup.everyObject.Children.value.append(self.human)
 
-        # listen to tracked position of pself.cursor.Transformointer
-        self.pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-        self.pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
+        # listen to tracked position of pointers
+        pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+        pointer_device_sensor.TransmitterOffset.value = self.setup.offsetTracking
 
-        self.pointer_device_sensor.Station.value = "pointer"
-        # connect pencil->inputMat
-        self.inputMat.connect_from(self.pointer_device_sensor.Matrix)
-
+        # connect pencil->inputMatA
+        pointer_device_sensor.Station.value = "pointer"
+        self.inputMatA.connect_from(pointer_device_sensor.Matrix)
 
         self.timer = avango.nodes.TimeSensor()
         self.TimeIn.connect_from(self.timer.Time)
@@ -70,7 +68,7 @@ class Cursor(avango.script.Script):
 
     def evaluate(self):
         # get input
-        self.cursor.Transform.value = self.setup.offsetPointer * self.inputMat.value * avango.gua.make_scale_mat(
+        self.cursor.Transform.value = self.setup.offsetPointer * self.inputMatA.value * avango.gua.make_scale_mat(
             self.cursor.Transform.value.get_scale())
         # then reduce
         self.reducePencilMat()

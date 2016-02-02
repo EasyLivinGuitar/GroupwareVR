@@ -351,12 +351,12 @@ class setupEnvironment(avango.script.Script):
         self.cam.PipelineDescription.value.EnableABuffer.value = True
 
         # Setup headtracking
-        self.head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-        self.head_device_sensor.TransmitterOffset.value = self.offsetTracking
+        head_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+        head_device_sensor.TransmitterOffset.value = self.offsetTracking
 
-        self.head_device_sensor.Station.value = "glasses"
+        head_device_sensor.Station.value = "glasses"
 
-        self.cam.Transform.connect_from(self.head_device_sensor.Matrix)  # headTracking->camera
+        self.cam.Transform.connect_from(head_device_sensor.Matrix)  # headTracking->camera
 
         graph.Root.value.Children.value = [light, screen]
 
