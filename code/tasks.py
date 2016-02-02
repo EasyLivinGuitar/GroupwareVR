@@ -139,35 +139,45 @@ class taskManager(avango.script.Script):
         self.points = 0
         self.id_e_r = 0
         self.id_e_t = 0
+        self.phone_core = None
 
         environment.getWindow().on_key_press(self.handle_key)
         environment.setup(graph)
 
+        if environment.usePhoneCursor:
+            self.phone = Phone.Phone(environment)
+            self.target = self.phone.geometry
+            self.phone.setErrorMargin(W_trans[self.level])
+        else:  
+            self.target = loader.create_geometry_from_file(
+                "modified_sphere",
+                "data/objects/modified_sphere.obj",
+                avango.gua.LoaderFlags.NORMALIZE_SCALE
+            )
+
+        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
+        self.target.Material.value.EnableBackfaceCulling.value = False
+        environment.everyObject.Children.value.append(self.target)
+
         if environment.taskDOFTranslate > 0:#show targets
+            # init target position
+            sign = -1
+            if self.counter % 2 == 1:
+                sign = 1
+            self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+                * avango.gua.make_scale_mat(W_trans[self.level]))
+
             if environment.usePhoneCursor:
-                self.phone = Phone.Phone(environment)
-                self.target = self.phone.geometry
                 self.phone_core = Phone.Phone(environment)
                 self.phone_core.setTranslate(avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0))
                 self.phone_core.setErrorMargin(0)
                 environment.everyObject.Children.value.append(self.phone_core.geometry)
-            else:  
-                self.target = loader.create_geometry_from_file(
-                    "modified_sphere",
-                    "data/objects/modified_sphere.obj",
-                    avango.gua.LoaderFlags.NORMALIZE_SCALE
-                )
-
-            self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
-            self.target.Material.value.EnableBackfaceCulling.value = False
-            environment.everyObject.Children.value.append(self.target)
-
-            if environment.usePhoneCursor:
                 self.targetShadow = loader.create_geometry_from_file(
                     "phone",
                     "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
                     avango.gua.LoaderFlags.NORMALIZE_SCALE
                 )
+                Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
             else:  
                 self.targetShadow = loader.create_geometry_from_file(
                     "modified_sphere",
@@ -178,20 +188,9 @@ class taskManager(avango.script.Script):
             self.targetShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
             self.targetShadow.Material.value.EnableBackfaceCulling.value = False
             environment.everyObject.Children.value.append(self.targetShadow)
-
-         # init target position
-        sign = -1
-        if self.counter % 2 == 1:
-            sign = 1
-
-        self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+            self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
             * avango.gua.make_scale_mat(W_trans[self.level]))
-        self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[self.level]))
-        if config.usePhoneCursor:
-            Phone.setErrorMargin(self.target, W_trans[self.level])
-            Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
-
+                    
 
         # loadMeshes
         self.cursorContainer = Cursor.Cursor().create(environment)
@@ -411,7 +410,8 @@ class taskManager(avango.script.Script):
 
                     #apply directly to target if a translation task     
                     if config.usePhoneCursor:
-                        self.phone_core.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                        if self.phone_core is not None:
+                            self.phone_core.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.phone.setErrorMargin(W_trans[self.level])
                     else: 
