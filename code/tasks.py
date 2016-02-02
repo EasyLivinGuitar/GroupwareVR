@@ -53,8 +53,9 @@ pencil_transform = avango.gua.nodes.TransformNode()
 logmanager = LogManager.LogManager()
 
 class taskManager(avango.script.Script):
-    Button = avango.SFBool()
+    button = avango.SFBool()
     timer = avango.SFFloat()
+    inputMatB = avango.gua.SFMatrix4()
 
     time2 = 0
 
@@ -123,6 +124,7 @@ class taskManager(avango.script.Script):
     last_error = 0
 
     cursorContainer = None
+
 
     def __init__(self):
         self.super(taskManager).__init__()
@@ -213,7 +215,15 @@ class taskManager(avango.script.Script):
         # listen to button
         button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
         button_sensor.Station.value = "device-pointer"
-        self.Button.connect_from(button_sensor.Button0)
+        self.button.connect_from(button_sensor.Button0)
+
+        # listen to tracked position of pointers
+        pointer_device_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
+        pointer_device_sensor.TransmitterOffset.value = environment.offsetTracking
+
+        # connect pencil->inputMatA
+        pointer_device_sensor.Station.value = "pointer2"
+        self.inputMatB.connect_from(pointer_device_sensor.Matrix)
 
         # timer
         timer = avango.nodes.TimeSensor()
@@ -224,15 +234,24 @@ class taskManager(avango.script.Script):
         if environment.logResults:
             pass  # self.result_file.close()
 
-    @field_has_changed(Button)
+    @field_has_changed(button)
     def button_pressed(self):
-        if self.Button.value:
+        if self.button.value:
              self.select()
         else:
             self.flagPrinted = False
 
+    @field_has_changed(inputMatB)
+    def matChanged(self):
+        if config.bimanual:
+            self.target.Transform.value = (environment.offsetPointer
+                    * avango.gua.make_trans_mat(self.inputMatB.value.get_translate())
+                    * avango.gua.make_rot_mat(self.inputMatB.value.get_rotate_scale_corrected())
+                    * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))
+
     @field_has_changed(timer)
     def updateTimer(self):
+
         if not self.endedTests:
             highlightR = False
 
@@ -332,7 +351,7 @@ class taskManager(avango.script.Script):
                     self.logSetter()
                     environment.logData(logmanager)
                     self.resetValues()
-            self.Button.value = False
+            self.button.value = False
 
             self.nextSettingStep()
 
@@ -373,6 +392,7 @@ class taskManager(avango.script.Script):
                     Phone.setErrorMargin(self.target_core, 0)
                     Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
 
+            #apply rotation to target
             if config.taskDOFRotate > 0:
                 if environment.randomTargets:
                     if config.taskDOFRotate > 0:
@@ -575,7 +595,7 @@ class taskManager(avango.script.Script):
         logmanager.set("ID combined", (ID_R + ID_T))
         logmanager.set("repetition", environment.levelSize)
         logmanager.set("trial", self.counter)
-        logmanager.set("Button clicks", self.clicks)
+        logmanager.set("button clicks", self.clicks)
         logmanager.set("successful clicks", self.successful_clicks)
 
         if self.goal:
@@ -718,7 +738,7 @@ class taskManager(avango.script.Script):
                     self.first_reversal_acceleration_rotate = self.current_acceleration_rotate
                     self.reversal_points_r.append(self.first_reversal_point_r)
                     self.first_rotate = False
-                    #self.Button.value = True
+                    #self.button.value = True
 
                 if self.local_peak_speed_r > 100:
                     self.speededup = True
@@ -728,7 +748,7 @@ class taskManager(avango.script.Script):
                     self.reversal_points_r.append(self.getErrorRotate())
                     if(environment.config.useAutoDetect):
                         if(self.getErrorRotate() <= W_rot[self.level]):
-                            self.Button.value = True
+                            self.button.value = True
 
                     self.speededup = False
 
@@ -758,7 +778,7 @@ class taskManager(avango.script.Script):
                 if self.endedTests:
                     print("Test ended")
                 else:
-                    self.Button.value = True
+                    self.button.value = True
 
 
 if __name__ == '__main__':

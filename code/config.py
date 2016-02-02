@@ -65,6 +65,9 @@ class Config():
     '''play level up sound'''
     playLevelUpSound = False
 
+    '''bimanual: target can be modified by second pointer (early implementation)'''
+    bimanual = False
+
     def getTrialsCount(self):
         a = len(self.W_trans)
         b = len(self.W_rot)
