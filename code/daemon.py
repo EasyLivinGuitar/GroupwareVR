@@ -27,24 +27,11 @@ def init_art_tracking():
 	_art = avango.daemon.DTrack()
 	_art.port = "5000"
 
-	_art.stations[1] = avango.daemon.Station('pointer')
-	_art.stations[3] = avango.daemon.Station('pointer2')
+	_art.stations[3] = avango.daemon.Station('pointer')
+	_art.stations[1] = avango.daemon.Station('pointer2')
 	_art.stations[10] = avango.daemon.Station('glasses')
 
 	device_list.append(_art)
-
-
-def init_lcd_wall_tracking():
-	_dtrack = avango.daemon.DTrack()
-	_dtrack.port = "5020"
-
-	_dtrack.stations[5] = avango.daemon.Station('glass-1')
-	_dtrack.stations[4] = avango.daemon.Station('rift')
-	_dtrack.stations[3] = avango.daemon.Station('pointer-1')
-
-	device_list.append(_dtrack)
-
-	print("LCD wall tracking has started!")
 
 
 def init_pointer():

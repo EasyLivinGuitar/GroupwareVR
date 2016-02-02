@@ -93,32 +93,33 @@ class Config():
         else:
             if len(self.A_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_t) == len(self.W_trans):#has enough ID information
-                    for i in range(0, len(self.W_trans) * self.levelSize):
-                        self.A_trans.append(2 ** self.ID_t[int(i / self.levelSize)] * self.W_trans[int(i / self.levelSize)] / 2)
+                    for i in range(0, getTrialsCount()):
+                        self.A_trans.append(2 ** self.ID_t[i] * self.W_trans[i] / 2)
                 else:
                     print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and target widths!")
             if len(self.W_trans) == 0 and self.taskDOFTranslate > 0:
-                if len(self.ID_r) == len(self.A_rot):#has enough ID information
-                    for i in range(0, len(self.A_trans) * self.levelSize):
-                        self.W_trans.append(core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.A_trans[int(i / self.levelSize)]))
+                if len(self.ID_t) == len(self.A_trans):#has enough ID information
+                    for i in range(0, self.getTrialsCount()):
+                        self.W_trans.append(core.ID_A_to_W(self.ID_t[i], self.A_trans[i]))
                 else:
                     print("\033[91mConfig ERROR\033[0m: Unequal number of given ID's and distances!")
 
-        if len(self.W_rot) == 0 and len(self.A_rot) == 0 and self.taskDOFRotate>0:
-            print ("\033[93mConfig Warning\033[0m: No rotation information in config found!")
-        else:
-            if len(self.A_rot) == 0:
-                if len(self.ID_r) == len(self.W_rot):
-                    for i in range(0, len(self.W_rot) * self.levelSize):
-                        self.A_rot[i] = 2 ** self.ID_r[int(i / self.levelSize)] * self.W_rot[int(i / self.levelSize)] / 2
-                else:
-                    print("Config ERROR: Unequal number of given ID's and rotation target widths!")
-            if len(self.W_rot) == 0 and self.taskDOFRotate>0:
-                if len(self.ID_r) == len(self.A_rot):
-                    for i in range(0, len(self.A_rot) * self.levelSize):
-                        self.W_rot.append((core.ID_A_to_W(self.ID_r[int(i / self.levelSize)], self.A_rot[int(i / self.levelSize)])))
-                else:
-                    print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and rotation distances!")
+        if self.taskDOFRotate>0:
+            if len(self.W_rot) == 0 and len(self.A_rot) == 0:
+                print ("\033[93mConfig Warning\033[0m: No rotation information in config found!")
+            else:
+                if len(self.A_rot) == 0:
+                    if len(self.ID_r) == len(self.W_rot):
+                        for i in range(0, self.getTrialsCount()):
+                            self.A_rot[i] = 2 ** self.ID_r[i] * self.W_rot[i] / 2
+                    else:
+                        print("Config ERROR: Unequal number of given ID's and rotation target widths!")
+                if len(self.W_rot) == 0 and self.taskDOFRotate>0:
+                    if len(self.ID_r) == len(self.A_rot):
+                        for i in range(0, self.getTrialsCount()):
+                            self.W_rot.append(core.ID_A_to_W(self.ID_r[i], self.A_rot[i]))
+                    else:
+                        print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and rotation distances!")
 
         #calculate ID if missing
         if len(self.ID_t) == 0:
@@ -193,7 +194,7 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [.035, .030, .028, .024, .022, .020,  .015,  .012,  .008,  .005,  .004,  .003,  .002]
+            self.ID_t = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]#muss erst mit config 1 raus gefunden werden
             self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit config 0 raus gefunden werden
             self.levelSize = 3
         elif conf_num == 3:#6DOF docking task test
