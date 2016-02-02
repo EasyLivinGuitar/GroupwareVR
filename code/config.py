@@ -214,7 +214,7 @@ class Config():
             #2. add bounds to target
             #3. add rotation to target
         else:
-            print("ERROR: No such configuration\n")
+            print("\033[91mConfig ERROR\033[0m: No such configuration\n")
             sys.exit(0)
 
         self.verifyConfig()

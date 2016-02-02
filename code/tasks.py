@@ -132,7 +132,6 @@ class taskManager(avango.script.Script):
         self.startTime = 0
         self.rotationTarget = RotationTarget.RotationTarget(environment)
         self.target = None
-        self.target_core = None
         self.phone = None
         self.targetShadow = None
         self.level = 0
@@ -148,11 +147,10 @@ class taskManager(avango.script.Script):
             if environment.usePhoneCursor:
                 self.phone = Phone.Phone(environment)
                 self.target = self.phone.geometry
-                phone_core = Phone.Phone(environment)
-                #core inside the cursor outline
-                self.target_core = phone_core.geometry
-                self.target_core.Transform.value = (avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0) * avango.gua.make_scale_mat(
-                self.target_core.Transform.value.get_scale()))
+                self.phone_core = Phone.Phone(environment)
+                self.phone_core.setTranslate(avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0))
+                self.phone_core.setErrorMargin(0)
+                environment.everyObject.Children.value.append(self.phone_core.geometry)
             else:  
                 self.target = loader.create_geometry_from_file(
                     "modified_sphere",
@@ -163,8 +161,6 @@ class taskManager(avango.script.Script):
             self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
             self.target.Material.value.EnableBackfaceCulling.value = False
             environment.everyObject.Children.value.append(self.target)
-            if self.target_core is not None:
-                environment.everyObject.Children.value.append(self.target_core)
 
             if environment.usePhoneCursor:
                 self.targetShadow = loader.create_geometry_from_file(
@@ -382,14 +378,14 @@ class taskManager(avango.script.Script):
 
                 self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
-                self.target_core.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+                self.phone_core.geometry.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
                 self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
 
                 if config.usePhoneCursor:
                     Phone.setErrorMargin(self.target, W_trans[self.level])
-                    Phone.setErrorMargin(self.target_core, 0)
+                    self.phone_core.setErrorMargin(0)
                     Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
 
             #apply rotation to target
@@ -415,6 +411,7 @@ class taskManager(avango.script.Script):
 
                     #apply directly to target if a translation task     
                     if config.usePhoneCursor:
+                        self.phone_core.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.phone.setErrorMargin(W_trans[self.level])
                     else: 
