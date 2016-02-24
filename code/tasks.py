@@ -27,7 +27,7 @@ W_trans = environment.W_trans
 
 
 targetDiameter = []
-for i in range(0, config.getTrialsCount()):
+for i in range(0, config.getLevelsCount()):
     #if not environment.randomTargets:
     #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
     #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
@@ -65,7 +65,6 @@ class taskManager(avango.script.Script):
     created_logfile = False
     created_replayfile = False
 
-    current_level = 0
     counter = 0
 
     # Logging
@@ -130,11 +129,12 @@ class taskManager(avango.script.Script):
         self.super(taskManager).__init__()
         self.isInside = False
         self.startTime = 0
-        self.rotationTarget = RotationTarget.RotationTarget(environment)
+        if not environment.usePhoneCursor:
+            self.rotationTarget = RotationTarget.RotationTarget(environment)#use the classical rotation target class
         self.target = None
         self.phone = None
         self.targetShadow = None
-        self.level = 0
+        self.level = 0 #when started is set to level 1
         self.cursorNode = None
         self.points = 0
         self.id_e_r = 0
@@ -245,7 +245,7 @@ class taskManager(avango.script.Script):
                     * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))
 
     @field_has_changed(timer)
-    def updateTimer(self):
+    def updateTimer(self):#each frame
 
         if not self.endedTests:
             highlightR = False
@@ -255,22 +255,24 @@ class taskManager(avango.script.Script):
                 if environment.taskDOFTranslate == 0\
                         or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level]):
                     # attach rotationTarget to cursor
-                    self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                     if config.usePhoneCursor:
                         self.phone.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
+                    else:
+                        self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
                     # attach rotationTarget to target
                     self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
 
-                # highlight rotation if near target
-                if (environment.showWhenInTarget
-                    and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level])
-                    and self.getErrorRotate() < environment.W_rot[self.level] / 2
-                ):
-                    highlightR = True
-                    self.rotationTarget.highlightRed()
-                else:
-                    self.rotationTarget.setColor()
+                if not config.usePhoneCursor:    
+                    # highlight rotation if near target
+                    if (environment.showWhenInTarget
+                        and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level])
+                        and self.getErrorRotate() < environment.W_rot[self.level] / 2
+                    ):
+                        highlightR = True
+                        self.rotationTarget.highlightRed()
+                    else:
+                        self.rotationTarget.setColor()
 
             # highlight translation
             highlightT = False
@@ -317,7 +319,8 @@ class taskManager(avango.script.Script):
             # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        if self.level < config.getTrialsCount() and not self.cursorContainer.isAnimating():
+        print(str(self.level) + "/"+str(config.getLevelsCount())+" "+str(self.counter))
+        if self.level < config.getLevelsCount() and not self.cursorContainer.isAnimating():
             # auswerten
             if self.startedTests:
                 self.MT = self.timer.value - self.startTime
@@ -343,6 +346,7 @@ class taskManager(avango.script.Script):
                         environment.playSound("miss")
 
                 if environment.logResults and not self.endedTests:
+                    print("  "+str(self.level) + "/"+str(config.getLevelsCount())+" "+str(self.counter))
                     self.logSetter()
                     environment.logData(logmanager)
                     self.resetValues()
@@ -356,19 +360,19 @@ class taskManager(avango.script.Script):
         else:
             self.counter += 1
 
-        if self.counter % environment.levelSize == environment.levelSize - 1:
+        if (self.counter) % environment.levelSize == 0:
             if environment.config.playLevelUpSound:
                 environment.playSound("levelUp")
             self.level += 1
 
-        if self.level == environment.config.getTrialsCount():
+        if self.level >= environment.config.getLevelsCount():
             self.endedTests = True
             environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
             print("Your Score: " + str(self.points))
 
         # print("P:"+str( pencilRot )+"")
         # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
-        if self.level < config.getTrialsCount():
+        if self.level < config.getLevelsCount():
             if config.taskDOFTranslate > 0:
                 # move target
                 sign = 1
@@ -430,11 +434,12 @@ class taskManager(avango.script.Script):
                         self.rotationTarget.getRotate()
                     )
 
+    '''returns the error by comparing the cursorNode with the rotationTarget'''
     def getErrorRotate(self):
         if environment.taskDOFRotate > 0:
             return core.getRotationError1D(
                 self.cursorNode.Transform.value.get_rotate_scale_corrected(),
-                self.rotationTarget.getRotate()
+                self.target.Transform.value.get_rotate_scale_corrected()
             )
         return 0
 
@@ -490,10 +495,11 @@ class taskManager(avango.script.Script):
                 self.overshoots_r += 1
                 self.overshootInside_rotate = False
 
-    def getEffectiveID(self, rot):
+    '''returns the effective ID for the colected values. can return for rotation or translation'''
+    def calcEffectiveID(self, rot, level):
         # berechne erwartungswert
         erw = 0
-        for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
+        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
             if rot:
                 erw += self.error_r[i]
             else: 
@@ -502,7 +508,7 @@ class taskManager(avango.script.Script):
 
         # berechne varianz
         varianz = 0
-        for i in range(environment.levelSize*self.level, environment.levelSize*(self.level+1)):
+        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
             if rot:
                  varianz += (self.error_r[i]-erw)*(self.error_r[i]-erw)
             else: 
@@ -518,9 +524,9 @@ class taskManager(avango.script.Script):
 
         # effektiver ID
         if rot: 
-            self.id_e_r = math.log(2*environment.A_rot[self.level] / W_e, 2)
+            self.id_e_r = math.log(2*environment.A_rot[level] / W_e, 2)
         else:
-            self.id_e_t = math.log(2*environment.A_trans[self.level] / W_e, 2)
+            self.id_e_t = math.log(2*environment.A_trans[level] / W_e, 2)
 
     # sets the fields in the logmanager
     def logSetter(self):
@@ -530,11 +536,12 @@ class taskManager(avango.script.Script):
         #berechne effektiven ID
         if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
             if environment.logEffectiveForR:
-                getEffectiveID(True)
+                self.calcEffectiveID(True, self.level)
             if environment.logEffectiveForT:
-                getEffectiveID(False)
+                self.calcEffectiveID(False, self.level)
         else:
-            self.id_e = 0
+            self.id_e_r = 0
+            self.id_e_t = 0
 
         if environment.useAutoDetect:
             hit_type = "Auto"
@@ -574,16 +581,21 @@ class taskManager(avango.script.Script):
         ID_T = 0
         if environment.logEffectiveForR:
             ID_R = self.id_e_r
-            print("effective r"+str(ID_R))
             logmanager.set("ID effective R", ID_R)
         else:
             if environment.taskDOFRotate > 0:#has rotation
                 ID_R = ID_r[self.level]
-            logmanager.set("ID R", ID_R)
+            if (ID_R==0):
+                logmanager.set("ID effective R", "-")
+            else:
+                logmanager.set("ID R", ID_R)
 
         if environment.logEffectiveForT:
             ID_T = self.id_e_t
-            logmanager.set("ID effective T", ID_T)
+            if (ID_T==0):
+                logmanager.set("ID effective T", "-")
+            else:
+                logmanager.set("ID effective T", ID_T)
         else:
             if environment.taskDOFTranslate != 0:#has translation
                 ID_T = ID_t[self.level]
@@ -648,7 +660,7 @@ class taskManager(avango.script.Script):
                 time = self.end_time_rotate_speed - self.start_time_rotate_speed
                 self.current_speed_rotate = div / time
 
-                if self.current_speed_rotate < 10 ** -3:
+                if self.current_speed_rotate < 0.001:
                     self.current_speed_rotate = 0
 
                 if self.current_speed_rotate > self.peak_speed_r:
@@ -765,7 +777,7 @@ class taskManager(avango.script.Script):
         self.first_rotate = True
 
     def setTP(self, index):
-        if self.MT > 0 and self.current_level < environment.config.getTrialsCount():
+        if self.MT > 0 and self.level < environment.config.getLevelsCount():
             self.TP = (ID_t[index]+ID_r[index]) / self.MT
 
     def handle_key(self, key, scancode, action, mods):

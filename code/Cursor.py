@@ -66,10 +66,10 @@ class Cursor(avango.script.Script):
 
         return self
 
-    def evaluate(self):
+    def evaluate(self):#each frame
         # get input
         self.cursor.Transform.value = self.setup.offsetPointer * self.inputMatA.value * avango.gua.make_scale_mat(
-            self.cursor.Transform.value.get_scale())
+            self.cursor.Transform.value.get_scale())#keep scale
         # then reduce
         self.reducePencilMat()
 

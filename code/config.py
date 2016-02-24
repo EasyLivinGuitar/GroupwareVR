@@ -68,7 +68,7 @@ class Config():
     '''bimanual: target can be modified by second pointer (early implementation)'''
     bimanual = False
 
-    def getTrialsCount(self):
+    def getLevelsCount(self):
         a = len(self.W_trans)
         b = len(self.W_rot)
         c = len(self.ID_r)
@@ -93,13 +93,13 @@ class Config():
         else:
             if len(self.A_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_t) == len(self.W_trans):#has enough ID information
-                    for i in range(0, getTrialsCount()):
+                    for i in range(0, getLevelsCount()):
                         self.A_trans.append(2 ** self.ID_t[i] * self.W_trans[i] / 2)
                 else:
                     print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and target widths!")
             if len(self.W_trans) == 0 and self.taskDOFTranslate > 0:
                 if len(self.ID_t) == len(self.A_trans):#has enough ID information
-                    for i in range(0, self.getTrialsCount()):
+                    for i in range(0, self.getLevelsCount()):
                         self.W_trans.append(core.ID_A_to_W(self.ID_t[i], self.A_trans[i]))
                 else:
                     print("\033[91mConfig ERROR\033[0m: Unequal number of given ID's and distances!")
@@ -110,46 +110,46 @@ class Config():
             else:
                 if len(self.A_rot) == 0:
                     if len(self.ID_r) == len(self.W_rot):
-                        for i in range(0, self.getTrialsCount()):
+                        for i in range(0, self.getLevelsCount()):
                             self.A_rot[i] = 2 ** self.ID_r[i] * self.W_rot[i] / 2
                     else:
                         print("Config ERROR: Unequal number of given ID's and rotation target widths!")
                 if len(self.W_rot) == 0 and self.taskDOFRotate>0:
                     if len(self.ID_r) == len(self.A_rot):
-                        for i in range(0, self.getTrialsCount()):
+                        for i in range(0, self.getLevelsCount()):
                             self.W_rot.append(core.ID_A_to_W(self.ID_r[i], self.A_rot[i]))
                     else:
                         print("033[91mConfig ERROR\033[0m: Unequal number of given ID's and rotation distances!")
 
         #calculate ID if missing
         if len(self.ID_t) == 0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 if len(self.A_trans) > 0 and self.A_trans[i] != 0:#can calculate ID for translation
                     self.ID_t.append(core.A_W_to_ID(self.A_trans[i], self.W_trans[i]))
 
         if len(self.ID_r) == 0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 if len(self.A_rot) > 0 and self.A_rot[i] != 0:#can calculate ID for rotation
                     self.ID_r.append(core.A_W_to_ID(self.A_rot[i], self.W_rot[i]))
 
         #fill every list which is not set with zeros
         if len(self.W_trans)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.W_trans.append(0)
         if len(self.W_rot)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.W_rot.append(0)
         if len(self.A_trans)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.A_trans.append(0)
         if len(self.A_rot)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.A_rot.append(0)
         if len(self.ID_t)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.ID_t.append(0)
         if len(self.ID_r)==0:
-            for i in range(0, self.getTrialsCount()):
+            for i in range(0, self.getLevelsCount()):
                 self.ID_r.append(0)
 
         if self.taskDOFRotate > self.virtualDOFRotate:
@@ -173,11 +173,11 @@ class Config():
             self.usePhoneCursor = True
             self.useAutoDetect = False
             self.space3D = True
-            self.W_rot = [10, 10, 10, 10,  10,  10,  10,  10,  10,  10,  10,  10,  10]
-            self.A_rot = [60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-            self.logEffectiveForR = False
-            self.levelSize = 3
-        elif conf_num == 1:#min. rot. Zielgröße bestimmen
+            self.W_rot = [10, 10, 10, 10,  10]#wird im Endeffekt ignoriert, da effektiv berechnet wird
+            self.A_rot = [60, 84, 108,132,156, 180]
+            self.logEffectiveForR = True
+            self.levelSize = 5
+        elif conf_num == 1:#min. rot. Zielgröße bestimmen (nicht möglich mit phone cursor)
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
             self.taskDOFRotate = 3
@@ -185,7 +185,7 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
-            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit config 0 raus gefunden werden
+            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit config 0 bestimmt werden
             self.levelSize = 3
         elif conf_num == 2:#max. trans Genauigkeit bestimmen
             self.disableAxisTranslate = [0, 0, 0]
@@ -195,7 +195,7 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.ID_t = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]#muss erst mit config 1 raus gefunden werden
-            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit config 0 raus gefunden werden
+            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit config 0 bestimmt werden
             self.levelSize = 3
         elif conf_num == 3:#6DOF docking task test
             self.disableAxisTranslate = [0, 0, 0]
