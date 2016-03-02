@@ -260,8 +260,9 @@ class taskManager(avango.script.Script):
                     else:
                         self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
-                    # attach rotationTarget to target
-                    self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
+                    if not config.usePhoneCursor:
+                        # attach rotationTarget to target
+                        self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
 
                 if not config.usePhoneCursor:    
                     # highlight rotation if near target
