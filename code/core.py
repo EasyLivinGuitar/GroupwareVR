@@ -169,8 +169,8 @@ def printHelp():
 '''Settings'''
 class setupEnvironment(avango.script.Script):
     # user id 0 and group 0 is developer flag
-    userId = 0
-    group = 0
+    userId = 2
+    group = 1
 
     ''' difference from screen center to center of tracking'''
     offsetTracking = avango.gua.make_trans_mat(-1.0, -(0.58 + 0.975), 0.26 + 3.48) * avango.gua.make_rot_mat(90.0,0,1,0)

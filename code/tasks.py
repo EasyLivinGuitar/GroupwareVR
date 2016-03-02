@@ -369,7 +369,7 @@ class taskManager(avango.script.Script):
         else:
             self.counter += 1
 
-        if (self.counter) % environment.levelSize == 0 && self.counter>0:
+        if (self.counter) % environment.levelSize == 0 and self.counter>0:
             if environment.config.playLevelUpSound:
                 environment.playSound("levelUp")
             self.level += 1
