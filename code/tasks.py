@@ -147,8 +147,8 @@ class taskManager(avango.script.Script):
 
         if environment.usePhoneCursor:
             self.phone = Phone.Phone(environment)
-            self.target = self.phone.geometry
             self.phone.setErrorMargin(W_trans[self.level])
+            self.target = self.phone.geometry
         else:  
             self.target = loader.create_geometry_from_file(
                 "modified_sphere",
@@ -165,14 +165,19 @@ class taskManager(avango.script.Script):
             sign = -1
             if self.counter % 2 == 1:
                 sign = 1
+
+            #set position of target
             self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
-                * avango.gua.make_scale_mat(W_trans[self.level]))
+                * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))#keep scale
 
             if environment.usePhoneCursor:
                 self.phone_core = Phone.Phone(environment)
                 self.phone_core.setTranslate(avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0))
                 self.phone_core.setErrorMargin(0)
                 environment.everyObject.Children.value.append(self.phone_core.geometry)
+
+            #configure target shadow
+            if environment.usePhoneCursor:   
                 self.targetShadow = loader.create_geometry_from_file(
                     "phone",
                     "/opt/3d_models/targets/phone/phoneAntennaOutlines.obj",
@@ -185,12 +190,14 @@ class taskManager(avango.script.Script):
                     "data/objects/modified_sphere.obj",
                     avango.gua.LoaderFlags.NORMALIZE_SCALE
                 )
+                #may need to apply size here
 
             self.targetShadow.Material.value.set_uniform("Color", avango.gua.Vec4(0.5, 0.5, 0.5, 0.1))
             self.targetShadow.Material.value.EnableBackfaceCulling.value = False
             environment.everyObject.Children.value.append(self.targetShadow)
+            #set position
             self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
-            * avango.gua.make_scale_mat(W_trans[self.level]))
+            * avango.gua.make_scale_mat(self.targetShadow.Transform.value.get_scale()))
                     
 
         # loadMeshes
