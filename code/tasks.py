@@ -328,7 +328,7 @@ class taskManager(avango.script.Script):
             # environment.cam.Transform.connect_from(environment.head_device_sensor.Matrix)
 
     def select(self):
-        print(str(self.level) + "/"+str(config.getLevelsCount())+" "+str(self.counter))
+        print(str(self.level) + "/"+str(config.getLevelsCount()-1)+" "+str(self.counter))
         if self.level < config.getLevelsCount() and not self.cursorContainer.isAnimating():
             # auswerten
             if self.startedTests:
@@ -369,7 +369,7 @@ class taskManager(avango.script.Script):
         else:
             self.counter += 1
 
-        if (self.counter) % environment.levelSize == 0:
+        if (self.counter) % environment.levelSize == 0 && self.counter>0:
             if environment.config.playLevelUpSound:
                 environment.playSound("levelUp")
             self.level += 1
