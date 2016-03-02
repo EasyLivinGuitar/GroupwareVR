@@ -194,10 +194,21 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.ID_t = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]#muss erst mit config 1 raus gefunden werden
-            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]#muss erst mit config 0 bestimmt werden
-            self.levelSize = 3
-        elif conf_num == 3:#6DOF docking task test
+            self.ID_t = [3, 3, 3, 3, 3]#muss erst mit config 1 raus gefunden werden
+            self.A_trans = [1.00, 0.80,0.60, 0.40, 0.20]#muss erst mit config 0 bestimmt werden
+            self.levelSize = 5
+        elif conf_num == 3:#max. trans Genauigkeit bestimmen
+            self.disableAxisTranslate = [0, 0, 0]
+            self.virtualDOFRotate = 0
+            self.taskDOFRotate = 0
+            self.taskDOFTranslate = 1
+            self.usePhoneCursor = True
+            self.space3D = True
+            self.ID_t = [3, 3, 3, 3, 3]#ignoriert, da effektiv
+            self.A_trans = [0.20, 0.20,0.20, 0.20, 0.20]#muss erst mit config 0 bestimmt werden
+            self.logEffectiveForT = True
+            self.levelSize = 5
+        elif conf_num == 4:#6DOF docking task test
             self.disableAxisTranslate = [0, 0, 0]
             self.virtualDOFRotate = 3
             self.virtualDOFTranslate = 3

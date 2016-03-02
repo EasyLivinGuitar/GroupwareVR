@@ -103,6 +103,7 @@ class taskManager(avango.script.Script):
     reversal_points_t = []
     reversal_points_r = []
     error_r = []
+    error_t = []
 
     successful_clicks = 0
 
@@ -533,6 +534,7 @@ class taskManager(avango.script.Script):
     def logSetter(self):
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
+        self.error_t.append(self.getErrorTranslate())
 
         #berechne effektiven ID
         if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
