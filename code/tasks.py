@@ -141,6 +141,7 @@ class taskManager(avango.script.Script):
         self.id_e_r = 0
         self.id_e_t = 0
         self.phone_core = None
+        self.lastEndPos = None
 
         environment.getWindow().on_key_press(self.handle_key)
         environment.setup(graph)
@@ -623,9 +624,16 @@ class taskManager(avango.script.Script):
             logmanager.set("Hit", 0)
 
         logmanager.set("hit type", hit_type)
-        logmanager.set("MT", self.MT)
+        logmanager.set("MT", self.MT)        
 
         if environment.taskDOFTranslate > 0:#has translation
+            logmanager.set("effective end pos", self.cursorNode.Transform.value.get_translate())
+            if self.lastEndPos is not None:
+                logmanager.set("effective A", (self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
+            else:
+                logmanager.set("effective A", 0)
+            self.lastEndPos = self.cursorNode.Transform.value.get_translate()
+             
             logmanager.set("overshoots T", self.overshoots_t)
             logmanager.set("peak acceleration T", self.peak_acceleration_t)
             if self.peak_acceleration_t > 0:
