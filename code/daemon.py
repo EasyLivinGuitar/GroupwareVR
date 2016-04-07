@@ -29,7 +29,7 @@ def init_art_tracking():
 
 	_art.stations[15] = avango.daemon.Station('pointer')
 	_art.stations[1] = avango.daemon.Station('pointer2')
-	_art.stations[10] = avango.daemon.Station('glasses')
+	_art.stations[5] = avango.daemon.Station('glasses')
 
 	device_list.append(_art)
 

@@ -173,13 +173,14 @@ class setupEnvironment(avango.script.Script):
     group = 0
 
     ''' difference from screen center to center of tracking'''
-    offsetTracking = avango.gua.make_trans_mat(-1.0, -(0.58 + 0.975), 0.26 + 3.48) * avango.gua.make_rot_mat(90.0,0,1,0)
+    #offsetTracking = avango.gua.make_trans_mat(-1.0, -(0.58 + 0.975), 0.26 + 3.48) #* avango.gua.make_rot_mat(90.0,0,1,0)
+    offsetTracking = avango.gua.make_trans_mat(0.0, -1.42, 1.6);
 
     '''get the offsets of the pointer.'''
-    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
+    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -1.50)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0.05, 0.40)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 1)
 
     logResults = True
     saveReplay = True
@@ -196,13 +197,15 @@ class setupEnvironment(avango.script.Script):
 
     viewer = avango.gua.nodes.Viewer()
     viewer.DesiredFPS.value = 60
-    resolution = avango.gua.Vec2ui(1920, 1080)
+    resolution = avango.gua.Vec2ui(1920 * 2, 1200)
     # screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
     window = avango.gua.nodes.GlfwWindow(
         Size=resolution,
-        LeftResolution=resolution,
-        RightResolution=resolution,
-        StereoMode=avango.gua.StereoMode.CHECKERBOARD
+        LeftPosition=avango.gua.Vec2ui(150, 0),
+        LeftResolution=avango.gua.Vec2ui(1920 - 150, 1160),
+        RightPosition=avango.gua.Vec2ui(1920, 0),
+        RightResolution=avango.gua.Vec2ui(1920 - 140, 1160),
+        StereoMode=avango.gua.StereoMode.SIDE_BY_SIDE
     )
 
     # sound
@@ -331,8 +334,10 @@ class setupEnvironment(avango.script.Script):
         )
         screen = avango.gua.nodes.ScreenNode(
             Name="screen",
-            Width=1.445,
-            Height=0.81,
+            Width=3,
+            Height=2,
+            # Width=1.445,
+            # Height=0.81,
             Children=[self.cam]
         )
 
@@ -380,6 +385,7 @@ class setupEnvironment(avango.script.Script):
         self.soundRenderer.ListenerPosition.connect_from(self.cam.Transform)
 
         # setup sounds
+
         self.balloonSound.URL.value = "data/sounds/balloon_pop.ogg"
         self.balloonSound.Loop.value = False
         self.balloonSound.Play.value = True
