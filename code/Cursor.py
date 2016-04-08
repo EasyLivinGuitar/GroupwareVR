@@ -31,10 +31,12 @@ class Cursor(avango.script.Script):
         if setup.usePhoneCursor:
             # create cross
             self.cursor = setup.loader.create_geometry_from_file("phone",
-                                                                 "data/objects/phone.obj",
+                                                                 "/opt/3d_models/targets/phone/phone_ao.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
             self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.001)
             self.cursor.Material.value.EnableBackfaceCulling.value = False
+            self.cursor.Material.value.set_uniform("Emissivity", 0.5)
+            self.cursor.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 1))
         else:
             self.cursor = setup.loader.create_geometry_from_file("colored_cross",
                                                                  "data/objects/colored_cross.obj",

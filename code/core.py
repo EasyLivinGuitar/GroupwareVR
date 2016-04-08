@@ -177,10 +177,10 @@ class setupEnvironment(avango.script.Script):
     offsetTracking = avango.gua.make_trans_mat(0.0, -1.28, 1.6);
 
     '''get the offsets of the pointer.'''
-    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
+    offsetPointer = avango.gua.make_trans_mat(0.0, 0.1, -0.60)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 0.2)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 0.35)
 
     logResults = True
     saveReplay = True
@@ -231,7 +231,7 @@ class setupEnvironment(avango.script.Script):
         "\033[32mWelcome to the VR motor movement study application.\033[0m \n"
         +"\033[90mWritten by Benedikt S. Vogler and Marcel Gohsen with the help of Alexander Kulik.\033[0m\n"
         +"To change the parameters and/or change the group and user id open the 'core.py'.")
-        self.timeTillBlack = 0
+        self.timeTempBGleft = 0
         self.permanentBG = False
         # connect time with the timerField
         self.timerField.connect_from(self.timeSensor.Time)
@@ -327,7 +327,7 @@ class setupEnvironment(avango.script.Script):
             WarpMatrixGreenLeft="/opt/lcd-warpmatrices/lcd_2_warp_P1.warp",
             WarpMatrixBlueLeft="/opt/lcd-warpmatrices/lcd_2_warp_P1.warp"
         )
-        
+
         avango.gua.register_window("window", self.window)
 
         self.cam = avango.gua.nodes.CameraNode(
@@ -338,7 +338,9 @@ class setupEnvironment(avango.script.Script):
             EyeDistance=0.064,
             EnableStereo=True,
             OutputWindowName="window",
-            Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5)
+            Transform=avango.gua.make_trans_mat(0.0, 0.0, 3.5),
+            NearClip = 0.1,
+            FarClip = 10.0
         )
         screen = avango.gua.nodes.ScreenNode(
             Name="screen",
@@ -348,7 +350,7 @@ class setupEnvironment(avango.script.Script):
         )
 
         # Sieht netter aus
-        self.res_pass.EnableSSAO.value = True
+        self.res_pass.EnableSSAO.value = False
         self.res_pass.SSAOIntensity.value = 4.0
         self.res_pass.SSAOFalloff.value = 10.0
         self.res_pass.SSAORadius.value = 7.0
@@ -420,10 +422,19 @@ class setupEnvironment(avango.script.Script):
 
     @field_has_changed(timerField)
     def update(self):
-        # print("Update: " +str(self.timeTillBlack))
-        if (not self.permanentBG) and (self.timerField.value >= self.timeTillBlack):
-            # print("back to black: "+str(self.timerField.value) + " >= " + str(self.timeTillBlack))
-            self.res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
+        # print("Update: " +str(self.timeTempBGleft))
+        #apply set background color
+        if (not self.permanentBG) and (self.timerField.value >= self.timeTempBGleft):
+            # print("back to black: "+str(self.timerField.value) + " >= " + str(self.timeTempBGleft))
+            self.res_pass.BackgroundColor.value = avango.gua.Color(0.4, 0.4, 0.4)
+
+    def setBackgroundColor(self, color, time=0):
+        if time > 0: #temporary color
+            self.timeTempBGleft = self.timeSensor.Time.value + time  # aktuelle Zeit plus Zeit
+            self.permanentBG = False
+        else: #permanent color
+            self.permanentBG = True
+        self.res_pass.BackgroundColor.value = color
 
     def getWindow(self):
         return self.window
@@ -449,23 +460,12 @@ class setupEnvironment(avango.script.Script):
 
         logmanager.writeToFile(path + self.taskString + "_trial" + str(self.num_files) + ".csv")
 
-    def setBackgroundColor(self, color, time=0):
-        if time > 0:
-            self.timeTillBlack = self.timeSensor.Time.value + time  # aktuelle Zeit plus Zeit
-            self.permanentBG = False
-        else:
-            self.permanentBG = True
-        self.res_pass.BackgroundColor.value = color
-
     def playSound(self, sound):
         if sound == "balloon":
             self.balloonSound.Play.value = True
-        else:
-            if sound == "miss":
-                self.missSound.Play.value = True
-            else:
-                if sound == "hit_rotate":
-                    self.hitRotateSound.Play.value = True
-                else:
-                    if sound == "levelUp":
-                        self.levelUpSound.Play.value = True
+        elif sound == "miss":
+            self.missSound.Play.value = True
+        elif sound == "hit_rotate":
+            self.hitRotateSound.Play.value = True
+        elif sound == "levelUp":
+            self.levelUpSound.Play.value = True

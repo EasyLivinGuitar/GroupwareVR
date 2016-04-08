@@ -56,11 +56,11 @@ class Config():
     showWhenInTarget = False
 
     '''hit or miss feedback'''
-    provideFeedback = True
+    provideFeedback = False
 
     '''you can log the effective values per level'''
-    logEffectiveForR = False
-    logEffectiveForT = False
+    logEffectiveForR = True
+    logEffectiveForT = True
 
     '''play level up sound'''
     playLevelUpSound = False
@@ -180,8 +180,7 @@ class Config():
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10]#wird im Endeffekt ignoriert, da effektiv berechnet wird
             self.A_rot = [60, 84, 108,132,156, 180]
-            self.logEffectiveForR = True
-            self.levelSize = 20
+            self.levelSize = 3
         elif conf_num == 1:#min. rot. Zielgröße bestimmen (nicht möglich mit phone cursor)
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
@@ -199,19 +198,21 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [0.2, 0.2, 0.2, 0.2, 0.2]#
-            self.A_trans = [1.00, 0.80,0.60, 0.40, 0.20]#
+            self.W_trans = [0.03, 0.03, 0.03, 0.03, 0.03]#
+            self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]#muss erst mit config 0 bestimmt werden
             self.levelSize = 20
-        elif conf_num == 3:#max. trans Genauigkeit bestimmen
+        elif conf_num == 3:#6DOF docking task test
             self.disableAxisTranslate = [0, 0, 0]
-            self.virtualDOFRotate = 0
-            self.taskDOFRotate = 0
+            self.virtualDOFRotate = 3
+            self.virtualDOFTranslate = 3
+            self.taskDOFRotate = 3
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.W_trans = [0.03, 0.03, 0.03, 0.03, 0.03]#
-            self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]#muss erst mit config 0 bestimmt werden
-            self.logEffectiveForT = True
+            self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
+            self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]
+            self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
+            self.A_rot = [60, 84, 108,132,156, 180]
             self.levelSize = 20
         elif conf_num == 4:#6DOF docking task test
             self.disableAxisTranslate = [0, 0, 0]
@@ -221,13 +222,11 @@ class Config():
             self.taskDOFTranslate = 1
             self.usePhoneCursor = True
             self.space3D = True
-            self.logEffectiveForT = True
-            self.logEffectiveForR = True
             self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
             self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]
             self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
             self.A_rot = [60, 84, 108,132,156, 180]
-            self.levelSize = 20
+            self.levelSize = 20    
             #TODO
             #1.remove bounds container if T task
             #2. add bounds to target

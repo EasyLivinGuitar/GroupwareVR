@@ -59,7 +59,7 @@ class taskManager(avango.script.Script):
 
     time2 = 0
 
-    startedTests = False
+    runningTest = False
     endedTests = False
 
     created_logfile = False
@@ -142,6 +142,7 @@ class taskManager(avango.script.Script):
         self.id_e_t = 0
         self.phone_core = None
         self.lastEndPos = None
+        self.leftRight = False
 
         #environment.getWindow().on_key_press(self.handle_key)
         environment.setup(graph)
@@ -160,18 +161,15 @@ class taskManager(avango.script.Script):
                 avango.gua.LoaderFlags.NORMALIZE_SCALE
             )
 
-        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0, 1, 0, 0.8))
+        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0.0, 0.8, 1))#avango.gua.Vec4(0.2, 0.3, 0.2, 1)
+        self.target.Material.value.set_uniform("Emissivity", 0.5)
         self.target.Material.value.EnableBackfaceCulling.value = False
         environment.everyObject.Children.value.append(self.target)
 
         if environment.taskDOFTranslate > 0:#show targets
             # init target position
-            sign = -1
-            if self.counter % 2 == 1:
-                sign = 1
-
             #set position of target
-            self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+            self.target.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
                 * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))#keep scale
 
             if environment.usePhoneCursor:
@@ -200,7 +198,7 @@ class taskManager(avango.script.Script):
             self.targetShadow.Material.value.EnableBackfaceCulling.value = False
             environment.everyObject.Children.value.append(self.targetShadow)
             #set position
-            self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
+            self.targetShadow.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * -environment.A_trans[self.level] / 2, 0, 0)
             * avango.gua.make_scale_mat(self.targetShadow.Transform.value.get_scale()))
                     
 
@@ -260,7 +258,6 @@ class taskManager(avango.script.Script):
     def updateTimer(self):#each frame
 
         if not self.endedTests:
-            highlightR = False
 
             # position rotationTarget
             if environment.taskDOFRotate > 0:
@@ -276,6 +273,7 @@ class taskManager(avango.script.Script):
                         # attach rotationTarget to target
                         self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
 
+                highlightR = False
                 if not config.usePhoneCursor:    
                     # highlight rotation if near target
                     if (environment.showWhenInTarget
@@ -288,8 +286,8 @@ class taskManager(avango.script.Script):
                         self.rotationTarget.setColor()
 
             # highlight translation
-            highlightT = False
             if config.showWhenInTarget:
+                highlightT = False
                 if config.taskDOFTranslate > 0:
                     if self.getErrorTranslate() < W_trans[self.level] / 2:
                         self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
@@ -297,19 +295,19 @@ class taskManager(avango.script.Script):
                     else:
                         self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
 
-            if highlightT:
-                environment.setBackgroundColor(avango.gua.Color(0.1, 0.2, 0.2))
-            if highlightR:
-                environment.setBackgroundColor(avango.gua.Color(0.2, 0.1, 0.0))
+                if highlightT:
+                    environment.setBackgroundColor(avango.gua.Color(0.1, 0.2, 0.2))
+                if highlightR:
+                    environment.setBackgroundColor(avango.gua.Color(0.2, 0.1, 0.0))
 
-            if (highlightT and highlightR) or (config.taskDOFRotate == 0 and highlightT):
-                environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
+                if (highlightT and highlightR) or (config.taskDOFRotate == 0 and highlightT):
+                    environment.setBackgroundColor(avango.gua.Color(0.3, 0.5, 0.1))
 
-            if (not highlightT) and (not highlightR):
-                environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
+                if not highlightT and not highlightR:
+                    environment.setBackgroundColor(avango.gua.Color(0.0, 0.0, 0.0))
 
         # set logging vars
-        if self.startedTests and not self.endedTests:
+        if self.runningTest and not self.endedTests:
             # only set starting time after animation
             if self.startTime == 0 and not self.cursorContainer.isAnimating():
                 self.startTime = self.timer.value
@@ -335,7 +333,7 @@ class taskManager(avango.script.Script):
         print(str(self.level) + "/"+str(config.getLevelsCount()-1)+" "+str(self.counter))
         if self.level < config.getLevelsCount() and not self.cursorContainer.isAnimating():
             # auswerten
-            if self.startedTests:
+            if self.runningTest:
                 self.MT = self.timer.value - self.startTime
                 self.startTime = 0 #reset starting time
                 # hit?
@@ -369,42 +367,46 @@ class taskManager(avango.script.Script):
 
             self.nextSettingStep()
 
+
     def nextSettingStep(self):
-        if not self.startedTests:
-            self.startedTests = True
+        self.leftRight = not self.leftRight
+        if not self.runningTest:#if not running start
+            self.runningTest = True
+            #if self.counter > 0 and self.level < environment.config.getLevelsCount()-1:
+            #    self.counter += 1
         else:
             self.counter += 1
 
-        if (self.counter) % environment.levelSize == 0 and self.counter>0:
-            if environment.config.playLevelUpSound:
-                environment.playSound("levelUp")
-            self.level += 1
+            if self.counter % environment.levelSize == 0 and self.counter > 0:
+                if environment.config.playLevelUpSound:
+                    environment.playSound("levelUp")
+                self.level += 1
+                self.runningTest = False
+
+        if self.runningTest:
+            environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.5))
+        else: 
+            environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
 
         if self.level >= environment.config.getLevelsCount():
             self.endedTests = True
-            environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
             print("Your Score: " + str(self.points))
 
-        # print("P:"+str( pencilRot )+"")
-        # print("T:"+str( self.disksMat.value.get_rotate_scale_corrected() )+"")
         if self.level < config.getLevelsCount():
             if config.taskDOFTranslate > 0:
                 # move target
-                sign = 1
-                if self.counter % 2 == 1:
-                    sign = -1
-
-                self.target.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
+                self.target.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
-                self.phone_core.geometry.Transform.value = (avango.gua.make_trans_mat(sign * environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.level]))
-                self.targetShadow.Transform.value = (avango.gua.make_trans_mat(sign * -environment.A_trans[self.level] / 2, 0, 0)
+                self.targetShadow.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * -environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
 
                 if config.usePhoneCursor:
+                    #self.phone_core.geometry.Transform.value = (avango.gua.make_trans_mat(self.leftRight * environment.A_trans[self.level] / 2, 0, 0)
+                    #* avango.gua.make_scale_mat(W_trans[self.level]))
+                    self.phone_core.setTranslate(avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0))
                     if config.showFramingBorder:
                         Phone.setErrorMargin(self.target, W_trans[self.level])
-                    self.phone_core.setErrorMargin(0)
+                    Phone.setErrorMargin(self.phone_core.geometry, 0)
                     Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
 
             #apply rotation to target
@@ -418,7 +420,7 @@ class taskManager(avango.script.Script):
                             rotation = self.getRandomRotation2D()
                             self.rotationTarget.setRotation(rotation)
                 else:
-                    if self.counter % 2 == 0:  # toggle beetwen
+                    if self.leftRight:  # toggle beetwen
                         distance = environment.A_rot[self.level]
                         if config.taskDOFRotate == 3:
                             rotateAroundX = 1
@@ -428,7 +430,7 @@ class taskManager(avango.script.Script):
                         rotateAroundX = 0
                         distance = 0
 
-                    #apply directly to target if a translation task     
+                    #apply directly to target if a rotation task     
                     if config.usePhoneCursor:
                         if self.phone_core is not None:
                             self.phone_core.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
@@ -555,9 +557,9 @@ class taskManager(avango.script.Script):
 
         #berechne effektiven ID
         if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
-            if environment.logEffectiveForR:
+            if environment.logEffectiveForR and environment.taskDOFRotate>0:
                 self.calcEffectiveID(True, self.level)
-            if environment.logEffectiveForT:
+            if environment.logEffectiveForT and environment.taskDOFTranslate>0:
                 self.calcEffectiveID(False, self.level)
         else:
             self.id_e_r = 0
