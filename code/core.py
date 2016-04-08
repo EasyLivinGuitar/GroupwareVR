@@ -177,10 +177,10 @@ class setupEnvironment(avango.script.Script):
     offsetTracking = avango.gua.make_trans_mat(0.0, -1.28, 1.6);
 
     '''get the offsets of the pointer.'''
-    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -1.50)
+    offsetPointer = avango.gua.make_trans_mat(0.0, 0, -0.50)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 1)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 0.2)
 
     logResults = True
     saveReplay = True
@@ -199,20 +199,7 @@ class setupEnvironment(avango.script.Script):
     viewer.DesiredFPS.value = 60
     resolution = avango.gua.Vec2ui(1920, 1200)
     # screenSize = avango.gua.Vec2(1.235, 0.695) # in meters
-    window = avango.gua.nodes.GlfwWindow(
-        Size=resolution,
-        #LeftPosition=avango.gua.Vec2ui(150, 0),
-        #LeftResolution=avango.gua.Vec2ui(1920 - 150, 1160),
-        #RightPosition=avango.gua.Vec2ui(1920, 0),
-        #RightResolution=avango.gua.Vec2ui(1920 - 140, 1160),
-        StereoMode=avango.gua.StereoMode.SIDE_BY_SIDE,
-        WarpMatrixRedRight="/opt/lcd-warpmatrices/ldc_2_warp_P2.warp",
-        WarpMatrixGreenRight="/opt/lcd-warpmatrices/ldc_2_warp_P2.warp",
-        WarpMatrixBlueRight="/opt/lcd-warpmatrices/ldc_2_warp_P2.warp",
-        WarpMatrixRedLeft="/opt/lcd-warpmatrices/ldc_2_warp_P1.warp",
-        WarpMatrixGreenLeft="/opt/lcd-warpmatrices/ldc_2_warp_P1.warp",
-        WarpMatrixBlueLeft="/opt/lcd-warpmatrices/ldc_2_warp_P1.warp"
-    )
+    #window = avango.gua.nodes.GlfwWindow(
 
     # sound
     soundtraverser = avango.sound.nodes.SoundTraverser()
@@ -326,6 +313,21 @@ class setupEnvironment(avango.script.Script):
                        avango.gua.make_scale_mat(30, 30, 30))
         )
 
+        self.window = avango.gua.nodes.Window(
+            Size=avango.gua.Vec2ui(self.resolution.x*2, self.resolution.y),
+            LeftPosition=avango.gua.Vec2ui(0, 0),
+            LeftResolution=self.resolution,
+            RightPosition=avango.gua.Vec2ui(self.resolution.x, 0),
+            RightResolution=self.resolution,
+            StereoMode=avango.gua.StereoMode.SIDE_BY_SIDE,
+            WarpMatrixRedRight="/opt/lcd-warpmatrices/lcd_2_warp_P2.warp",
+            WarpMatrixGreenRight="/opt/lcd-warpmatrices/lcd_2_warp_P2.warp",
+            WarpMatrixBlueRight="/opt/lcd-warpmatrices/lcd_2_warp_P2.warp",
+            WarpMatrixRedLeft="/opt/lcd-warpmatrices/lcd_2_warp_P1.warp",
+            WarpMatrixGreenLeft="/opt/lcd-warpmatrices/lcd_2_warp_P1.warp",
+            WarpMatrixBlueLeft="/opt/lcd-warpmatrices/lcd_2_warp_P1.warp"
+        )
+        
         avango.gua.register_window("window", self.window)
 
         self.cam = avango.gua.nodes.CameraNode(

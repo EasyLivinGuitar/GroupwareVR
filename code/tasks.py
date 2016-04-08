@@ -143,7 +143,7 @@ class taskManager(avango.script.Script):
         self.phone_core = None
         self.lastEndPos = None
 
-        environment.getWindow().on_key_press(self.handle_key)
+        #environment.getWindow().on_key_press(self.handle_key)
         environment.setup(graph)
 
         if environment.usePhoneCursor:
