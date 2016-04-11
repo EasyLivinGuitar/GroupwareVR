@@ -180,7 +180,7 @@ class Config():
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10]#wird im Endeffekt ignoriert, da effektiv berechnet wird
             self.A_rot = [60, 84, 108,132,156, 180]
-            self.levelSize = 3
+            self.levelSize = 20
         elif conf_num == 1:#min. rot. Zielgröße bestimmen (nicht möglich mit phone cursor)
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3

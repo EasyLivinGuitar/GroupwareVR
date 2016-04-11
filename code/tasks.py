@@ -131,16 +131,16 @@ class taskManager(avango.script.Script):
         self.isInside = False
         self.startTime = 0
         if not environment.usePhoneCursor:
-            self.rotationTarget = RotationTarget.RotationTarget(environment)#use the classical rotation target class
-        self.target = None
+            self.rotationTarget = RotationTarget.RotationTarget(environment)#use the classical rotation targetCore class
+        self.targetCore = None
         self.phone = None
-        self.targetShadow = None
+        self.targetShadow = None #geometry
         self.level = 0 #when started is set to level 1
         self.cursorNode = None
         self.points = 0
         self.id_e_r = 0
         self.id_e_t = 0
-        self.phone_core = None
+        self.phoneTargetHull = None
         self.lastEndPos = None
         self.leftRight = False
 
@@ -153,32 +153,33 @@ class taskManager(avango.script.Script):
                 self.phone.setErrorMargin(W_trans[self.level])
             else:
                 self.phone.setErrorMargin(0)
-            self.target = self.phone.geometry
+            self.targetCore = self.phone.geometry
         else:  
-            self.target = loader.create_geometry_from_file(
+            self.targetCore = loader.create_geometry_from_file(
                 "modified_sphere",
                 "data/objects/modified_sphere.obj",
                 avango.gua.LoaderFlags.NORMALIZE_SCALE
             )
 
-        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0.0, 0.8, 1))#avango.gua.Vec4(0.2, 0.3, 0.2, 1)
-        self.target.Material.value.set_uniform("Emissivity", 0.5)
-        self.target.Material.value.EnableBackfaceCulling.value = False
-        environment.everyObject.Children.value.append(self.target)
+        self.targetCore.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0.0, 0.8, 1))#avango.gua.Vec4(0.2, 0.3, 0.2, 1)
+        self.targetCore.Material.value.set_uniform("Emissivity", 0.5)
+        self.targetCore.Material.value.EnableBackfaceCulling.value = False
+        environment.everyObject.Children.value.append(self.targetCore)
 
         if environment.taskDOFTranslate > 0:#show targets
-            # init target position
-            #set position of target
-            self.target.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
-                * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))#keep scale
+            # init targetCore position
+            #set position of targetCore
+            self.targetCore.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
+                * avango.gua.make_scale_mat(self.targetCore.Transform.value.get_scale()))#keep scale
 
             if environment.usePhoneCursor:
-                self.phone_core = Phone.Phone(environment)
-                self.phone_core.setTranslate(avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0))
-                self.phone_core.setErrorMargin(0)
-                environment.everyObject.Children.value.append(self.phone_core.geometry)
+                if config.showFramingBorder:
+                    self.phoneTargetHull = Phone.Phone(environment)
+                    self.phoneTargetHull.setTranslate(avango.gua.make_trans_mat(-environment.A_trans[self.level] / 2, 0, 0))
+                    self.phoneTargetHull.setErrorMargin(0)
+                    environment.everyObject.Children.value.append(self.phoneTargetHull.geometry)
 
-            #configure target shadow
+            #configure targetCore shadow
             if environment.usePhoneCursor:   
                 self.targetShadow = loader.create_geometry_from_file(
                     "phone",
@@ -249,10 +250,10 @@ class taskManager(avango.script.Script):
     @field_has_changed(inputMatB)
     def matChanged(self):
         if config.bimanual:
-            self.target.Transform.value = (environment.offsetPointer
+            self.targetCore.Transform.value = (environment.offsetPointer
                     * avango.gua.make_trans_mat(self.inputMatB.value.get_translate())
                     * avango.gua.make_rot_mat(self.inputMatB.value.get_rotate_scale_corrected())
-                    * avango.gua.make_scale_mat(self.target.Transform.value.get_scale()))
+                    * avango.gua.make_scale_mat(self.targetCore.Transform.value.get_scale()))
 
     @field_has_changed(timer)
     def updateTimer(self):#each frame
@@ -262,7 +263,7 @@ class taskManager(avango.script.Script):
             # position rotationTarget
             if environment.taskDOFRotate > 0:
                 if environment.taskDOFTranslate == 0\
-                        or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level]):
+                        or (environment.snapRotationTargetIfNear and core.getDistance3D(self.cursorNode.Transform.value, self.targetCore.Transform.value) <= W_trans[self.level]):
                     # attach rotationTarget to cursor
                     if config.usePhoneCursor:
                         self.phone.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
@@ -270,14 +271,14 @@ class taskManager(avango.script.Script):
                         self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.cursorNode.Transform.value.get_translate()))
                 else:
                     if not config.usePhoneCursor:
-                        # attach rotationTarget to target
-                        self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.target.Transform.value.get_translate()))
+                        # attach rotationTarget to targetCore
+                        self.rotationTarget.setTranslate(avango.gua.make_trans_mat(self.targetCore.Transform.value.get_translate()))
 
                 highlightR = False
                 if not config.usePhoneCursor:    
-                    # highlight rotation if near target
+                    # highlight rotation if near targetCore
                     if (environment.showWhenInTarget
-                        and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value) <= W_trans[self.level])
+                        and (config.taskDOFTranslate == 0 or core.getDistance3D(self.cursorNode.Transform.value, self.targetCore.Transform.value) <= W_trans[self.level])
                         and self.getErrorRotate() < environment.W_rot[self.level] / 2
                     ):
                         highlightR = True
@@ -290,10 +291,10 @@ class taskManager(avango.script.Script):
                 highlightT = False
                 if config.taskDOFTranslate > 0:
                     if self.getErrorTranslate() < W_trans[self.level] / 2:
-                        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
+                        self.targetCore.Material.value.set_uniform("Color", avango.gua.Vec4(1, 0.8, 0, 0.8))
                         highlightT = True
                     else:
-                        self.target.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
+                        self.targetCore.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 0, 0.8))
 
                 if highlightT:
                     environment.setBackgroundColor(avango.gua.Color(0.1, 0.2, 0.2))
@@ -391,25 +392,27 @@ class taskManager(avango.script.Script):
         if self.level >= environment.config.getLevelsCount():
             self.endedTests = True
             print("Your Score: " + str(self.points))
-
-        if self.level < config.getLevelsCount():
+        else:
             if config.taskDOFTranslate > 0:
-                # move target
-                self.target.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
-                    * avango.gua.make_scale_mat(W_trans[self.level]))
-                self.targetShadow.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * -environment.A_trans[self.level] / 2, 0, 0)
+                # move targetCore
+                self.targetCore.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0)
                     * avango.gua.make_scale_mat(W_trans[self.level]))
 
+                self.targetShadow.Transform.value = (avango.gua.make_trans_mat((self.leftRight*2-1) * -environment.A_trans[self.level] / 2, 0, 0)
+                    * avango.gua.make_rot_mat(self.targetShadow.Transform.value.get_rotate_scale_corrected())#keep rot
+                    * avango.gua.make_scale_mat(self.targetShadow.Transform.value.get_scale())#keep scale
+                )
+                
                 if config.usePhoneCursor:
-                    #self.phone_core.geometry.Transform.value = (avango.gua.make_trans_mat(self.leftRight * environment.A_trans[self.level] / 2, 0, 0)
+                    #self.phoneTargetHull.geometry.Transform.value = (avango.gua.make_trans_mat(self.leftRight * environment.A_trans[self.level] / 2, 0, 0)
                     #* avango.gua.make_scale_mat(W_trans[self.level]))
-                    self.phone_core.setTranslate(avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0))
                     if config.showFramingBorder:
-                        Phone.setErrorMargin(self.target, W_trans[self.level])
-                    Phone.setErrorMargin(self.phone_core.geometry, 0)
+                        self.phoneTargetHull.setTranslate(avango.gua.make_trans_mat((self.leftRight*2-1) * environment.A_trans[self.level] / 2, 0, 0))
+                        Phone.setErrorMargin(self.phoneTargetHull.geometry, W_trans[self.level])
+                    Phone.setErrorMargin(self.targetCore, 0)
                     Phone.setErrorMargin(self.targetShadow, W_trans[self.level])
 
-            #apply rotation to target
+            #apply rotation to targetCore
             if config.taskDOFRotate > 0:
                 if environment.randomTargets:
                     if config.taskDOFRotate > 0:
@@ -430,10 +433,10 @@ class taskManager(avango.script.Script):
                         rotateAroundX = 0
                         distance = 0
 
-                    #apply directly to target if a rotation task     
+                    #apply directly to targetCore if a rotation task     
                     if config.usePhoneCursor:
-                        if self.phone_core is not None:
-                            self.phone_core.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
+                        if self.phoneTargetHull is not None:
+                            self.phoneTargetHull.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         self.phone.setRotation(avango.gua.make_rot_mat(distance, rotateAroundX, 1, 0))
                         if config.showFramingBorder:
                             self.phone.setErrorMargin(W_trans[self.level])
@@ -444,14 +447,14 @@ class taskManager(avango.script.Script):
                         self.rotationTarget.setDisksTransMats(targetDiameter[self.level])
 
             if environment.animationPreview:
-                if self.target is None:
+                if self.targetCore is None:
                     self.cursorContainer.animateTo(
                         None,
                         self.rotationTarget.getRotate()
                     )
                 else:
                     self.cursorContainer.animateTo(
-                        self.target.Transform.value.get_translate(),
+                        self.targetCore.Transform.value.get_translate(),
                         self.rotationTarget.getRotate()
                     )
 
@@ -460,14 +463,14 @@ class taskManager(avango.script.Script):
         if environment.taskDOFRotate > 0:
             return core.getRotationError1D(
                 self.cursorNode.Transform.value.get_rotate_scale_corrected(),
-                self.target.Transform.value.get_rotate_scale_corrected()
+                self.targetCore.Transform.value.get_rotate_scale_corrected()
             )
         return 0
 
     '''Get the translation error from the cursor to the target in m'''
     def getErrorTranslate(self):
         if environment.taskDOFTranslate > 0:
-            return core.getDistance3D(self.cursorNode.Transform.value, self.target.Transform.value)
+            return core.getDistance3D(self.cursorNode.Transform.value, self.targetCore.Transform.value)
         else:
             return 0
 
@@ -489,7 +492,7 @@ class taskManager(avango.script.Script):
                 self.result_file = open(path + environment.taskString + "_trial" + str(self.num_files) + ".replay",
                                         "a+")
                 if environment.taskDOFTranslate > 0:
-                    targetString = "Target Pos: \n" + str(self.target.Transform.value) + "\n"
+                    targetString = "Target Pos: \n" + str(self.targetCore.Transform.value) + "\n"
                 else:
                     targetString = "Target Pos: \n" + str(self.cursorNode.Transform.value) + "\n"
 
@@ -501,7 +504,7 @@ class taskManager(avango.script.Script):
 
     def checkTranslateOvershoots(self):
         if environment.taskDOFTranslate > 0:
-            if config.usePhoneCursor and self.getErrorTranslate() < 0.01 or (not config.usePhoneCursor and self.getErrorTranslate() < self.target.Transform.value.get_scale().x / 2):
+            if config.usePhoneCursor and self.getErrorTranslate() < 0.01 or (not config.usePhoneCursor and self.getErrorTranslate() < self.targetCore.Transform.value.get_scale().x / 2):
                 self.overshootInside_translate = True
             else:
                 if self.overshootInside_translate:
@@ -589,15 +592,15 @@ class taskManager(avango.script.Script):
         if environment.taskDOFTranslate > 0:
             logmanager.set(
                 "movement direction",
-                self.target.Transform.value.get_translate() - self.targetShadow.Transform.value.get_translate()
+                self.targetCore.Transform.value.get_translate() - self.targetShadow.Transform.value.get_translate()
             )
         
         if environment.taskDOFTranslate > 0:
-            logmanager.set("target distance T [m]", environment.A_trans[self.level])
-            logmanager.set("target width T [m]", W_trans[self.level])
+            logmanager.set("targetCore distance T [m]", environment.A_trans[self.level])
+            logmanager.set("targetCore width T [m]", W_trans[self.level])
         if environment.taskDOFRotate > 0:
-            logmanager.set("target distance R [m]", environment.A_rot[self.level])
-            logmanager.set("target width R [m]", W_rot[self.level])
+            logmanager.set("targetCore distance R [m]", environment.A_rot[self.level])
+            logmanager.set("targetCore width R [m]", W_rot[self.level])
 
         ID_R = 0
         ID_T = 0
