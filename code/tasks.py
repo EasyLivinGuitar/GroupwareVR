@@ -104,6 +104,9 @@ class taskManager(avango.script.Script):
     reversal_points_r = []
     error_r = []
     error_t = []
+    eff_A_trans = []
+    eff_A_rot = []
+
 
     successful_clicks = 0
 
@@ -142,6 +145,7 @@ class taskManager(avango.script.Script):
         self.id_e_t = 0
         self.phoneTargetHull = None
         self.lastEndPos = None
+        self.lastEndRot = None
         self.leftRight = False
 
         #environment.getWindow().on_key_press(self.handle_key)
@@ -364,6 +368,7 @@ class taskManager(avango.script.Script):
                     self.resetValues()
             else:
                 self.lastEndPos = self.cursorNode.Transform.value.get_translate()
+                self.lastEndRot = self.cursorNode.Transform.value.get_rotate_scale_corrected()
             self.button.value = False
 
             self.nextSettingStep()
@@ -546,17 +551,29 @@ class taskManager(avango.script.Script):
         # berechne effektive breite
         W_e = 4.133*sd
 
+        #effektive amplitude translate
+        sumOfA = 0
+        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
+            if rot:
+                 sumOfA += self.eff_A_rot[i]
+            else: 
+                 sumOfA += self.eff_A_trans[i]
+
+        A_e = sumOfA/environment.levelSize # jedes ereignis ist gleich wahrscheinlich
+
         # effektiver ID
         if rot: 
-            self.id_e_r = math.log(2*environment.A_rot[level] / W_e, 2)
+            self.id_e_r = math.log(2*A_e / W_e, 2)
         else:
-            self.id_e_t = math.log(2*environment.A_trans[level] / W_e, 2)
+            self.id_e_t = math.log(2*A_e / W_e, 2)
 
     # sets the fields in the logmanager
     def logSetter(self):
         # record the rotation error
         self.error_r.append(self.getErrorRotate())
         self.error_t.append(self.getErrorTranslate())
+        self.eff_A_trans.append((self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
+        self.eff_A_rot.append(core.getRotationError1D(self.lastEndRot, self.cursorNode.Transform.value.get_rotate_scale_corrected()))
 
         #berechne effektiven ID
         if environment.levelSize > 1 and self.counter % environment.levelSize == environment.levelSize - 1:# is at end of level
@@ -642,7 +659,7 @@ class taskManager(avango.script.Script):
 
         if environment.taskDOFTranslate > 0:#has translation
             logmanager.set("effective end pos", self.cursorNode.Transform.value.get_translate())
-            logmanager.set("effective A [m]", (self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
+            logmanager.set("effective A trans [m]", (self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
             self.lastEndPos = self.cursorNode.Transform.value.get_translate()
              
             logmanager.set("overshoots T", self.overshoots_t)
@@ -656,7 +673,10 @@ class taskManager(avango.script.Script):
             logmanager.set("first reversal T", self.first_reversal_point_t)
             logmanager.set("reversal points T", len(self.reversal_points_t))
 
-        if environment.taskDOFRotate > 0:#has rotation    
+        if environment.taskDOFRotate > 0:#has rotation  
+            logmanager.set("effective end rot", self.cursorNode.Transform.value.get_rotate_scale_corrected())
+            logmanager.set("effective A rot [m]", core.getRotationError1D(self.lastEndRot, self.cursorNode.Transform.value.get_rotate_scale_corrected())) 
+            self.lastEndRot = self.cursorNode.Transform.value.get_rotate_scale_corrected()
             logmanager.set("overshoots R", self.overshoots_r)
             logmanager.set("peak acceleration R [°/s^2]", self.peak_acceleration_r)
 

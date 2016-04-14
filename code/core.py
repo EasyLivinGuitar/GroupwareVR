@@ -80,7 +80,7 @@ def  get_euler_angles(q):
 
     return yaw, pitch, roll
 
-
+#returns array with error on each axis
 def getRotationError3D(aMat, bMat):
     # quaternion to euler has an error with the z axis
     a = aMat.get_rotate_scale_corrected()
@@ -169,7 +169,7 @@ def printHelp():
 '''Settings'''
 class setupEnvironment(avango.script.Script):
     # user id 0 and group 0 is developer flag
-    userId = 0
+    userId = 2
     group = 0
 
     ''' difference from screen center to center of tracking'''
