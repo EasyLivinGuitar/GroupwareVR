@@ -9,6 +9,7 @@ import config
 import math
 import os.path
 import glob
+import LogManager
 
 from examples_common.GuaVE import GuaVE
 from avango.script import field_has_changed
@@ -222,6 +223,8 @@ class setupEnvironment(avango.script.Script):
     timeSensor = avango.nodes.TimeSensor()
     timerField = avango.SFFloat()
 
+    logmanager = None
+
     def __init__(self):
         self.super(setupEnvironment).__init__()
 
@@ -279,7 +282,7 @@ class setupEnvironment(avango.script.Script):
             else:
                 self.taskString = str(testConfigNo)+"_rotation"
 
-        self.created_logfile = False
+        self.logmanager = LogManager.LogManager(self.taskString)
 
         return self
 
@@ -439,7 +442,7 @@ class setupEnvironment(avango.script.Script):
     def getWindow(self):
         return self.window
 
-    def getPath(self):
+    def getFolderPath(self):
         path = "results/" + self.taskString + "_T" + str(self.getDOFTranslateReal()) + "_" + str(
             self.getDOFTranslateVirtual()) + "_R" + str(self.taskDOFRotate) + "/"
 
@@ -448,17 +451,6 @@ class setupEnvironment(avango.script.Script):
             os.makedirs(path)
 
         return path
-
-    def logData(self, logmanager):
-        path = self.getPath()
-
-        # fint out which file number
-        if not self.created_logfile:  # create File
-            self.num_files = len(glob.glob1(path, "*.csv"))
-            # if os.path.isfile(os.path.join(path, f)):
-            self.created_logfile = True
-
-        logmanager.writeToFile(path + self.taskString + "_trial" + str(self.num_files) + ".csv")
 
     def playSound(self, sound):
         if sound == "balloon":

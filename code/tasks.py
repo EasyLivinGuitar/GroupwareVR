@@ -50,7 +50,7 @@ graph = avango.gua.nodes.SceneGraph(Name="scenegraph")  # Create Graph
 loader = avango.gua.nodes.TriMeshLoader()  # Create Loader
 pencil_transform = avango.gua.nodes.TransformNode()
 
-logmanager = LogManager.LogManager()
+logmanager = environment.logmanager
 
 class taskManager(avango.script.Script):
     button = avango.SFBool()
@@ -364,7 +364,7 @@ class taskManager(avango.script.Script):
                 if environment.logResults and not self.endedTests:
                     print("  "+str(self.level) + "/"+str(config.getLevelsCount())+" "+str(self.counter))
                     self.logSetter()
-                    environment.logData(logmanager)
+                    logmanager.writeToFile(environment.getFolderPath())
                     self.resetValues()
             else:
                 self.lastEndPos = self.cursorNode.Transform.value.get_translate()
@@ -486,7 +486,7 @@ class taskManager(avango.script.Script):
         return avango.gua.make_rot_mat(random.uniform(0.0, environment.A_rot[self.level]), 0, random.randint(0, 1), 0)
 
     def logReplay(self):
-        path = environment.getPath()
+        path = environment.getFolderPath()
 
         if not self.endedTests:
             if not self.created_replayfile:  # create File
