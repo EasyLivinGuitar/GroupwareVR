@@ -2,6 +2,7 @@
 import math
 import glob
 
+import sys
 import avango
 import avango.daemon
 import avango.gua
@@ -13,44 +14,6 @@ import Cursor
 import LogManager
 import random
 from avango.script import field_has_changed
-
-environment = core.setupEnvironment().create()
-config = environment.config
-
-# fitt's law parameter
-
-ID_t = environment.ID_t
-ID_r = environment.ID_r
-
-W_rot = environment.W_rot
-W_trans = environment.W_trans
-
-
-targetDiameter = []
-for i in range(0, config.getLevelsCount()):
-    #if not environment.randomTargets:
-    #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
-    #else:
-    #    W_rot.append(i*2+2)  # in degrees
-    #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
-
-    # add ID wenn es noch einen Rotations-Anteil gibt
-    if environment.taskDOFRotate > 0:
-        targetDiameter.append(2 * environment.r * math.tan(environment.W_rot[i] * math.pi / 180))  # größe (Durchmesser) der Gegenkathete auf dem kreisumfang
-
-THRESHHOLD_TRANSLATE = 0.3
-FRAMES_FOR_AUTODETECT_TRANSLATE = 3
-
-FRAMES_FOR_AUTODETECT_ROTATE = 3
-THRESHHOLD_ROTATE = 60
-FRAMES_FOR_SPEED = 4  # How many frames taken to calculate speed and acceleration
-
-graph = avango.gua.nodes.SceneGraph(Name="scenegraph")  # Create Graph
-loader = avango.gua.nodes.TriMeshLoader()  # Create Loader
-pencil_transform = avango.gua.nodes.TransformNode()
-
-logmanager = environment.logmanager
 
 class taskManager(avango.script.Script):
     button = avango.SFBool()
@@ -594,7 +557,7 @@ class taskManager(avango.script.Script):
                 self.successful_clicks += 1
 
         logmanager.set("User Id", environment.userId)
-        logmanager.set("Group", environment.group)
+        logmanager.set("Group", environment.groupId)
 
         if environment.space3D:
             logmanager.set("DOF real T", 3)
@@ -838,6 +801,48 @@ class taskManager(avango.script.Script):
                 else:
                     self.button.value = True
 
-
 if __name__ == '__main__':
+    environment = core.setupEnvironment()
+
+    if len(sys.argv) > 2:
+        environment.userId = int(sys.argv[1])
+        environment.groupId = int(sys.argv[2])
+
+    environment.create()
+    config = environment.config
+
+    # fitt's law parameter
+
+    ID_t = environment.ID_t
+    ID_r = environment.ID_r
+
+    W_rot = environment.W_rot
+    W_trans = environment.W_trans
+
+
+    targetDiameter = []
+    for i in range(0, config.getLevelsCount()):
+        #if not environment.randomTargets:
+        #    W_rot.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_rot[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+        #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+        #else:
+        #    W_rot.append(i*2+2)  # in degrees
+        #    W_trans.append(core.IDtoW(ID[int(i/environment.levelSize)], environment.A_trans[int(i/environment.levelSize)]))  # in degrees, Fitt's Law umgeformt nach W
+
+        # add ID wenn es noch einen Rotations-Anteil gibt
+        if environment.taskDOFRotate > 0:
+            targetDiameter.append(2 * environment.r * math.tan(environment.W_rot[i] * math.pi / 180))  # größe (Durchmesser) der Gegenkathete auf dem kreisumfang
+
+    THRESHHOLD_TRANSLATE = 0.3
+    FRAMES_FOR_AUTODETECT_TRANSLATE = 3
+
+    FRAMES_FOR_AUTODETECT_ROTATE = 3
+    THRESHHOLD_ROTATE = 60
+    FRAMES_FOR_SPEED = 4  # How many frames taken to calculate speed and acceleration
+
+    graph = avango.gua.nodes.SceneGraph(Name="scenegraph")  # Create Graph
+    loader = avango.gua.nodes.TriMeshLoader()  # Create Loader
+    pencil_transform = avango.gua.nodes.TransformNode()
+
+    logmanager = environment.logmanager    
     taskManager = taskManager()

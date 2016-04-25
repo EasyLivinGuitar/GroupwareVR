@@ -170,8 +170,8 @@ def printHelp():
 '''Settings'''
 class setupEnvironment(avango.script.Script):
     # user id 0 and group 0 is developer flag
-    userId = 2
-    group = 0
+    userId = 0
+    groupId = 0
 
     ''' difference from screen center to center of tracking'''
     #offsetTracking = avango.gua.make_trans_mat(-1.0, -(0.58 + 0.975), 0.26 + 3.48) #* avango.gua.make_rot_mat(90.0,0,1,0)
@@ -233,7 +233,7 @@ class setupEnvironment(avango.script.Script):
         print(
         "\033[32mWelcome to the VR motor movement study application.\033[0m \n"
         +"\033[90mWritten by Benedikt S. Vogler and Marcel Gohsen with the help of Alexander Kulik.\033[0m\n"
-        +"To change the parameters and/or change the group and user id open the 'core.py'.")
+        +"User id and group id are set via first two launch parameters. Currently: "+str(self.userId)+"-"+str(self.groupId))
         self.timeTempBGleft = 0
         self.permanentBG = False
         # connect time with the timerField
