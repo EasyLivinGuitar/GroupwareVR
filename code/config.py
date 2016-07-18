@@ -170,7 +170,7 @@ class Config():
     '''possible to set distances/amplitudes or ID's or target widths, rest gets calculated'''
     def setConfig(self, conf_num):
         # Slot 0
-        if conf_num == 0:#max. rotationswinkel bestimmen
+        if conf_num == 1:#max. rotationswinkel bestimmen
             self.disableAxisTranslate = [1, 1, 1]
             self.virtualDOFRotate = 3
             self.taskDOFRotate = 3
@@ -179,9 +179,9 @@ class Config():
             self.useAutoDetect = False
             self.space3D = True
             self.W_rot = [10, 10, 10, 10,  10]#wird im Endeffekt ignoriert, da effektiv berechnet wird
-            self.A_rot = [60, 84, 108,132,156]
+            self.A_rot = [108, 108, 108,108,108]
             self.levelSize = 20
-        elif conf_num == 1:#max. trans Genauigkeit bestimmen
+        elif conf_num == 2:#max. trans Genauigkeit bestimmen
             self.disableAxisTranslate = [0, 0, 0]
             self.virtualDOFRotate = 0
             self.taskDOFRotate = 0
@@ -189,9 +189,9 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = True
             self.W_trans = [0.03, 0.03, 0.03, 0.03, 0.03]#wird im Endeffekt ignoriert, da effektiv berechnet wird
-            self.A_trans = [0.10, 0.30, 0.40, 0.50,0.60]
+            self.A_trans = [0.35, 0.35, 0.35, 0.35,0.35]
             self.levelSize = 20
-        elif conf_num == 2:#max. trans Genauigkeit bestimmen auf Tisch
+        elif conf_num == 3:#max. trans Genauigkeit bestimmen auf Tisch
             self.disableAxisTranslate = [0, 1, 0]
             self.virtualDOFRotate = 0
             self.taskDOFRotate = 0
@@ -199,9 +199,9 @@ class Config():
             self.usePhoneCursor = True
             self.space3D = False
             self.W_trans = [0.03, 0.03, 0.03, 0.03, 0.03]#wird im Endeffekt ignoriert, da effektiv berechnet wird
-            self.A_trans = [0.10, 0.30, 0.40, 0.50,0.60]
+            self.A_trans = [0.35, 0.35, 0.35, 0.35,0.35]
             self.levelSize = 20
-        elif conf_num == 3:#6DOF docking task
+        elif conf_num == 4 or conf_num == 0:#6DOF docking task
             self.disableAxisTranslate = [0, 0, 0]
             self.virtualDOFRotate = 3
             self.virtualDOFTranslate = 3
@@ -214,42 +214,42 @@ class Config():
             self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
             self.A_rot = [108, 108, 108,108,108, 108]
             self.levelSize = 20
-        elif conf_num == 4:#6DOF docking task test
-            self.disableAxisTranslate = [0, 0, 0]
-            self.virtualDOFRotate = 3
-            self.virtualDOFTranslate = 3
-            self.taskDOFRotate = 3
-            self.taskDOFTranslate = 1
-            self.usePhoneCursor = True
-            self.space3D = True
-            self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
-            self.A_trans = [0.35, 0.35,0.35, 0.35, 0.35]
-            self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
-            self.A_rot = [60, 84, 108,132,156]
-            self.levelSize = 20
-        elif conf_num == 5:#min. rot. Zielgröße bestimmen (nicht möglich mit phone cursor)
-            self.disableAxisTranslate = [1, 1, 1]
-            self.virtualDOFRotate = 3
-            self.taskDOFRotate = 3
-            self.taskDOFTranslate = 0
-            self.usePhoneCursor = True
-            self.space3D = True
-            self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
-            self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit config 0 bestimmt werden
-            self.levelSize = 20
-        elif conf_num == 6:#6DOF docking task test
-            self.disableAxisTranslate = [0, 0, 0]
-            self.virtualDOFRotate = 3
-            self.virtualDOFTranslate = 3
-            self.taskDOFRotate = 3
-            self.taskDOFTranslate = 1
-            self.usePhoneCursor = True
-            self.space3D = True
-            self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
-            self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]
-            self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
-            self.A_rot = [60, 84, 108,132,156, 180]
-            self.levelSize = 20    
+        # elif conf_num == 4:#6DOF docking task test
+        #     self.disableAxisTranslate = [0, 0, 0]
+        #     self.virtualDOFRotate = 3
+        #     self.virtualDOFTranslate = 3
+        #     self.taskDOFRotate = 3
+        #     self.taskDOFTranslate = 1
+        #     self.usePhoneCursor = True
+        #     self.space3D = True
+        #     self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
+        #     self.A_trans = [0.35, 0.35,0.35, 0.35, 0.35]
+        #     self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
+        #     self.A_rot = [60, 84, 108,132,156]
+        #     self.levelSize = 20
+        # elif conf_num == 5:#min. rot. Zielgröße bestimmen (nicht möglich mit phone cursor)
+        #     self.disableAxisTranslate = [1, 1, 1]
+        #     self.virtualDOFRotate = 3
+        #     self.taskDOFRotate = 3
+        #     self.taskDOFTranslate = 0
+        #     self.usePhoneCursor = True
+        #     self.space3D = True
+        #     self.W_rot = [50, 45, 40, 35,  30,  25,  20,  15,  10,  5,  4,  3,  2]
+        #     self.A_rot = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]#muss erst mit config 0 bestimmt werden
+        #     self.levelSize = 20
+        # elif conf_num == 6:#6DOF docking task test
+        #     self.disableAxisTranslate = [0, 0, 0]
+        #     self.virtualDOFRotate = 3
+        #     self.virtualDOFTranslate = 3
+        #     self.taskDOFRotate = 3
+        #     self.taskDOFTranslate = 1
+        #     self.usePhoneCursor = True
+        #     self.space3D = True
+        #     self.W_trans = [.035, .030, .028, .024, .022]#not rendered with phone cursor
+        #     self.A_trans = [0.60, 0.50,0.40, 0.30, 0.10]
+        #     self.W_rot = [50, 45, 40, 35,  30]#not rendered with phone cursor
+        #     self.A_rot = [60, 84, 108,132,156, 180]
+        #     self.levelSize = 20    
             #TODO
             #1.remove bounds container if T task
             #2. add bounds to target

@@ -29,7 +29,8 @@ def init_art_tracking():
 
 	_art.stations[16] = avango.daemon.Station('pointer')
 	_art.stations[1] = avango.daemon.Station('pointer2')
-	_art.stations[5] = avango.daemon.Station('glasses')
+	_art.stations[5] = avango.daemon.Station('glasses_old')
+	_art.stations[2] = avango.daemon.Station('glasses')
 
 	device_list.append(_art)
 
@@ -118,17 +119,24 @@ def init_mouse():
 
 
 def init_keyboard():
-	keyboard_name = os.popen("ls /dev/input/by-id | grep \"-event-kbd\" | sed -e \'s/\"//g\'  | cut -d\" \" -f4").read()
 
-	keyboard_name = keyboard_name.split()
+	#keyboard_name = os.popen("ls /dev/input/by-id | grep \"-event-kbd\" | sed -e \'s/\"//g\'  | cut -d\" \" -f4").read()
+	_string = os.popen(
+		"/opt/avango/vr_application_lib/tools/list-ev -s | grep \"USB Compliant Keypad\" | sed -e \'s/\"//g\'  | cut -d\" \" -f4").read()
+	
+	keyboard_name = _string.split()
+	# if len(_string) > 0:
+	# 	keyboard_name = _string[0]
+	#keyboard_name = keyboard_name.split()
 
 	for i, name in enumerate(keyboard_name):
 		keyboard = avango.daemon.HIDInput()
-		keyboard.station = avango.daemon.Station('gua-device-keyboard' + str(i))
-		keyboard.device = "/dev/input/by-id/" + name
+		keyboard.station = avango.daemon.Station('gua-device-keyboard')# '''+ str(i)''')
+		#keyboard.device = "/dev/input/by-id/" + name
+		keyboard.device = name
 
-		keyboard.buttons[0] = "EV_KEY::KEY_Q"
-		keyboard.buttons[1] = "EV_KEY::KEY_W"
+		keyboard.buttons[0] = "EV_KEY::KEY_KP0"
+		keyboard.buttons[1] = "EV_KEY::KEY_ENTER"
 		keyboard.buttons[2] = "EV_KEY::KEY_E"
 		keyboard.buttons[3] = "EV_KEY::KEY_R"
 		keyboard.buttons[4] = "EV_KEY::KEY_T"

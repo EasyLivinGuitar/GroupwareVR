@@ -187,7 +187,7 @@ class taskManager(avango.script.Script):
 
         # listen to button
         button_sensor = avango.daemon.nodes.DeviceSensor(DeviceService=avango.daemon.DeviceService())
-        button_sensor.Station.value = "device-pointer"
+        button_sensor.Station.value = "gua-device-keyboard"
         self.button.connect_from(button_sensor.Button0)
 
         # listen to tracked position of pointers
@@ -303,6 +303,11 @@ class taskManager(avango.script.Script):
             # auswerten
             if self.runningTest:
                 self.MT = self.timer.value - self.startTime
+
+                if(self.MT < 0.5):
+                    print("Too fast.")
+                    return
+
                 self.startTime = 0 #reset starting time
                 # hit?
                 if self.getErrorRotate() <= environment.W_rot[self.level] / 2 \
@@ -353,9 +358,11 @@ class taskManager(avango.script.Script):
                 self.runningTest = False
 
         if self.runningTest:
-            environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.5))
+            #environment.setBackgroundColor(avango.gua.Color(0.5, 0.5, 0.5))
+            self.targetCore.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0.0, 0.8, 1))
         else: 
-            environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
+            self.targetCore.Material.value.set_uniform("Color", avango.gua.Vec4(0.8, 0.8, 0.8, 1))
+            #environment.setBackgroundColor(avango.gua.Color(0, 0, 0.5))
 
         if self.level >= environment.config.getLevelsCount():
             self.endedTests = True
@@ -490,8 +497,9 @@ class taskManager(avango.script.Script):
     '''returns the effective ID for the colected values. can return for rotation or translation'''
     def calcEffectiveID(self, rot, level):
         # berechne erwartungswert
+        print("Level:"+str(level))
         erw = 0
-        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
+        for i in range(environment.levelSize*level, environment.levelSize*(level+1)):
             if rot:
                 erw += self.error_r[i]
             else: 
@@ -500,7 +508,7 @@ class taskManager(avango.script.Script):
 
         # berechne varianz
         varianz = 0
-        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
+        for i in range(environment.levelSize*(level), environment.levelSize*(level+1)):
             if rot:
                  varianz += (self.error_r[i]-erw)*(self.error_r[i]-erw)
             else: 
@@ -516,7 +524,7 @@ class taskManager(avango.script.Script):
 
         #effektive amplitude translate
         sumOfA = 0
-        for i in range(environment.levelSize*(level-1), environment.levelSize*level):
+        for i in range(environment.levelSize*(level), environment.levelSize*(level+1)):
             if rot:
                  sumOfA += self.eff_A_rot[i]
             else: 
@@ -569,18 +577,18 @@ class taskManager(avango.script.Script):
         logmanager.set("DOF virtual R", environment.virtualDOFRotate)
         logmanager.set("task R DOF", environment.taskDOFRotate)
         logmanager.set("task T DOF", environment.taskDOFTranslate)
-        if environment.taskDOFTranslate > 0:
-            logmanager.set(
-                "movement direction",
-                self.targetCore.Transform.value.get_translate() - self.targetShadow.Transform.value.get_translate()
-            )
+        # if environment.taskDOFTranslate > 0:
+        #     logmanager.set(
+        #         "movement direction",
+        #         self.targetCore.Transform.value.get_translate() - self.targetShadow.Transform.value.get_translate()
+        #     )
         
-        if environment.taskDOFTranslate > 0:
-            logmanager.set("targetCore distance T [m]", environment.A_trans[self.level])
-            logmanager.set("targetCore width T [m]", W_trans[self.level])
-        if environment.taskDOFRotate > 0:
-            logmanager.set("targetCore distance R [m]", environment.A_rot[self.level])
-            logmanager.set("targetCore width R [m]", W_rot[self.level])
+        #if environment.taskDOFTranslate > 0:
+        logmanager.set("target distance T [m]", environment.A_trans[self.level])
+        logmanager.set("target width T [m]", W_trans[self.level])
+    #if environment.taskDOFRotate > 0:
+        logmanager.set("target distance R [m]", environment.A_rot[self.level])
+        logmanager.set("target width R [m]", W_rot[self.level])
 
         ID_R = 0
         ID_T = 0
@@ -620,38 +628,38 @@ class taskManager(avango.script.Script):
         logmanager.set("hit type", hit_type)
         logmanager.set("MT [s]", self.MT)        
 
-        if environment.taskDOFTranslate > 0:#has translation
-            logmanager.set("effective end pos", self.cursorNode.Transform.value.get_translate())
-            logmanager.set("effective A trans [m]", (self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
-            self.lastEndPos = self.cursorNode.Transform.value.get_translate()
-             
-            logmanager.set("overshoots T", self.overshoots_t)
-            logmanager.set("peak acceleration T [m/s^2]", self.peak_acceleration_t)
-            if self.peak_acceleration_t > 0:
-                logmanager.set("movement continuity T", self.first_reversal_acceleration_t / self.peak_acceleration_t)
-            else:
-                logmanager.set("movement continuity T", "#div0")
-            logmanager.set("error T [m]", self.getErrorTranslate())
-            logmanager.set("peak speed T [m/s]", self.peak_speed_t)
-            logmanager.set("first reversal T", self.first_reversal_point_t)
-            logmanager.set("reversal points T", len(self.reversal_points_t))
+        #if environment.taskDOFTranslate > 0:#has translation
+        logmanager.set("effective end pos", self.cursorNode.Transform.value.get_translate())
+        logmanager.set("effective A trans [m]", (self.lastEndPos - self.cursorNode.Transform.value.get_translate()).length())
+        self.lastEndPos = self.cursorNode.Transform.value.get_translate()
+         
+        logmanager.set("overshoots T", self.overshoots_t)
+        logmanager.set("peak acceleration T [m/s^2]", self.peak_acceleration_t)
+        if self.peak_acceleration_t > 0:
+            logmanager.set("movement continuity T", self.first_reversal_acceleration_t / self.peak_acceleration_t)
+        else:
+            logmanager.set("movement continuity T", "#div0")
+        logmanager.set("error T [m]", self.getErrorTranslate())
+        logmanager.set("peak speed T [m/s]", self.peak_speed_t)
+        logmanager.set("first reversal T", self.first_reversal_point_t)
+        logmanager.set("reversal points T", len(self.reversal_points_t))
 
-        if environment.taskDOFRotate > 0:#has rotation  
-            logmanager.set("effective end rot", self.cursorNode.Transform.value.get_rotate_scale_corrected())
-            logmanager.set("effective A rot [m]", core.getRotationError1D(self.lastEndRot, self.cursorNode.Transform.value.get_rotate_scale_corrected())) 
-            self.lastEndRot = self.cursorNode.Transform.value.get_rotate_scale_corrected()
-            logmanager.set("overshoots R", self.overshoots_r)
-            logmanager.set("peak acceleration R [°/s^2]", self.peak_acceleration_r)
+        #if environment.taskDOFRotate > 0:#has rotation  
+        logmanager.set("effective end rot", self.cursorNode.Transform.value.get_rotate_scale_corrected())
+        logmanager.set("effective A rot [m]", core.getRotationError1D(self.lastEndRot, self.cursorNode.Transform.value.get_rotate_scale_corrected())) 
+        self.lastEndRot = self.cursorNode.Transform.value.get_rotate_scale_corrected()
+        logmanager.set("overshoots R", self.overshoots_r)
+        logmanager.set("peak acceleration R [°/s^2]", self.peak_acceleration_r)
 
-            if self.peak_acceleration_r > 0:
-                logmanager.set("movement continuity R", self.first_reversal_acceleration_rotate / self.peak_acceleration_r)
-            else:
-                logmanager.set("movement continuity R", "#div0")
-            logmanager.set("error R", self.getErrorRotate())    
-            logmanager.set("peak speed R", self.peak_speed_r)
+        if self.peak_acceleration_r > 0:
+            logmanager.set("movement continuity R", self.first_reversal_acceleration_rotate / self.peak_acceleration_r)
+        else:
+            logmanager.set("movement continuity R", "#div0")
+        logmanager.set("error R", self.getErrorRotate())    
+        logmanager.set("peak speed R", self.peak_speed_r)
 
-            logmanager.set("first reversal R", self.first_reversal_point_r)
-            logmanager.set("reversal points R", len(self.reversal_points_r))
+        logmanager.set("first reversal R", self.first_reversal_point_r)
+        logmanager.set("reversal points R", len(self.reversal_points_r))
 
         if environment.config.usePhoneCursor:
             logmanager.set("Cursor", "Phone")

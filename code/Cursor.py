@@ -30,15 +30,74 @@ class Cursor(avango.script.Script):
 
         if setup.usePhoneCursor:
             # create cross
-            self.cursor = setup.loader.create_geometry_from_file("phone",
+            '''
+            self.cursor = setup.setup.loader.create_geometry_from_file("phone",
                                                                  "/opt/3d_models/targets/phone/phone_ao.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
             self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(0.001)
             self.cursor.Material.value.EnableBackfaceCulling.value = False
             self.cursor.Material.value.set_uniform("Emissivity", 0.5)
             self.cursor.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 1))
+            '''
+            phone_body = setup.loader.create_geometry_from_file("phone_body",
+                                                 "/opt/3d_models/targets/phone_parts/phone_body.obj",
+                                                avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            phone_body.Transform.value *=avango.gua.make_scale_mat(0.001)
+            phone_body.Material.value.EnableBackfaceCulling.value = False
+            phone_body.Material.value.set_uniform("ColorMap", "/opt/3d_models/targets/phone_parts/textures/New_Base_Color.png")
+            phone_body.Material.value.set_uniform("NormalMap", "/opt/3d_models/targets/phone_parts/textures/New_Normal.png")
+            phone_body.Material.value.set_uniform("RoughnessMap", "/opt/3d_models/targets/phone_parts/textures/New_Roughness.png")
+            phone_body.Material.value.set_uniform("MetalnessMap", "/opt/3d_models/targets/phone_parts/textures/New_Metallic.png")
+
+    
+            phone_buttons = setup.loader.create_geometry_from_file("phone_buttons",
+                                                     "/opt/3d_models/targets/phone_parts/phone_buttons.obj",
+                                                    avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            phone_buttons.Transform.value *=avango.gua.make_scale_mat(0.001)
+            phone_buttons.Material.value.EnableBackfaceCulling.value = False
+            phone_buttons.Material.value.set_uniform("ColorMap", "/opt/3d_models/targets/phone_parts/textures/Plastic_Base_Color.png")
+            phone_buttons.Material.value.set_uniform("NormalMap", "/opt/3d_models/targets/phone_parts/textures/Plastic_Normal.png")
+            phone_buttons.Material.value.set_uniform("RoughnessMap", "/opt/3d_models/targets/phone_parts/textures/Plastic_Roughness.png")
+            phone_buttons.Material.value.set_uniform("MetalnessMap", "/opt/3d_models/targets/phone_parts/textures/Plastic_Metallic.png")
+    
+            phone_screen = setup.loader.create_geometry_from_file("phone_screen",
+                                                     "/opt/3d_models/targets/phone_parts/phone_screen.obj",
+                                                    avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            phone_screen.Transform.value *=avango.gua.make_scale_mat(0.001)
+            phone_screen.Material.value.EnableBackfaceCulling.value = False
+            phone_screen.Material.value.set_uniform("ColorMap", "/opt/3d_models/targets/phone_parts/textures/Silver_Base_Color.png")
+            phone_screen.Material.value.set_uniform("NormalMap", "/opt/3d_models/targets/phone_parts/textures/Silver_Normal.png")
+            phone_screen.Material.value.set_uniform("RoughnessMap", "/opt/3d_models/targets/phone_parts/textures/Silver_Roughness.png")
+            phone_screen.Material.value.set_uniform("MetalnessMap", "/opt/3d_models/targets/phone_parts/textures/Silver_Metallic.png")
+    
+            phone_antenna = setup.loader.create_geometry_from_file("phone_antenna",
+                                                     "/opt/3d_models/targets/phone_parts/phone_antenna.obj",
+                                                    avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            phone_antenna.Transform.value *=avango.gua.make_scale_mat(0.001)
+            phone_antenna.Material.value.EnableBackfaceCulling.value = False
+            phone_antenna.Material.value.set_uniform("ColorMap", "/opt/3d_models/targets/phone_parts/textures/Black_Base_Color.png")
+            phone_antenna.Material.value.set_uniform("NormalMap", "/opt/3d_models/targets/phone_parts/textures/Black_Normal.png")
+            phone_antenna.Material.value.set_uniform("RoughnessMap", "/opt/3d_models/targets/phone_parts/textures/Black_Roughness.png")
+            phone_antenna.Material.value.set_uniform("MetalnessMap", "/opt/3d_models/targets/phone_parts/textures/Black_Metallic.png")
+    
+            phone_cam = setup.loader.create_geometry_from_file("phone_cam",
+                                                     "/opt/3d_models/targets/phone_parts/phone_cam.obj",
+                                                    avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
+            phone_cam.Transform.value *=avango.gua.make_scale_mat(0.001)
+            phone_cam.Material.value.EnableBackfaceCulling.value = False
+            phone_cam.Material.value.set_uniform("ColorMap", "/opt/3d_models/targets/phone_parts/textures/Black_Base_Color.png")
+            phone_cam.Material.value.set_uniform("NormalMap", "/opt/3d_models/targets/phone_parts/textures/Black_Normal.png")
+            phone_cam.Material.value.set_uniform("RoughnessMap", "/opt/3d_models/targets/phone_parts/textures/Black_Roughness.png")
+            phone_cam.Material.value.set_uniform("MetalnessMap", "/opt/3d_models/targets/phone_parts/textures/Black_Metallic.png")
+    
+
+            self.cursor = avango.gua.nodes.TransformNode(
+                Children=[phone_body, phone_buttons, phone_screen, phone_cam, phone_antenna])
+
+
+
         else:
-            self.cursor = setup.loader.create_geometry_from_file("colored_cross",
+            self.cursor = setup.setup.loader.create_geometry_from_file("colored_cross",
                                                                  "data/objects/colored_cross.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS | avango.gua.LoaderFlags.LOAD_MATERIALS)
             self.cursor.Transform.value = setup.offsetPointer * avango.gua.make_scale_mat(self.setup.r / self.setup.r_model)
@@ -49,7 +108,7 @@ class Cursor(avango.script.Script):
         # pencil.Material.value.set_uniform("Emissivity", 1.0)
         self.setup.everyObject.Children.value.append(self.cursor)
         if setup.showHuman:
-            self.human = setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj",
+            self.human = setup.setup.loader.create_geometry_from_file("human", "data/objects/MaleLow.obj",
                                                                 avango.gua.LoaderFlags.DEFAULTS)
             self.human.Material.value.set_uniform("Color", avango.gua.Vec4(1, 1, 1, 0.3))
             self.human.Material.value.EnableBackfaceCulling.value = False

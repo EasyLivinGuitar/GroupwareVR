@@ -181,7 +181,7 @@ class setupEnvironment(avango.script.Script):
     offsetPointer = avango.gua.make_trans_mat(0.0, 0.1, -0.60)
 
     '''get the position of the center where the pointer and the target is located.'''
-    displayPosition = avango.gua.make_trans_mat(0.0, 0.0, 0.35)
+    displayPosition = avango.gua.make_trans_mat(0.0, 0.15, 0.35)
 
     logResults = True
     saveReplay = True
@@ -311,9 +311,9 @@ class setupEnvironment(avango.script.Script):
             Type=avango.gua.LightType.POINT,
             Name="light",
             Color=avango.gua.Color(1.0, 1.0, 1.0),
-            Brightness=100.0,
-            Transform=(avango.gua.make_trans_mat(1, 1, 5) *
-                       avango.gua.make_scale_mat(30, 30, 30))
+            Brightness=10.0,
+            Transform=(avango.gua.make_trans_mat(0, 1, 1.0) *
+                       avango.gua.make_scale_mat(5.0))
         )
 
         self.window = avango.gua.nodes.Window(
@@ -359,11 +359,18 @@ class setupEnvironment(avango.script.Script):
         self.res_pass.SSAORadius.value = 7.0
 
         # self.res_pass.EnableScreenSpaceShadow.value = True
-
+        '''
         self.res_pass.EnvironmentLightingColor.value = avango.gua.Color(0.1, 0.1, 0.1)
         self.res_pass.ToneMappingMode.value = avango.gua.ToneMappingMode.UNCHARTED
         self.res_pass.Exposure.value = 1.0
         self.res_pass.BackgroundColor.value = avango.gua.Color(0, 0, 0)
+        '''
+
+        #self.res_pass.BackgroundColor.value = avango.gua.Color(0.4, 0.65, 0.75)
+        #self.res_pass.BackgroundMode.value = avango.gua.BackgroundMode.SKYMAP_TEXTURE
+        self.res_pass.BackgroundMode.value = avango.gua.BackgroundMode.QUAD_TEXTURE
+        #self.res_pass.BackgroundTexture.value = "/opt/guacamole/resources/skymaps/DH203SN.png"
+        self.res_pass.BackgroundTexture.value = "/opt/3d_models/textures/FORHUMANUSE_TEXTURES/stone/030_stone_sandy.jpg"
 
         anti_aliasing = avango.gua.nodes.SSAAPassDescription()
 
@@ -429,7 +436,8 @@ class setupEnvironment(avango.script.Script):
         #apply set background color
         if (not self.permanentBG) and (self.timerField.value >= self.timeTempBGleft):
             # print("back to black: "+str(self.timerField.value) + " >= " + str(self.timeTempBGleft))
-            self.res_pass.BackgroundColor.value = avango.gua.Color(0.4, 0.4, 0.4)
+            # self.res_pass.BackgroundColor.value = avango.gua.Color(0.5, 0.75, 0.95)
+            pass
 
     def setBackgroundColor(self, color, time=0):
         if time > 0: #temporary color
